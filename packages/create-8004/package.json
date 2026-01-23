@@ -1,0 +1,9 @@
+{
+  "name": "create-8004",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "@inquirer/prompts": "^8.2.0"
+  }
+}
