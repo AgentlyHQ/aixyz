@@ -276,10 +276,19 @@ app.post("/mcp", express.json(), async (req, res) => {
   res.on("close", cleanup);
 });
 
+// Initialize function for serverless environments (e.g., Vercel)
+let isInitialized = false;
+export async function initializeApp() {
+  if (!isInitialized) {
+    await resourceServer.initialize();
+    isInitialized = true;
+  }
+}
+
 // Start server function for standalone use
 export async function startServer(port?: number) {
   // Initialize resource server to fetch supported kinds from facilitator
-  await resourceServer.initialize();
+  await initializeApp();
 
   const PORT = port || process.env.PORT || 3000;
   const server = app.listen(PORT, () => {

@@ -201,6 +201,69 @@ Run the test suite:
 pnpm test
 ```
 
+## Deployment
+
+### Deploying to Vercel
+
+This agent can be easily deployed to Vercel using the included `vercel.json` configuration file.
+
+#### Prerequisites
+
+1. Install the Vercel CLI:
+
+```bash
+npm i -g vercel
+```
+
+2. Login to Vercel:
+
+```bash
+vercel login
+```
+
+#### Deployment Steps
+
+1. Navigate to the agent-chainlink directory:
+
+```bash
+cd examples/agent-chainlink
+```
+
+2. Deploy to Vercel:
+
+```bash
+vercel
+```
+
+3. Set up the required environment variables in your Vercel project settings:
+
+- `OPENAI_API_KEY`: Your OpenAI API key
+- `ALCHEMY_API_KEY`: Your Alchemy API key for Ethereum access
+- `X402_PAYMENT_ADDRESS`: Your payment address (Base Sepolia)
+- `X402_NETWORK`: Network for payments (default: `eip155:84532`)
+- `X402_AMOUNT`: Payment amount per request (default: `$0.000001`)
+- `X402_FACILITATOR_URL`: x402 facilitator URL (default: `https://x402.org/facilitator`)
+
+You can set environment variables using the Vercel CLI:
+
+```bash
+vercel env add OPENAI_API_KEY
+vercel env add ALCHEMY_API_KEY
+vercel env add X402_PAYMENT_ADDRESS
+```
+
+Or through the Vercel dashboard at: `https://vercel.com/[your-username]/[project-name]/settings/environment-variables`
+
+4. After deployment, your agent will be available at the Vercel URL provided. Update the `AGENT_URL` environment variable to match your deployment URL.
+
+#### Configuration
+
+The `vercel.json` file configures the deployment:
+
+- Routes all traffic to the Express app via serverless functions
+- Uses the `api/index.ts` handler as the entry point
+- Supports all endpoints: `/`, `/.well-known/agent-card.json`, and `/mcp`
+
 ## Architecture
 
 The agent follows the A2A protocol architecture:
