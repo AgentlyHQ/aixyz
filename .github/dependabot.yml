@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      lint:
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "husky"
+          - "lint-staged"
+          - "eslint"
+          - "globals"
+          - "@eslint/*"
+          - "*eslint*"
+          - "prettier"
+          - "prettier-plugin-*"
+        exclude-patterns:
+          - "eslint-config-next"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+      next:
+        patterns:
+          - "eslint-config-next"
+          - "next"
+          - "@next/*"
+      ai-sdk:
+        patterns:
+          - "ai"
+          - "@ai-sdk/*"
