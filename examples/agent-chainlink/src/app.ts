@@ -277,12 +277,12 @@ app.post("/mcp", express.json(), async (req, res) => {
 });
 
 // Initialize function for serverless environments (e.g., Vercel)
-let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
 export async function initializeApp() {
-  if (!isInitialized) {
-    await resourceServer.initialize();
-    isInitialized = true;
+  if (!initializationPromise) {
+    initializationPromise = resourceServer.initialize();
   }
+  return initializationPromise;
 }
 
 // Start server function for standalone use
