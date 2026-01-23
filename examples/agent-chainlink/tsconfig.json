@@ -6,7 +6,6 @@
     "strict": true,
     "module": "nodenext",
     "target": "esnext",
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": true,
     "outDir": "dist"

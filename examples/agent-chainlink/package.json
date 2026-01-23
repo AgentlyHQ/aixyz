@@ -5,28 +5,30 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/app.ts",
-    "start": "node dist/app.js",
-    "test": "vitest run"
+    "dev": "tsx src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@a2a-js/sdk": "^0.3.8",
-    "@ai-sdk/openai": "3.0.13",
+    "@a2a-js/sdk": "^0.3.9",
+    "@ai-sdk/openai": "3.0.18",
     "@modelcontextprotocol/sdk": "^1.25.3",
     "@x402/core": "^2.2.0",
     "@x402/evm": "^2.2.0",
     "@x402/express": "^2.2.0",
     "@x402/extensions": "^2.2.0",
-    "ai": "6.0.42",
+    "ai": "6.0.48",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "viem": "2.44.4",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1",
+    "@types/express": "^5.0.6",
     "@types/supertest": "^6.0.3",
     "supertest": "^7.2.2",
-    "tsx": "^4.19.2"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

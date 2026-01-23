@@ -99,7 +99,7 @@ const requestHandler = new DefaultRequestHandler(agentCard, new InMemoryTaskStor
 
 // Setup x402 payment configuration
 const facilitatorClient = new HTTPFacilitatorClient({
-  url: process.env.X402_FACILITATOR_URL || "https://facilitator.x402.org",
+  url: process.env.X402_FACILITATOR_URL || "https://www.x402.org/facilitator",
 });
 
 const resourceServer = new x402ResourceServer(facilitatorClient);
@@ -114,7 +114,7 @@ resourceServer.registerExtension(bazaarResourceServerExtension);
 // Common payment configuration for all protected endpoints
 const commonPaymentConfig = {
   scheme: "exact" as const,
-  price: process.env.X402_AMOUNT || "$0.000001",
+  price: process.env.X402_AMOUNT || "$0.001",
   network: x402Network,
   payTo: process.env.X402_PAYMENT_ADDRESS || "0x0000000000000000000000000000000000000000",
 };
@@ -234,7 +234,7 @@ function createMcpServer() {
 }
 
 // Setup the Express app with A2A routes using specific middlewares
-const app = express();
+export const app: express.Express = express();
 
 // Add agent card handler at well-known path (no payment required for A2A discovery)
 app.use(
@@ -276,17 +276,25 @@ app.post("/mcp", express.json(), async (req, res) => {
   res.on("close", cleanup);
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Chainlink Price Oracle Agent server running on http://localhost:${PORT}`);
-  console.log(`📋 Agent card available at http://localhost:${PORT}/.well-known/agent-card.json`);
-  console.log(`🔗 JSON-RPC endpoint at http://localhost:${PORT}/`);
-  console.log(`🔌 MCP endpoint at http://localhost:${PORT}/mcp`);
-});
+// Start server function for standalone use
+export async function startServer(port?: number) {
+  // Initialize resource server to fetch supported kinds from facilitator
+  await resourceServer.initialize();
 
-// Handle server shutdown
-process.on("SIGINT", () => {
-  console.log("Shutting down server...");
-  process.exit(0);
-});
+  const PORT = port || process.env.PORT || 3000;
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Chainlink Price Oracle Agent server running on http://localhost:${PORT}`);
+    console.log(`📋 Agent card available at http://localhost:${PORT}/.well-known/agent-card.json`);
+    console.log(`🔗 JSON-RPC endpoint at http://localhost:${PORT}/`);
+    console.log(`🔌 MCP endpoint at http://localhost:${PORT}/mcp`);
+  });
+
+  // Handle server shutdown
+  process.on("SIGINT", () => {
+    console.log("Shutting down server...");
+    server.close();
+    process.exit(0);
+  });
+
+  return server;
+}
