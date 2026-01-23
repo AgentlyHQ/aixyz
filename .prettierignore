@@ -1,0 +1,8 @@
+.husky
+.idea
+.vscode
+.next
+node_modules
+dist
+pnpm-lock.yaml
+.github/pull_request_template.md

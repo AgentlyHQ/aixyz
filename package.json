@@ -1,0 +1,39 @@
+{
+  "name": "@workspace/agently",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "clean": "turbo run clean",
+    "dev": "turbo run dev",
+    "format": "prettier --write .",
+    "lint": "turbo run lint -- --fix",
+    "prepare": "husky",
+    "test": "turbo run test"
+  },
+  "lint-staged": {
+    "*": [
+      "prettier --write --ignore-unknown"
+    ]
+  },
+  "prettier": {
+    "plugins": [
+      "prettier-plugin-packagejson"
+    ],
+    "printWidth": 120
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.9",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "prettier-plugin-packagejson": "^3.0.0",
+    "turbo": "^2.7.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": "^24"
+  }
+}
