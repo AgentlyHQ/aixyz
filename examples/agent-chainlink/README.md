@@ -260,9 +260,10 @@ Or through the Vercel dashboard at: `https://vercel.com/[your-username]/[project
 
 The `vercel.json` file configures the deployment:
 
-- Routes all traffic to the Express app via serverless functions
-- Uses the `api/index.ts` handler as the entry point
+- Uses a simple rewrite rule to route all traffic to the Express app in `api/index.ts`
+- The Express app is exported directly and Vercel automatically wraps it as a serverless function
 - Supports all endpoints: `/`, `/.well-known/agent-card.json`, and `/mcp`
+- Zero-config deployment - Vercel automatically detects and builds the TypeScript Express app
 
 ## Architecture
 

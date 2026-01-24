@@ -1,31 +1,23 @@
 import "dotenv/config";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import type { Request, Response, NextFunction } from "express";
-import { app, initializeApp } from "../src/app";
+import express, { type Express } from "express";
+import { app as expressApp, initializeApp } from "../src/app";
 
-// Initialize the app once for the serverless function
-let initializationPromise: Promise<void> | null = null;
+// Create a wrapper that ensures initialization before handling requests
+const app: Express = express();
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Initialize on first request - promise ensures only one initialization
-  if (!initializationPromise) {
-    initializationPromise = initializeApp();
+// Initialization middleware - ensures app is ready before processing requests
+app.use(async (req, res, next) => {
+  try {
+    await initializeApp();
+    next();
+  } catch (error) {
+    console.error("Initialization error:", error);
+    res.status(500).json({ error: "Service initialization failed" });
   }
-  await initializationPromise;
+});
 
-  // Use the Express app to handle the request
-  // Vercel's request/response types are compatible with Express
-  return new Promise<void>((resolve, reject) => {
-    app(
-      req as unknown as Request,
-      res as unknown as Response,
-      ((err?: Error) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }) as NextFunction,
-    );
-  });
-}
+// Mount the main Express app
+app.use(expressApp);
+
+// Export for Vercel
+export default app;
