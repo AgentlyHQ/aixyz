@@ -23,7 +23,7 @@
     "printWidth": 120
   },
   "devDependencies": {
-    "@types/node": "^24.10.9",
+    "@types/node": "^25.0.10",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
