@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chainlink Price Oracle Agent</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      color: #0070f3;
+      border-bottom: 2px solid #eaeaea;
+      padding-bottom: 0.5rem;
+    }
+    .endpoint {
+      background: #f5f5f5;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      border-left: 4px solid #0070f3;
+    }
+    .endpoint code {
+      background: #fff;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .method {
+      display: inline-block;
+      background: #0070f3;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    a {
+      color: #0070f3;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔗 Chainlink Price Oracle Agent</h1>
+  
+  <p>
+    An AI agent that provides real-time cryptocurrency price data using Chainlink price feeds on Ethereum mainnet.
+    This agent supports both the A2A (Agent2Agent) protocol and MCP (Model Context Protocol) for flexible integration options.
+  </p>
+
+  <h2>Features</h2>
+  <ul>
+    <li>A2A Protocol Compliant</li>
+    <li>MCP Protocol Compliant</li>
+    <li>Chainlink Integration for real-time price feeds</li>
+    <li>AI-Powered with OpenAI GPT-4o-mini</li>
+    <li>x402 Payment Support</li>
+  </ul>
+
+  <h2>API Endpoints</h2>
+
+  <div class="endpoint">
+    <span class="method">GET</span>
+    <code>/.well-known/agent-card.json</code>
+    <p>Agent discovery endpoint (no payment required)</p>
+    <a href="/.well-known/agent-card.json" target="_blank">View Agent Card →</a>
+  </div>
+
+  <div class="endpoint">
+    <span class="method">POST</span>
+    <code>/</code>
+    <p>JSON-RPC endpoint for A2A protocol (requires x402 payment)</p>
+  </div>
+
+  <div class="endpoint">
+    <span class="method">POST</span>
+    <code>/mcp</code>
+    <p>MCP protocol endpoint (requires x402 payment)</p>
+  </div>
+
+  <h2>Documentation</h2>
+  <p>
+    For detailed documentation on how to integrate with this agent, visit the 
+    <a href="https://github.com/AgentlyHQ/agently/tree/main/examples/agent-chainlink" target="_blank">GitHub repository</a>.
+  </p>
+
+  <h2>Payment Requirements</h2>
+  <p>
+    All API requests (except the agent card endpoint) require a valid x402 payment.
+  </p>
+  <ul>
+    <li><strong>Cost:</strong> $0.000001 USDC per request</li>
+    <li><strong>Network:</strong> Base Sepolia (eip155:84532)</li>
+    <li><strong>Protocol:</strong> x402 version 2</li>
+  </ul>
+
+  <!-- Vercel Web Analytics -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

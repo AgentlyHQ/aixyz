@@ -10,6 +10,7 @@ An AI agent that provides real-time cryptocurrency price data using Chainlink pr
 - **AI-Powered**: Uses OpenAI GPT-4o-mini for natural language interaction
 - **Express Server**: HTTP server with JSON-RPC and REST endpoints
 - **x402 Payment Support**: Uses `@x402/express` library for payment protocol implementation
+- **Vercel Web Analytics**: Integrated analytics tracking for monitoring API usage and landing page visitors
 
 ## Setup
 
@@ -264,6 +265,46 @@ The `vercel.json` file configures the deployment:
 - The Express app is exported directly and Vercel automatically wraps it as a serverless function
 - Supports all endpoints: `/`, `/.well-known/agent-card.json`, and `/mcp`
 - Zero-config deployment - Vercel automatically detects and builds the TypeScript Express app
+
+### Vercel Web Analytics
+
+This project includes Vercel Web Analytics to monitor API usage and track visitor patterns. The analytics are automatically enabled when deployed to Vercel.
+
+#### Features
+
+- **Landing Page Analytics**: The root path (`/`) serves an HTML landing page with embedded Vercel Web Analytics script to track page views
+- **API Usage Tracking**: Server-side analytics middleware tracks all API endpoint usage, including:
+  - Endpoint paths
+  - HTTP methods
+  - Response status codes
+  
+#### How It Works
+
+1. **Frontend Analytics**: The landing page (`public/index.html`) includes the Vercel analytics script:
+   ```html
+   <script>
+     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+   </script>
+   <script defer src="/_vercel/insights/script.js"></script>
+   ```
+
+2. **Backend Analytics**: API requests are tracked using the `@vercel/analytics/server` package:
+   - Analytics middleware is added to the Express app
+   - All API calls are tracked with endpoint, method, and status code metadata
+   - Tracking only occurs in production (when `VERCEL` environment variable is set)
+
+#### Viewing Analytics
+
+After deployment to Vercel:
+
+1. Go to your project dashboard on Vercel
+2. Click the **Analytics** tab
+3. View real-time data on:
+   - Page views on the landing page
+   - API endpoint usage patterns
+   - Traffic sources and visitor locations
+
+For more information, see the [Vercel Web Analytics documentation](https://vercel.com/docs/analytics).
 
 ## Architecture
 

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { randomUUID } from "crypto";
+import path from "path";
 import type { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import {
   AgentExecutor,
@@ -19,6 +20,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { z } from "zod";
 import { agent } from "./agent";
 import { executeLookup } from "./tools";
+import { analyticsMiddleware } from "./analytics";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {
@@ -236,6 +238,17 @@ function createMcpServer() {
 // Setup the Express app with A2A routes using specific middlewares
 const app: express.Express = express();
 export { app };
+
+// Add Vercel Analytics tracking middleware for API usage monitoring
+app.use(analyticsMiddleware);
+
+// Serve static files from public directory (for landing page with analytics)
+app.use(express.static(path.join(__dirname, "../public")));
+
+// Serve landing page at root for GET requests (no payment required)
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
 
 // Add agent card handler at well-known path (no payment required for A2A discovery)
 app.use(
