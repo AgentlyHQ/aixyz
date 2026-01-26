@@ -1,6 +1,5 @@
-import "dotenv/config";
 import agent from "./agent";
-import { expect, test } from "vitest";
+import { expect, test } from "bun:test";
 import { writeFile, mkdir } from "node:fs/promises";
 
 async function log(object: any) {

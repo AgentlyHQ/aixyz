@@ -1,4 +1,3 @@
-import "dotenv/config";
 import express from "express";
 import { randomUUID } from "crypto";
 import type { AgentCard, Message, TextPart } from "@a2a-js/sdk";

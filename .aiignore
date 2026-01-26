@@ -12,6 +12,7 @@ build/
 out/
 
 # secrets
+.env
 .env*.local
 *.pem
 

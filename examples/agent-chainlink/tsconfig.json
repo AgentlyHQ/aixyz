@@ -1,7 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "include": ["src"],
-  "exclude": ["**/*.test.*"],
   "compilerOptions": {
     "strict": true,
     "module": "nodenext",
