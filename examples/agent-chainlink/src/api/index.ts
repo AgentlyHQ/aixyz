@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express, { type Express } from "express";
-import { app as expressApp, initializeApp } from "../src/app";
+import { app as expressApp, initializeApp } from "../app";
 
 // Create a wrapper that ensures initialization before handling requests
 const app: Express = express();
