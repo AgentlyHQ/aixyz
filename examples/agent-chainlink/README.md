@@ -36,7 +36,7 @@ AGENT_URL=http://localhost:3000/
 X402_PAYMENT_ADDRESS=your_payment_address_here
 X402_NETWORK=eip155:84532
 X402_AMOUNT=$0.000001
-X402_FACILITATOR_URL=https://x402.org/facilitator
+X402_FACILITATOR_URL=https://www.x402.org/facilitator
 ```
 
 ## x402 Payment Protocol
@@ -64,7 +64,7 @@ import { registerExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 
 const facilitatorClient = new HTTPFacilitatorClient({
-  url: "https://x402.org/facilitator",
+  url: "https://www.x402.org/facilitator",
 });
 
 const resourceServer = new x402ResourceServer(facilitatorClient);
@@ -242,7 +242,7 @@ vercel
 - `X402_PAYMENT_ADDRESS`: Your payment address (Base Sepolia)
 - `X402_NETWORK`: Network for payments (default: `eip155:84532`)
 - `X402_AMOUNT`: Payment amount per request (default: `$0.000001`)
-- `X402_FACILITATOR_URL`: x402 facilitator URL (default: `https://x402.org/facilitator`)
+- `X402_FACILITATOR_URL`: x402 facilitator URL (default: `https://www.x402.org/facilitator`)
 
 You can set environment variables using the Vercel CLI:
 

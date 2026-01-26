@@ -246,8 +246,7 @@ app.use(
 );
 
 // Apply x402 payment middleware to protect the root JSON-RPC endpoint
-// Disable sync check for development since facilitator may not support all networks yet
-app.use(paymentMiddleware(x402Routes, resourceServer, undefined, undefined, false));
+app.use(paymentMiddleware(x402Routes, resourceServer));
 
 // Add JSON-RPC handler at root (protected by x402 payment)
 app.use(
