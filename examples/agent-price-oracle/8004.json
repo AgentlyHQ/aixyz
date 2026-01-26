@@ -1,0 +1,22 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "price-oracle",
+  "description": "Price Gecky - AI Agent that provides real-time cryptocurrency market data using CoinGecko Pro. Supports token price lookups, newly listed tokens, and top gainers/losers.",
+  "image": "https://agently.to/eip155/1/price-oracle/agent.png",
+  "endpoints": [
+    {
+      "name": "A2A",
+      "endpoint": "https://agently.to/eip155/1/price-oracle/.well-known/agent-card.json",
+      "version": "0.3.0"
+    },
+    {
+      "name": "MCP",
+      "endpoint": "https://agently.to/eip155/1/price-oracle/mcp",
+      "version": "2025-06-18"
+    }
+  ],
+  "registrations": [],
+  "supportedTrust": ["reputation"],
+  "active": true,
+  "x402support": true
+}

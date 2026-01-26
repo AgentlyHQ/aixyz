@@ -1,0 +1,22 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "job-hunter",
+  "description": "Career Scout AI Agent that searches for remote job opportunities. Provides the latest remote job listings for specific countries using the Jobicy API.",
+  "image": "https://agently.to/eip155/1/job-hunter/agent.png",
+  "endpoints": [
+    {
+      "name": "A2A",
+      "endpoint": "https://agently.to/eip155/1/job-hunter/.well-known/agent-card.json",
+      "version": "0.3.0"
+    },
+    {
+      "name": "MCP",
+      "endpoint": "https://agently.to/eip155/1/job-hunter/mcp",
+      "version": "2025-06-18"
+    }
+  ],
+  "registrations": [],
+  "supportedTrust": ["reputation"],
+  "active": true,
+  "x402support": true
+}

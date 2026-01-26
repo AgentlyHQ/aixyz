@@ -1,0 +1,40 @@
+{
+  "name": "Price Gecky - Price Oracle",
+  "description": "AI agent that provides real-time cryptocurrency market data using CoinGecko Pro. Supports token price lookups, newly listed tokens discovery, and top gainers/losers tracking.",
+  "url": "http://localhost:3000",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "authentication": {
+    "schemes": ["x402"],
+    "credentials": null
+  },
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text"],
+  "skills": [
+    {
+      "id": "token-price",
+      "name": "Token Price Lookup",
+      "description": "Get the current price for any cryptocurrency token using CoinGecko data.",
+      "tags": ["price", "cryptocurrency", "coingecko", "market"],
+      "examples": ["What is the price of Bitcoin?", "Get ETH price in USD", "How much is Solana worth?"]
+    },
+    {
+      "id": "new-tokens",
+      "name": "Newly Listed Tokens",
+      "description": "Discover recently listed tokens on CoinGecko.",
+      "tags": ["new", "tokens", "listing", "discovery"],
+      "examples": ["Show me new tokens", "What tokens were recently listed?"]
+    },
+    {
+      "id": "gainers-losers",
+      "name": "Top Gainers & Losers",
+      "description": "Get the top gaining and losing tokens in the last 24 hours.",
+      "tags": ["gainers", "losers", "trending", "24h"],
+      "examples": ["What are the top gainers today?", "Show me the biggest losers", "Which tokens are pumping?"]
+    }
+  ]
+}
