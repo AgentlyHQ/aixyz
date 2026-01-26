@@ -4,15 +4,13 @@ description: "Setup tooling for mono repo"
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-node@v4
+    - uses: oven-sh/setup-bun@v2
       with:
-        node-version-file: ".nvmrc"
+        bun-version: latest
 
-    - uses: pnpm/action-setup@v4
     - run: |
         echo "DO_NOT_TRACK=1" >> $GITHUB_ENV
         echo "NEXT_TELEMETRY_DISABLED=1" >> $GITHUB_ENV
         echo "TURBO_TELEMETRY_DISABLED=1" >> $GITHUB_ENV
-        pnpm install -g turbo
-        pnpm install
+        bun install
       shell: bash
