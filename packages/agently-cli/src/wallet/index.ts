@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import type { Chain, WalletClient } from "viem";
 import { select, input, password } from "@inquirer/prompts";
 import { createPrivateKeyWallet } from "./privatekey.js";
@@ -45,7 +46,7 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
     case "keystore": {
       const keystorePath = await input({
         message: "Enter keystore path:",
-        default: `${process.env.HOME}/.foundry/keystores/default`,
+        default: `${homedir()}/.foundry/keystores/default`,
       });
       return { type: "keystore", path: keystorePath };
     }

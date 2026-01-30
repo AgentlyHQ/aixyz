@@ -3,7 +3,7 @@ import { program } from "commander";
 import { register } from "./commands/register.js";
 import { CliError } from "./utils.js";
 
-program.name("agently").description("CLI for ERC-8004 agent registry operations").version("0.0.1");
+program.name("agently-cli").description("CLI for ERC-8004 agent registry operations").version("0.0.1");
 
 program
   .command("register")
@@ -65,10 +65,10 @@ Environment Variables:
                  for interactive use as the key may appear in shell history.
 
 Examples:
-  $ agently register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default
-  $ PRIVATE_KEY=0x... agently register --chain sepolia
-  $ agently register --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --uri "./metadata.json"
-  $ agently register --uri "./metadata.json" --chain sepolia --browser`,
+  $ agently-cli register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default
+  $ PRIVATE_KEY=0x... agently-cli register --chain sepolia
+  $ agently-cli register --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --uri "./metadata.json"
+  $ agently-cli register --uri "./metadata.json" --chain sepolia --browser`,
   )
   .action(async (options) => {
     try {
