@@ -1,0 +1,22 @@
+{
+  "name": "@agentlyhq/agently-cli",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": {
+    "agently-cli": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun --external viem --external @inquirer/prompts --external commander --external chalk --external boxen",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@agentlyhq/8004": "workspace:*",
+    "@inquirer/prompts": "^7.0.0",
+    "boxen": "^8.0.0",
+    "chalk": "^5.0.0",
+    "commander": "^13.0.0",
+    "ethers": "^6.16.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {}
+}

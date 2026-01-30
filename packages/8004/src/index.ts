@@ -27,6 +27,7 @@ export { ValidationRegistryAbi_V1 as ValidationRegistryAbi } from "../abis/Valid
 
 // Chain ID constants
 export const CHAIN_ID = {
+  MAINNET: 1,
   SEPOLIA: 11155111,
   BASE_SEPOLIA: 84532,
 } as const;
@@ -35,6 +36,12 @@ export type SupportedChainId = (typeof CHAIN_ID)[keyof typeof CHAIN_ID];
 
 // Contract addresses by chain
 export const ADDRESSES = {
+  [CHAIN_ID.MAINNET]: {
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    // TODO: this contract address is not officially announced (found through deployment by same owner as the rest)
+    validationRegistry: "0x8004Cc8439f36fd5F9F049D9fF86523Df6dAAB58",
+  },
   [CHAIN_ID.SEPOLIA]: {
     identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
     reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",

@@ -22,3 +22,5 @@ out/
 
 # agently
 .agently
+
+.keystore
