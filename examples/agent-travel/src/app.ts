@@ -336,8 +336,16 @@ let initializationPromise: Promise<void> | null = null;
 export async function initializeApp() {
   if (!initializationPromise) {
     initializationPromise = (async () => {
-      await resourceServer.initialize();
-      initializeStripe(); // Initialize Stripe if configured
+      // Initialize Stripe first (independent of x402)
+      initializeStripe();
+
+      // Initialize x402 resource server (non-fatal if fails)
+      try {
+        await resourceServer.initialize();
+      } catch (error) {
+        console.warn("[x402] Failed to initialize:", error instanceof Error ? error.message : error);
+        console.warn("[x402] x402 payments will not be available. Stripe payments will still work.");
+      }
     })();
   }
   return initializationPromise;
