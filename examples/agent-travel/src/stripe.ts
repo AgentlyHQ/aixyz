@@ -4,7 +4,10 @@ let stripe: Stripe | null = null;
 
 export function initializeStripe(): Stripe | null {
   const secretKey = process.env.STRIPE_SECRET_KEY;
-  if (!secretKey) return null;
+  if (!secretKey) {
+    console.warn("[Stripe] STRIPE_SECRET_KEY not found in environment");
+    return null;
+  }
 
   stripe = new Stripe(secretKey);
   console.log("[Stripe] Initialized successfully");

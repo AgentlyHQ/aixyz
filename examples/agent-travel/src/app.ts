@@ -287,8 +287,10 @@ app.post("/stripe/create-payment-intent", express.json(), async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    console.error("[Stripe] Failed to create payment intent:", error);
-    res.status(500).json({ error: "Failed to create payment intent" });
+    const message = error instanceof Error ? error.message : "Failed to create payment intent";
+    console.error("[Stripe] Failed to create payment intent:", message);
+    const status = message === "Stripe not configured" ? 503 : 500;
+    res.status(status).json({ error: message });
   }
 });
 
