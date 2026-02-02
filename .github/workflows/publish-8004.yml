@@ -1,9 +1,8 @@
 name: Publish @agentlyhq/erc-8004
 
 on:
-  push:
-    tags:
-      - "packages/erc-8004/v*"
+  release:
+    types: [published]
 
 permissions:
   id-token: write # Required for OIDC
@@ -12,15 +11,22 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.release.tag_name, 'packages/erc-8004/v')
     steps:
       - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup
 
+      # Setup nodejs for npm publish with OIDC to create .npmrc
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+
       - name: Extract version from tag
         id: version
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
+          TAG="${{ github.event.release.tag_name }}"
           VERSION="${TAG#packages/erc-8004/v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           # Determine dist-tag
