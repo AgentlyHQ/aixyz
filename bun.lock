@@ -100,18 +100,14 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/8004": {
-      "name": "@agentlyhq/8004",
-      "version": "0.0.0",
-    },
     "packages/agently-cli": {
       "name": "@agentlyhq/agently-cli",
       "version": "0.0.1",
       "bin": {
-        "agently": "./dist/index.js",
+        "agently-cli": "dist/index.js",
       },
       "dependencies": {
-        "@agentlyhq/8004": "workspace:*",
+        "@agentlyhq/erc-8004": "workspace:*",
         "@inquirer/prompts": "^7.0.0",
         "boxen": "^8.0.0",
         "chalk": "^5.0.0",
@@ -124,15 +120,19 @@
       "name": "aixyz",
       "version": "0.0.0",
     },
+    "packages/erc-8004": {
+      "name": "@agentlyhq/erc-8004",
+      "version": "0.0.1",
+    },
   },
   "packages": {
     "@a2a-js/sdk": ["@a2a-js/sdk@0.3.9", "", { "dependencies": { "uuid": "^11.1.0" }, "peerDependencies": { "@bufbuild/protobuf": "^2.10.2", "@grpc/grpc-js": "^1.11.0", "express": "^4.21.2 || ^5.1.0" }, "optionalPeers": ["@bufbuild/protobuf", "@grpc/grpc-js", "express"] }, "sha512-GWOSjL/dbkNRETfmLIKqtVV/fm+chPPp0uL5DUDKJlFmVjPCxRS75I6oiIkJeGo3/AM7QjaZTMb003Ia09ibtQ=="],
 
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.10.1", "", {}, "sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw=="],
 
-    "@agentlyhq/8004": ["@agentlyhq/8004@workspace:packages/8004"],
-
     "@agentlyhq/agently-cli": ["@agentlyhq/agently-cli@workspace:packages/agently-cli"],
+
+    "@agentlyhq/erc-8004": ["@agentlyhq/erc-8004@workspace:packages/erc-8004"],
 
     "@ai-sdk/gateway": ["@ai-sdk/gateway@3.0.22", "", { "dependencies": { "@ai-sdk/provider": "3.0.5", "@ai-sdk/provider-utils": "4.0.9", "@vercel/oidc": "3.1.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-NgnlY73JNuooACHqUIz5uMOEWvqR1MMVbb2soGLMozLY1fgwEIF5iJFDAGa5/YArlzw2ATVU7zQu7HkR/FUjgA=="],
 

@@ -1,9 +1,9 @@
-name: Publish @agentlyhq/8004
+name: Publish @agentlyhq/erc-8004
 
 on:
   push:
     tags:
-      - "packages/8004/v*"
+      - "packages/erc-8004/v*"
 
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
         id: version
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          VERSION="${TAG#packages/8004/v}"
+          VERSION="${TAG#packages/erc-8004/v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           # Determine dist-tag
           if [[ "$VERSION" == *-* ]]; then
@@ -37,17 +37,17 @@ jobs:
           fi
 
       - name: Build
-        run: bun run build --filter @agentlyhq/8004
+        run: bun run build --filter @agentlyhq/erc-8004
 
       - name: Lint
-        run: bun run lint --filter @agentlyhq/8004
+        run: bun run lint --filter @agentlyhq/erc-8004
 
       - name: Set package version
-        working-directory: packages/8004
+        working-directory: packages/erc-8004
         run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
 
       - name: Publish
-        working-directory: packages/8004
+        working-directory: packages/erc-8004
         run: bun publish --access public --tag ${{ steps.version.outputs.dist_tag }}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
