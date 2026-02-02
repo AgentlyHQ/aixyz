@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, statSync } from "fs";
-import { resolve } from "path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { resolve } from "node:path";
 
 export function resolveUri(uri: string): string {
   // Return as-is for URLs (ipfs://, https://, data:, etc.)
