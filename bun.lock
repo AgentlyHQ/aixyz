@@ -123,6 +123,9 @@
     "packages/erc-8004": {
       "name": "@agentlyhq/erc-8004",
       "version": "0.0.1",
+      "dependencies": {
+        "zod": "^4.3.6",
+      },
     },
   },
   "packages": {

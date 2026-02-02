@@ -19,6 +19,10 @@
     ".": {
       "require": "./dist/src/index.js",
       "default": "./dist/src/index.js"
+    },
+    "./*": {
+      "require": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
     }
   },
   "main": "dist/src/index.js",
@@ -29,5 +33,8 @@
   ],
   "scripts": {
     "build": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }
