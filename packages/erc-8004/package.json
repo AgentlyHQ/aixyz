@@ -19,6 +19,10 @@
     ".": {
       "require": "./dist/src/index.js",
       "default": "./dist/src/index.js"
+    },
+    "./*": {
+      "require": "./dist/src/*.js",
+      "default": "./dist/src/*.js"
     }
   },
   "main": "dist/src/index.js",
@@ -28,6 +32,10 @@
     "contracts"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }
