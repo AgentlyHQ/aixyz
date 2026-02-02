@@ -15,11 +15,11 @@ import { z } from "zod";
  * Optional number schema - accepts string or number, transforms to number or null
  * Used for chainId which may come as string from JSON
  */
-const OptionalNumberSchema = z
-  .union([z.string(), z.number()])
+const ChainIdSchema = z
+  .union([z.string().min(1), z.number()])
   .transform((val) => {
     const num = Number(val);
-    return Number.isNaN(num) ? null : num;
+    return Number.isNaN(num) || !Number.isInteger(num) || num < 0 ? null : num;
   })
   .nullish();
 
@@ -31,7 +31,7 @@ const ProofOfPaymentSchema = z
   .object({
     fromAddress: z.string().nullish(),
     toAddress: z.string().nullish(),
-    chainId: OptionalNumberSchema,
+    chainId: ChainIdSchema,
     txHash: z.string().nullish(),
   })
   .nullish();
@@ -80,7 +80,7 @@ const OasfSchema = z
  * - agentId: Numeric agent ID (allow for string that can be parsed to number)
  * - clientAddress: CAIP-10 address of the feedback submitter
  * - createdAt: ISO 8601 timestamp
- * - value: Feedback value (int256) - OR score for backward compatibility
+ * - value: Feedback value (int128, stored as bigint) - OR score for backward compatibility
  * - valueDecimals: Decimal precision for value (defaults to 0 if score is used)
  *
  * Optional fields:
@@ -103,8 +103,12 @@ export const RawFeedbackFileSchema = z
     createdAt: z.iso.datetime(),
 
     // Value fields - either value/valueDecimals OR score (backward compatibility)
-    value: z.number().optional(),
-    valueDecimals: z.number().optional(),
+    // On-chain type is int128; accept string/number/bigint and coerce to bigint
+    value: z
+      .union([z.string(), z.number(), z.bigint()])
+      .transform((val) => BigInt(val))
+      .optional(),
+    valueDecimals: z.number().int().nonnegative().optional(),
     score: z.number().optional(), // Legacy field, maps to value with valueDecimals=0
 
     // Optional fields
@@ -122,9 +126,8 @@ export const RawFeedbackFileSchema = z
   })
   .loose()
   .transform((data) => {
-    // note: when both are provided, value/valueDecimals take precedence
-    // Handle backward compatibility: score -> value with valueDecimals=0
-    const value = data.value ?? data.score;
+    // value/valueDecimals take precedence; score is backward-compat fallback
+    const value = data.value ?? (data.score !== undefined ? BigInt(data.score) : undefined);
     const valueDecimals = data.valueDecimals ?? (data.score !== undefined ? 0 : undefined);
     return {
       ...data,

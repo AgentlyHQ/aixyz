@@ -311,22 +311,22 @@ describe("validateRegistrationFile", () => {
 
 describe("getServices", () => {
   test("returns services when present", () => {
-    const file = { ...minimalValid, services: [{ name: "a", endpoint: "b" }] };
-    expect(getServices(file)).toEqual([{ name: "a", endpoint: "b" }]);
+    const file = { ...minimalValid, services: [{ name: "mcp", endpoint: "https://example.com/mcp" }] };
+    expect(getServices(file)).toEqual([{ name: "mcp", endpoint: "https://example.com/mcp" }]);
   });
 
   test("falls back to endpoints", () => {
-    const file = { ...minimalValid, endpoints: [{ name: "legacy", endpoint: "c" }] };
-    expect(getServices(file)).toEqual([{ name: "legacy", endpoint: "c" }]);
+    const file = { ...minimalValid, endpoints: [{ name: "legacy", endpoint: "https://example.com/legacy" }] };
+    expect(getServices(file)).toEqual([{ name: "legacy", endpoint: "https://example.com/legacy" }]);
   });
 
   test("prefers services over endpoints", () => {
     const file = {
       ...minimalValid,
-      services: [{ name: "new", endpoint: "a" }],
-      endpoints: [{ name: "old", endpoint: "b" }],
+      services: [{ name: "new", endpoint: "https://example.com/new" }],
+      endpoints: [{ name: "old", endpoint: "https://example.com/old" }],
     };
-    expect(getServices(file)).toEqual([{ name: "new", endpoint: "a" }]);
+    expect(getServices(file)).toEqual([{ name: "new", endpoint: "https://example.com/new" }]);
   });
 
   test("returns empty array when neither present", () => {

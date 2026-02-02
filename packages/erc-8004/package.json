@@ -32,7 +32,8 @@
     "contracts"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "bun test"
   },
   "dependencies": {
     "zod": "^4.3.6"

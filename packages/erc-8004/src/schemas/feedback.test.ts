@@ -108,13 +108,40 @@ describe("RawFeedbackFileSchema required fields", () => {
 describe("value/score backward compatibility", () => {
   test("accepts value + valueDecimals", () => {
     const result = RawFeedbackFileSchema.parse(minimalWithValue);
-    expect(result.value).toBe(100);
+    expect(result.value).toBe(100n);
     expect(result.valueDecimals).toBe(0);
+  });
+
+  test("accepts value as string", () => {
+    const result = RawFeedbackFileSchema.parse({ ...minimalWithValue, value: "100" });
+    expect(result.value).toBe(100n);
+  });
+
+  test("accepts value as bigint", () => {
+    const result = RawFeedbackFileSchema.parse({ ...minimalWithValue, value: 100n });
+    expect(result.value).toBe(100n);
+  });
+
+  test("accepts large int128 values without precision loss", () => {
+    const largeValue = "170141183460469231731687303715884105727"; // max int128
+    const result = RawFeedbackFileSchema.parse({ ...minimalWithValue, value: largeValue });
+    expect(result.value).toBe(BigInt(largeValue));
+  });
+
+  test("accepts negative value (int128 is signed)", () => {
+    const result = RawFeedbackFileSchema.parse({ ...minimalWithValue, value: -50 });
+    expect(result.value).toBe(-50n);
+  });
+
+  test("accepts large negative int128 value", () => {
+    const minValue = "-170141183460469231731687303715884105728"; // min int128
+    const result = RawFeedbackFileSchema.parse({ ...minimalWithValue, value: minValue });
+    expect(result.value).toBe(BigInt(minValue));
   });
 
   test("accepts score and maps to value with valueDecimals=0", () => {
     const result = RawFeedbackFileSchema.parse(minimalWithScore);
-    expect(result.value).toBe(85);
+    expect(result.value).toBe(85n);
     expect(result.valueDecimals).toBe(0);
   });
 
@@ -123,7 +150,7 @@ describe("value/score backward compatibility", () => {
       ...minimalWithValue,
       score: 50,
     });
-    expect(result.value).toBe(100);
+    expect(result.value).toBe(100n);
     expect(result.valueDecimals).toBe(0);
   });
 
@@ -251,6 +278,30 @@ describe("proofOfPayment field", () => {
       proofOfPayment: { chainId: "11155111" },
     });
     expect(result.proofOfPayment?.chainId).toBe(11155111);
+  });
+
+  test("rejects empty string chainId", () => {
+    const result = RawFeedbackFileSchema.safeParse({
+      ...minimalWithValue,
+      proofOfPayment: { chainId: "" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("transforms float chainId to null", () => {
+    const result = RawFeedbackFileSchema.parse({
+      ...minimalWithValue,
+      proofOfPayment: { chainId: 1.5 },
+    });
+    expect(result.proofOfPayment?.chainId).toBeNull();
+  });
+
+  test("transforms negative chainId to null", () => {
+    const result = RawFeedbackFileSchema.parse({
+      ...minimalWithValue,
+      proofOfPayment: { chainId: -1 },
+    });
+    expect(result.proofOfPayment?.chainId).toBeNull();
   });
 
   test("transforms non-numeric chainId string to null", () => {
