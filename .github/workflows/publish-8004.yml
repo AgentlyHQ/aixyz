@@ -45,7 +45,7 @@ jobs:
 
       - name: Set package version
         working-directory: packages/erc-8004
-        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+        run: bun pm version ${{ steps.version.outputs.version }} --no-git-tag-version
 
       - name: Publish
         working-directory: packages/erc-8004
