@@ -17,39 +17,39 @@ import {
 // =============================================================================
 
 const minimalValid = {
-  name: "Test Agent",
-  description: "A test agent",
-  image: "https://example.com/image.png",
+  name: "Agently Price Feed",
+  description: "Real-time cryptocurrency price feed agent with x402 payment support",
+  image: "ipfs://QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
 };
 
 const fullValid = {
   type: ERC8004_REGISTRATION_TYPE,
-  $schema: "https://example.com/schema.json",
-  name: "Full Agent",
-  description: "A fully specified agent",
-  image: "ipfs://QmTest",
+  $schema: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  name: "Agently Translation Service",
+  description: "Multi-language translation agent supporting MCP and A2A protocols",
+  image: "ipfs://QmT5NvUtoM5nWFfrQdVrFtvGfKFmG7AHE8P34isapyhCxX",
   services: [
     {
       name: "mcp-server",
-      endpoint: "https://example.com/mcp",
+      endpoint: "https://mcp.acme-agents.com/v1/translate",
       version: "1.0.0",
-      tools: ["search", "fetch"],
-      prompts: ["greeting"],
-      resources: ["docs"],
+      tools: ["translate", "detect-language"],
+      prompts: ["system-translate"],
+      resources: ["supported-languages"],
     },
     {
-      name: "oasf-endpoint",
-      endpoint: "https://example.com/oasf",
-      skills: ["translation"],
-      domains: ["language"],
+      name: "oasf-spec",
+      endpoint: "https://oasf.acme-agents.com/v1/translate",
+      skills: ["translation", "language-detection"],
+      domains: ["language", "nlp"],
     },
   ],
   active: true,
   x402support: true,
-  registrations: [{ agentId: "42", agentRegistry: "eip155:1:0xabc" }],
+  registrations: [{ agentId: "42", agentRegistry: "eip155:1:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" }],
   supportedTrust: ["reputation", "tee-attestation"],
-  ens: "agent.eth",
-  did: "did:example:123",
+  ens: "translate.agently.eth",
+  did: "did:pkh:eip155:11155111:0x1234567890abcdef1234567890abcdef12345678",
 };
 
 // =============================================================================
@@ -72,33 +72,33 @@ describe("TrustMechanismSchema", () => {
 
 describe("ServiceSchema", () => {
   test("accepts minimal service", () => {
-    const result = ServiceSchema.parse({ name: "mcp", endpoint: "https://example.com" });
-    expect(result.name).toBe("mcp");
-    expect(result.endpoint).toBe("https://example.com");
+    const result = ServiceSchema.parse({ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" });
+    expect(result.name).toBe("mcp-server");
+    expect(result.endpoint).toBe("https://mcp.acme-agents.com/v1/translate");
     expect(result.version).toBeUndefined();
   });
 
   test("accepts service with all optional fields", () => {
     const result = ServiceSchema.parse({
-      name: "mcp",
-      endpoint: "https://example.com",
-      version: "2.0",
-      skills: ["a"],
-      domains: ["b"],
-      tools: ["c"],
-      prompts: ["d"],
-      resources: ["e"],
+      name: "mcp-server",
+      endpoint: "https://mcp.acme-agents.com/v1/translate",
+      version: "2.0.0",
+      skills: ["translation", "summarization"],
+      domains: ["language", "nlp"],
+      tools: ["translate", "detect-language"],
+      prompts: ["system-translate"],
+      resources: ["supported-languages"],
     });
-    expect(result.tools).toEqual(["c"]);
-    expect(result.skills).toEqual(["a"]);
+    expect(result.tools).toEqual(["translate", "detect-language"]);
+    expect(result.skills).toEqual(["translation", "summarization"]);
   });
 
   test("rejects missing name", () => {
-    expect(() => ServiceSchema.parse({ endpoint: "https://example.com" })).toThrow();
+    expect(() => ServiceSchema.parse({ endpoint: "https://mcp.acme-agents.com/v1/translate" })).toThrow();
   });
 
   test("rejects missing endpoint", () => {
-    expect(() => ServiceSchema.parse({ name: "mcp" })).toThrow();
+    expect(() => ServiceSchema.parse({ name: "mcp-server" })).toThrow();
   });
 });
 
@@ -108,29 +108,55 @@ describe("ServiceSchema", () => {
 
 describe("RegistrationEntrySchema", () => {
   test("accepts string agentId and transforms to number", () => {
-    const result = RegistrationEntrySchema.parse({ agentId: "42", agentRegistry: "eip155:1:0xabc" });
+    const result = RegistrationEntrySchema.parse({
+      agentId: "42",
+      agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    });
     expect(result.agentId).toBe(42);
   });
 
   test("accepts numeric agentId", () => {
-    const result = RegistrationEntrySchema.parse({ agentId: 42, agentRegistry: "eip155:1:0xabc" });
+    const result = RegistrationEntrySchema.parse({
+      agentId: 42,
+      agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    });
     expect(result.agentId).toBe(42);
   });
 
   test("rejects empty string agentId", () => {
-    expect(() => RegistrationEntrySchema.parse({ agentId: "", agentRegistry: "eip155:1:0xabc" })).toThrow();
+    expect(() =>
+      RegistrationEntrySchema.parse({
+        agentId: "",
+        agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
+      }),
+    ).toThrow();
   });
 
   test("rejects non-numeric string agentId", () => {
-    expect(() => RegistrationEntrySchema.parse({ agentId: "abc", agentRegistry: "eip155:1:0xabc" })).toThrow();
+    expect(() =>
+      RegistrationEntrySchema.parse({
+        agentId: "abc",
+        agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
+      }),
+    ).toThrow();
   });
 
   test("rejects negative agentId", () => {
-    expect(() => RegistrationEntrySchema.parse({ agentId: -1, agentRegistry: "eip155:1:0xabc" })).toThrow();
+    expect(() =>
+      RegistrationEntrySchema.parse({
+        agentId: -1,
+        agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
+      }),
+    ).toThrow();
   });
 
   test("rejects float agentId", () => {
-    expect(() => RegistrationEntrySchema.parse({ agentId: 1.5, agentRegistry: "eip155:1:0xabc" })).toThrow();
+    expect(() =>
+      RegistrationEntrySchema.parse({
+        agentId: 1.5,
+        agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
+      }),
+    ).toThrow();
   });
 
   test("rejects missing agentRegistry", () => {
@@ -145,7 +171,7 @@ describe("RegistrationEntrySchema", () => {
 describe("RawAgentRegistrationFileSchema", () => {
   test("accepts minimal valid file", () => {
     const result = RawAgentRegistrationFileSchema.parse(minimalValid);
-    expect(result.name).toBe("Test Agent");
+    expect(result.name).toBe("Agently Price Feed");
   });
 
   test("accepts fully specified file", () => {
@@ -153,8 +179,8 @@ describe("RawAgentRegistrationFileSchema", () => {
     expect(result.services).toHaveLength(2);
     expect(result.registrations).toHaveLength(1);
     expect(result.active).toBe(true);
-    expect(result.ens).toBe("agent.eth");
-    expect(result.did).toBe("did:example:123");
+    expect(result.ens).toBe("translate.agently.eth");
+    expect(result.did).toBe("did:pkh:eip155:11155111:0x1234567890abcdef1234567890abcdef12345678");
   });
 
   test("type field is optional", () => {
@@ -165,7 +191,7 @@ describe("RawAgentRegistrationFileSchema", () => {
   test("accepts endpoints as legacy field", () => {
     const result = RawAgentRegistrationFileSchema.parse({
       ...minimalValid,
-      endpoints: [{ name: "legacy", endpoint: "https://example.com" }],
+      endpoints: [{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }],
     });
     expect(result.endpoints).toHaveLength(1);
   });
@@ -204,7 +230,7 @@ describe("StrictAgentRegistrationFileSchema", () => {
   const strictValid = {
     ...minimalValid,
     type: ERC8004_REGISTRATION_TYPE,
-    services: [{ name: "mcp", endpoint: "https://example.com" }],
+    services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
   };
 
   test("accepts valid strict file", () => {
@@ -217,7 +243,7 @@ describe("StrictAgentRegistrationFileSchema", () => {
     expect(() =>
       StrictAgentRegistrationFileSchema.parse({
         ...minimalValid,
-        services: [{ name: "mcp", endpoint: "https://example.com" }],
+        services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
       }),
     ).toThrow();
   });
@@ -227,7 +253,7 @@ describe("StrictAgentRegistrationFileSchema", () => {
       StrictAgentRegistrationFileSchema.parse({
         ...minimalValid,
         type: "wrong-type",
-        services: [{ name: "mcp", endpoint: "https://example.com" }],
+        services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
       }),
     ).toThrow();
   });
@@ -282,7 +308,7 @@ describe("validateRegistrationFile", () => {
     const result = validateRegistrationFile({
       ...minimalValid,
       type: ERC8004_REGISTRATION_TYPE,
-      services: [{ name: "mcp", endpoint: "https://example.com" }],
+      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
     });
     expect(result.success).toBe(true);
   });
@@ -290,7 +316,7 @@ describe("validateRegistrationFile", () => {
   test("returns failure when type is missing", () => {
     const result = validateRegistrationFile({
       ...minimalValid,
-      services: [{ name: "mcp", endpoint: "https://example.com" }],
+      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
     });
     expect(result.success).toBe(false);
   });
@@ -311,22 +337,28 @@ describe("validateRegistrationFile", () => {
 
 describe("getServices", () => {
   test("returns services when present", () => {
-    const file = { ...minimalValid, services: [{ name: "mcp", endpoint: "https://example.com/mcp" }] };
-    expect(getServices(file)).toEqual([{ name: "mcp", endpoint: "https://example.com/mcp" }]);
+    const file = {
+      ...minimalValid,
+      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }],
+    };
+    expect(getServices(file)).toEqual([{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }]);
   });
 
   test("falls back to endpoints", () => {
-    const file = { ...minimalValid, endpoints: [{ name: "legacy", endpoint: "https://example.com/legacy" }] };
-    expect(getServices(file)).toEqual([{ name: "legacy", endpoint: "https://example.com/legacy" }]);
+    const file = {
+      ...minimalValid,
+      endpoints: [{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }],
+    };
+    expect(getServices(file)).toEqual([{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }]);
   });
 
   test("prefers services over endpoints", () => {
     const file = {
       ...minimalValid,
-      services: [{ name: "new", endpoint: "https://example.com/new" }],
-      endpoints: [{ name: "old", endpoint: "https://example.com/old" }],
+      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }],
+      endpoints: [{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }],
     };
-    expect(getServices(file)).toEqual([{ name: "new", endpoint: "https://example.com/new" }]);
+    expect(getServices(file)).toEqual([{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }]);
   });
 
   test("returns empty array when neither present", () => {

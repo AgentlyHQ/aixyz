@@ -7,8 +7,8 @@ import { RawFeedbackFileSchema, parseRawFeedbackFile } from "./feedback";
 
 const minimalWithValue = {
   agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
-  agentId: 1,
-  clientAddress: "eip155:11155111:0xabc",
+  agentId: 42,
+  clientAddress: "eip155:11155111:0x1234567890abcdef1234567890abcdef12345678",
   createdAt: "2026-01-15T12:00:00Z",
   value: 100,
   valueDecimals: 0,
@@ -16,8 +16,8 @@ const minimalWithValue = {
 
 const minimalWithScore = {
   agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
-  agentId: 1,
-  clientAddress: "eip155:11155111:0xabc",
+  agentId: 42,
+  clientAddress: "eip155:11155111:0x1234567890abcdef1234567890abcdef12345678",
   createdAt: "2026-01-15T12:00:00Z",
   score: 85,
 };
@@ -25,16 +25,16 @@ const minimalWithScore = {
 const fullValid = {
   ...minimalWithValue,
   tag1: "quality",
-  tag2: "speed",
-  endpoint: "https://example.com/mcp",
-  mcp: { tool: "search", prompt: "find docs", resource: "docs" },
-  a2a: { skills: ["translation"], contextId: "ctx-1", taskId: "task-1" },
-  oasf: { skills: ["summarize"], domains: ["language"] },
+  tag2: "response-time",
+  endpoint: "https://mcp.acme-agents.com/v1/translate",
+  mcp: { tool: "translate", prompt: "system-translate", resource: "supported-languages" },
+  a2a: { skills: ["translation"], contextId: "ctx-a1b2c3d4", taskId: "task-e5f6g7h8" },
+  oasf: { skills: ["translation", "summarization"], domains: ["language", "nlp"] },
   proofOfPayment: {
-    fromAddress: "0xabc",
-    toAddress: "0xdef",
+    fromAddress: "0x1234567890abcdef1234567890abcdef12345678",
+    toAddress: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
     chainId: 11155111,
-    txHash: "0x123",
+    txHash: "0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
   },
 };
 
@@ -176,8 +176,8 @@ describe("optional fields", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.tag1).toBe("quality");
-      expect(result.data.tag2).toBe("speed");
-      expect(result.data.endpoint).toContain("example.com");
+      expect(result.data.tag2).toBe("response-time");
+      expect(result.data.endpoint).toContain("acme-agents.com");
     }
   });
 
@@ -201,14 +201,14 @@ describe("mcp field", () => {
   test("accepts mcp with all fields", () => {
     const result = RawFeedbackFileSchema.parse({
       ...minimalWithValue,
-      mcp: { tool: "search", prompt: "find", resource: "docs" },
+      mcp: { tool: "translate", prompt: "system-translate", resource: "supported-languages" },
     });
-    expect(result.mcp?.tool).toBe("search");
+    expect(result.mcp?.tool).toBe("translate");
   });
 
   test("accepts mcp with partial fields", () => {
-    const result = RawFeedbackFileSchema.parse({ ...minimalWithValue, mcp: { tool: "fetch" } });
-    expect(result.mcp?.tool).toBe("fetch");
+    const result = RawFeedbackFileSchema.parse({ ...minimalWithValue, mcp: { tool: "detect-language" } });
+    expect(result.mcp?.tool).toBe("detect-language");
     expect(result.mcp?.prompt).toBeUndefined();
   });
 
@@ -226,10 +226,10 @@ describe("a2a field", () => {
   test("accepts a2a with all fields", () => {
     const result = RawFeedbackFileSchema.parse({
       ...minimalWithValue,
-      a2a: { skills: ["translate"], contextId: "ctx-1", taskId: "task-1" },
+      a2a: { skills: ["translation"], contextId: "ctx-a1b2c3d4", taskId: "task-e5f6g7h8" },
     });
-    expect(result.a2a?.skills).toEqual(["translate"]);
-    expect(result.a2a?.contextId).toBe("ctx-1");
+    expect(result.a2a?.skills).toEqual(["translation"]);
+    expect(result.a2a?.contextId).toBe("ctx-a1b2c3d4");
   });
 
   test("accepts null a2a", () => {
@@ -266,10 +266,15 @@ describe("proofOfPayment field", () => {
   test("accepts full proof", () => {
     const result = RawFeedbackFileSchema.parse({
       ...minimalWithValue,
-      proofOfPayment: { fromAddress: "0xabc", toAddress: "0xdef", chainId: 1, txHash: "0x123" },
+      proofOfPayment: {
+        fromAddress: "0x1234567890abcdef1234567890abcdef12345678",
+        toAddress: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+        chainId: 11155111,
+        txHash: "0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+      },
     });
-    expect(result.proofOfPayment?.txHash).toBe("0x123");
-    expect(result.proofOfPayment?.chainId).toBe(1);
+    expect(result.proofOfPayment?.txHash).toBe("0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2");
+    expect(result.proofOfPayment?.chainId).toBe(11155111);
   });
 
   test("accepts chainId as string and transforms to number", () => {
@@ -320,9 +325,9 @@ describe("proofOfPayment field", () => {
   test("accepts partial proof with nullable fields", () => {
     const result = RawFeedbackFileSchema.parse({
       ...minimalWithValue,
-      proofOfPayment: { txHash: "0xabc" },
+      proofOfPayment: { txHash: "0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" },
     });
-    expect(result.proofOfPayment?.txHash).toBe("0xabc");
+    expect(result.proofOfPayment?.txHash).toBe("0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2");
     expect(result.proofOfPayment?.fromAddress).toBeUndefined();
   });
 });
