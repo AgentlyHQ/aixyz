@@ -8,7 +8,7 @@
 
 ## Repo layout
 
-- `packages/*`: workspace packages (`packages/8004`, `packages/create-8004`).
+- `packages/*`: workspace packages (`packages/erc-8004`, `packages/create-8004`).
 - `examples/*`: example apps (`examples/agent-chainlink`).
 - Root config: `package.json`, `turbo.json`.
 
