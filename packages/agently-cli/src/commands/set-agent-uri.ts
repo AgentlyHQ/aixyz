@@ -1,5 +1,5 @@
 import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log } from "viem";
-import { IdentityRegistryAbi } from "@agentlyhq/8004";
+import { IdentityRegistryAbi } from "@agentlyhq/erc-8004";
 import { selectWalletMethod, type WalletOptions } from "../wallet/index.js";
 import { signTransaction } from "../wallet/sign.js";
 import { CliError, resolveUri } from "../utils.js";

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the `@agentlyhq/8004` package will be documented in this file.
+All notable changes to the `@agentlyhq/erc-8004` package will be documented in this file.
 
 ## 26 Jan 2026
 

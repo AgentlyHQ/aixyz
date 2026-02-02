@@ -1,10 +1,20 @@
 {
-  "name": "@agentlyhq/8004",
-  "version": "0.0.0",
+  "name": "@agentlyhq/erc-8004",
+  "version": "0.0.1",
+  "description": "Shared ERC-8004 contract ABIs, addresses, and Solidity sources for the Agently ecosystem.",
+  "homepage": "https://github.com/AgentlyHQ/agently#readme",
+  "bugs": {
+    "url": "https://github.com/AgentlyHQ/agently/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AgentlyHQ/agently.git"
+    "url": "git+https://github.com/AgentlyHQ/agently.git"
   },
+  "license": "MIT",
+  "author": {
+    "name": "kevzzsk"
+  },
+  "type": "commonjs",
   "exports": {
     ".": {
       "require": "./dist/src/index.js",

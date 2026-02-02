@@ -1,4 +1,4 @@
-name: Publish @agentlyhq/8004
+name: Publish @agentlyhq/erc-8004
 
 on:
   push:
@@ -37,10 +37,10 @@ jobs:
           fi
 
       - name: Build
-        run: bun run build --filter @agentlyhq/8004
+        run: bun run build --filter @agentlyhq/erc-8004
 
       - name: Lint
-        run: bun run lint --filter @agentlyhq/8004
+        run: bun run lint --filter @agentlyhq/erc-8004
 
       - name: Set package version
         working-directory: packages/8004

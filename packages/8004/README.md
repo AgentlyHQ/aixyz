@@ -1,4 +1,4 @@
-# @agentlyhq/8004
+# @agentlyhq/erc-8004
 
 Shared ERC-8004 contract ABIs, addresses, and Solidity sources for the Agently ecosystem.
 
@@ -9,11 +9,11 @@ This package provides TypeScript exports for ERC-8004 registry contracts deploye
 ## Installation
 
 ```bash
-bun add @agentlyhq/8004
+bun add @agentlyhq/erc-8004
 # or
-npm install @agentlyhq/8004
+npm install @agentlyhq/erc-8004
 # or
-pnpm add @agentlyhq/8004
+pnpm add @agentlyhq/erc-8004
 ```
 
 For monorepo workspace usage:
@@ -21,7 +21,7 @@ For monorepo workspace usage:
 ```json
 {
   "dependencies": {
-    "@agentlyhq/8004": "workspace:*"
+    "@agentlyhq/erc-8004": "workspace:*"
   }
 }
 ```
@@ -31,7 +31,7 @@ For monorepo workspace usage:
 ### TypeScript / JavaScript
 
 ```typescript
-import { IdentityRegistryAbi, ADDRESSES, CHAIN_ID, getIdentityRegistryAddress } from "@agentlyhq/8004";
+import { IdentityRegistryAbi, ADDRESSES, CHAIN_ID, getIdentityRegistryAddress } from "@agentlyhq/erc-8004";
 
 // Use with viem
 import { createPublicClient, http } from "viem";
@@ -62,16 +62,16 @@ Add the remapping to your `foundry.toml`:
 
 ```toml
 remappings = [
-  "@agentlyhq/8004/=node_modules/@agentlyhq/8004/"
+  "@agentlyhq/erc-8004/=node_modules/@agentlyhq/erc-8004/"
 ]
 ```
 
 Then import in your contracts:
 
 ```solidity
-import { IdentityRegistryUpgradeable } from "@agentlyhq/8004/contracts/IdentityRegistryUpgradeable.sol";
-import { ReputationRegistryUpgradeable } from "@agentlyhq/8004/contracts/ReputationRegistryUpgradeable.sol";
-import { ValidationRegistryUpgradeable } from "@agentlyhq/8004/contracts/ValidationRegistryUpgradeable.sol";
+import { IdentityRegistryUpgradeable } from "@agentlyhq/erc-8004/contracts/IdentityRegistryUpgradeable.sol";
+import { ReputationRegistryUpgradeable } from "@agentlyhq/erc-8004/contracts/ReputationRegistryUpgradeable.sol";
+import { ValidationRegistryUpgradeable } from "@agentlyhq/erc-8004/contracts/ValidationRegistryUpgradeable.sol";
 ```
 
 ## Exports
@@ -89,7 +89,7 @@ Versioned ABIs are available for version pinning. See [CHANGELOG.md](./CHANGELOG
 ### Contract Addresses
 
 ```typescript
-import { ADDRESSES, CHAIN_ID } from "@agentlyhq/8004";
+import { ADDRESSES, CHAIN_ID } from "@agentlyhq/erc-8004";
 
 const sepolia = ADDRESSES[CHAIN_ID.SEPOLIA];
 // sepolia.identityRegistry, sepolia.reputationRegistry, sepolia.validationRegistry
