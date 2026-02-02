@@ -16,8 +16,9 @@ import { z } from "zod";
  * Used for chainId which may come as string from JSON
  */
 const ChainIdSchema = z
-  .union([z.string().min(1), z.number()])
+  .union([z.string(), z.number()])
   .transform((val) => {
+    if (typeof val === "string" && val.trim() === "") return null;
     const num = Number(val);
     return Number.isNaN(num) || !Number.isInteger(num) || num < 0 ? null : num;
   })
@@ -96,7 +97,7 @@ export const RawFeedbackFileSchema = z
     // MUST fields (required per spec)
     agentRegistry: z.string(),
     agentId: z
-      .union([z.string().min(1), z.number()])
+      .union([z.string().trim().regex(/^\d+$/), z.number()])
       .transform((val) => Number(val))
       .pipe(z.number().int().nonnegative()),
     clientAddress: z.string(),

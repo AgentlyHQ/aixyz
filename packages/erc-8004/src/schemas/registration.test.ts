@@ -123,6 +123,15 @@ describe("RegistrationEntrySchema", () => {
     expect(result.agentId).toBe(42);
   });
 
+  test("rejects whitespace-only agentId", () => {
+    expect(() =>
+      RegistrationEntrySchema.parse({
+        agentId: " ",
+        agentRegistry: "eip155:11155111:0x8004A818BFB912233c491871b3d84c89A494BD9e",
+      }),
+    ).toThrow();
+  });
+
   test("rejects empty string agentId", () => {
     expect(() =>
       RegistrationEntrySchema.parse({

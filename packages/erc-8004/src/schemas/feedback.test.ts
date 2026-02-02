@@ -63,6 +63,10 @@ describe("RawFeedbackFileSchema required fields", () => {
     expect(result.agentId).toBe(42);
   });
 
+  test("rejects whitespace-only agentId", () => {
+    expect(RawFeedbackFileSchema.safeParse({ ...minimalWithValue, agentId: " " }).success).toBe(false);
+  });
+
   test("rejects empty string agentId", () => {
     expect(RawFeedbackFileSchema.safeParse({ ...minimalWithValue, agentId: "" }).success).toBe(false);
   });
@@ -285,12 +289,20 @@ describe("proofOfPayment field", () => {
     expect(result.proofOfPayment?.chainId).toBe(11155111);
   });
 
-  test("rejects empty string chainId", () => {
-    const result = RawFeedbackFileSchema.safeParse({
+  test("transforms whitespace-only chainId to null", () => {
+    const result = RawFeedbackFileSchema.parse({
+      ...minimalWithValue,
+      proofOfPayment: { chainId: " " },
+    });
+    expect(result.proofOfPayment?.chainId).toBeNull();
+  });
+
+  test("transforms empty string chainId to null", () => {
+    const result = RawFeedbackFileSchema.parse({
       ...minimalWithValue,
       proofOfPayment: { chainId: "" },
     });
-    expect(result.success).toBe(false);
+    expect(result.proofOfPayment?.chainId).toBeNull();
   });
 
   test("transforms float chainId to null", () => {

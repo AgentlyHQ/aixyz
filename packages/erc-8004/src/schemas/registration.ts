@@ -51,7 +51,7 @@ export const ServiceSchema = z.object({
  */
 export const RegistrationEntrySchema = z.object({
   agentId: z
-    .union([z.string().min(1), z.number()])
+    .union([z.string().trim().regex(/^\d+$/), z.number()])
     .transform((val) => Number(val))
     .pipe(z.number().int().nonnegative()),
   agentRegistry: z.string(),
