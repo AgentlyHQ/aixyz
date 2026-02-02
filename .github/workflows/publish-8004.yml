@@ -6,6 +6,7 @@ on:
       - "packages/erc-8004/v*"
 
 permissions:
+  id-token: write # Required for OIDC
   contents: read
 
 jobs:
@@ -48,6 +49,4 @@ jobs:
 
       - name: Publish
         working-directory: packages/erc-8004
-        run: bun publish --access public --tag ${{ steps.version.outputs.dist_tag }}
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bunx npm publish --access public --tag ${{ steps.version.outputs.dist_tag }}
