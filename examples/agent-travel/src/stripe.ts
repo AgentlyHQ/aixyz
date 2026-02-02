@@ -3,6 +3,7 @@ import Stripe from "stripe";
 let stripe: Stripe | null = null;
 
 export function initializeStripe(): Stripe | null {
+  console.log("[Stripe] initializeStripe() called");
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
     console.warn("[Stripe] STRIPE_SECRET_KEY not found in environment");

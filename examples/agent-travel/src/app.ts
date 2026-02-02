@@ -281,7 +281,12 @@ app.use(
 
 // Create PaymentIntent for client-side payment flow
 app.post("/stripe/create-payment-intent", express.json(), async (req, res) => {
+  console.log("[Stripe] create-payment-intent endpoint hit");
   try {
+    // Ensure Stripe is initialized (important for serverless environments)
+    await initializeApp();
+    console.log("[Stripe] initializeApp() completed");
+
     const result = await createPaymentIntent({
       priceInCents: Number(process.env.STRIPE_PRICE_CENTS) || 100,
     });
@@ -337,8 +342,10 @@ app.post("/mcp", express.json(), async (req, res) => {
 // Initialize function for serverless environments (e.g., Vercel)
 let initializationPromise: Promise<void> | null = null;
 export async function initializeApp() {
+  console.log("[App] initializeApp() called, promise exists:", !!initializationPromise);
   if (!initializationPromise) {
     initializationPromise = (async () => {
+      console.log("[App] Running initialization...");
       // Initialize Stripe first (independent of x402)
       initializeStripe();
 
