@@ -287,6 +287,7 @@ app.post("/stripe/create-payment-intent", express.json(), async (req, res) => {
     });
     res.json(result);
   } catch (error) {
+    console.error("[Stripe] Failed to create payment intent:", error);
     res.status(500).json({ error: "Failed to create payment intent" });
   }
 });
