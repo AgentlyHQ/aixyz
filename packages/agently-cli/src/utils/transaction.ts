@@ -1,4 +1,4 @@
-import { createPublicClient, http, type Chain } from "viem";
+import { createPublicClient, http, type Chain, type Log } from "viem";
 import { startSpinner } from "./spinner.js";
 import { getExplorerUrl } from "./chain.js";
 import type { SignTransactionResult } from "../wallet/sign.js";
@@ -26,7 +26,7 @@ export interface BroadcastAndConfirmResult {
     blockNumber: bigint;
     gasUsed: bigint;
     effectiveGasPrice: bigint;
-    logs: readonly unknown[];
+    logs: Log[];
   };
   timestamp: bigint;
 }

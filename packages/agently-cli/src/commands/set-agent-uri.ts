@@ -135,13 +135,13 @@ interface SetAgentUriResult {
 }
 
 function printResult(
-  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: Log[] },
+  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: readonly unknown[] },
   timestamp: bigint,
   chain: Chain,
   chainId: number,
   hash: `0x${string}`,
 ): SetAgentUriResult {
-  const events = parseEventLogs({ abi: IdentityRegistryAbi, logs: receipt.logs });
+  const events = parseEventLogs({ abi: IdentityRegistryAbi, logs: receipt.logs as Log[] });
   const uriUpdated = events.find((e) => e.eventName === "URIUpdated");
 
   const lines: string[] = [];
