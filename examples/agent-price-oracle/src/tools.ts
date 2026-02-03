@@ -8,7 +8,7 @@ function requireEnv(name: string): string {
   if (!v) {
     throw new Error(
       `Missing environment variable: ${name}. ` +
-        `Make sure it's set in your environment or in a .env file loaded by dotenv.`,
+        `Make sure it's set in your environment or in a .env file loaded by @next/env.`,
     );
   }
   return v;

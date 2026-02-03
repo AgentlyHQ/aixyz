@@ -119,7 +119,7 @@ const commonPaymentConfig = {
 };
 
 const x402Routes = {
-  "POST /": {
+  "POST /agent": {
     accepts: commonPaymentConfig,
     mimeType: "application/json",
     description: "Payment for Job Hunter Agent API access",
@@ -245,6 +245,7 @@ app.use(paymentMiddleware(x402Routes, resourceServer));
 
 // Add JSON-RPC handler at root (protected by x402 payment)
 app.use(
+  "/agent",
   jsonRpcHandler({
     requestHandler,
     userBuilder: UserBuilder.noAuthentication,
