@@ -1,1 +1,15 @@
-node_modules/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+/.pnp
+.pnp.js
+.yarn*
+pnpm-lock.yaml
+
+# agently
+.agently
+
+# env files (can opt-in for committing if needed)
+#.env
+.env.local

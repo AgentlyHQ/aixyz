@@ -18,6 +18,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { z } from "zod";
 import { agent } from "./agent";
 import { executeLookup } from "./tools";
+import { getAddress } from "viem";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {
@@ -110,17 +111,14 @@ registerExactEvmScheme(resourceServer, {
 // Register bazaar extension for Coinbase x402 Bazaar compatibility
 resourceServer.registerExtension(bazaarResourceServerExtension);
 
-// Common payment configuration for all protected endpoints
-const commonPaymentConfig = {
-  scheme: "exact" as const,
-  price: process.env.X402_AMOUNT || "$0.001",
-  network: x402Network,
-  payTo: process.env.X402_PAYMENT_ADDRESS || "0x0000000000000000000000000000000000000000",
-};
-
 const x402Routes = {
-  "POST /": {
-    accepts: commonPaymentConfig,
+  "POST /agent": {
+    accepts: {
+      scheme: "exact",
+      price: "$0.001",
+      network: x402Network,
+      payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
+    },
     mimeType: "application/json",
     description: "Payment for Chainlink Price Oracle Agent API access",
     // Bazaar discovery extension for endpoint cataloging
@@ -151,7 +149,12 @@ const x402Routes = {
     }),
   },
   "POST /mcp": {
-    accepts: commonPaymentConfig,
+    accepts: {
+      scheme: "exact",
+      price: "$0.001",
+      network: x402Network,
+      payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
+    },
     mimeType: "application/json",
     description: "Payment for MCP protocol access to Chainlink Price Oracle Agent",
     // Bazaar discovery extension for endpoint cataloging
@@ -249,6 +252,7 @@ app.use(paymentMiddleware(x402Routes, resourceServer));
 
 // Add JSON-RPC handler at root (protected by x402 payment)
 app.use(
+  "/agent",
   jsonRpcHandler({
     requestHandler,
     userBuilder: UserBuilder.noAuthentication,
@@ -277,6 +281,7 @@ app.post("/mcp", express.json(), async (req, res) => {
 
 // Initialize function for serverless environments (e.g., Vercel)
 let initializationPromise: Promise<void> | null = null;
+
 export async function initializeApp() {
   if (!initializationPromise) {
     initializationPromise = resourceServer.initialize();

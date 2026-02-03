@@ -1,4 +1,5 @@
-import "dotenv/config";
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
 import { startServer } from "./app";
 
 // Start the server when running standalone

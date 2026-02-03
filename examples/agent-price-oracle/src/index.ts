@@ -1,12 +1,7 @@
-import "dotenv/config";
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
 import express, { type Express } from "express";
 import { app as coreApp, initializeApp } from "./app";
-
-// Re-export for library usage
-export { agent as priceOracleAgent } from "./agent";
-export { getNewListedTokens, getTokenPrice, getTopGainersLosers } from "./tools";
-export { executeGetNewListedTokens, executeGetTokenPrice, executeGetTopGainersLosers } from "./tools";
-export { app, startServer, initializeApp } from "./app";
 
 // Create wrapper app for Vercel serverless with initialization handling
 const serverlessApp: Express = express();
