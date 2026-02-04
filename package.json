@@ -26,9 +26,6 @@
     ],
     "printWidth": 120
   },
-  "dependencies": {
-    "@noble/hashes": "1.8.0"
-  },
   "devDependencies": {
     "@types/bun": "^1.2.19",
     "husky": "^9.1.7",

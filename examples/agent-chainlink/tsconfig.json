@@ -6,6 +6,5 @@
     "strict": true,
     "skipLibCheck": true,
     "types": ["bun"]
-  },
-  "exclude": ["node_modules"]
+  }
 }
