@@ -40,6 +40,11 @@ const agentCard: AgentCard = {
       name: "Remote Job Search",
       description: "Search for the latest remote job opportunities in specific countries",
       tags: ["jobs", "remote", "career", "employment", "hiring"],
+      examples: [
+        "Find remote jobs in Canada",
+        "Search for jobs in the USA",
+        "What remote positions are available in the UK?",
+      ],
     },
   ],
 };
