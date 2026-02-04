@@ -3,5 +3,8 @@
   "version": "0.0.0",
   "private": false,
   "scripts": {},
-  "dependencies": {}
+  "dependencies": {
+    "@coinbase/x402": "^2.1.0",
+    "@x402/core": "^2.2.0"
+  }
 }
