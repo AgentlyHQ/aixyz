@@ -3,5 +3,8 @@
   "version": "0.0.0",
   "private": false,
   "scripts": {},
-  "dependencies": {}
+  "dependencies": {
+    "@x402/core": "^2.2.0",
+    "jose": "^6.1.3"
+  }
 }

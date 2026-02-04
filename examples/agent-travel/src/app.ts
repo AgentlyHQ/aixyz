@@ -11,7 +11,6 @@ import {
 import { jsonRpcHandler, agentCardHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import { x402ResourceServer } from "@x402/express";
 import { registerExactEvmScheme } from "@x402/evm/exact/server";
-import { HTTPFacilitatorClient } from "@x402/core/server";
 import { declareDiscoveryExtension, bazaarResourceServerExtension } from "@x402/extensions/bazaar";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -21,6 +20,7 @@ import { executeSearchFlights, POPULAR_DESTINATIONS, type SearchFlightsInput } f
 import { initializeStripe, createPaymentIntent } from "./stripe";
 import { unifiedPaymentMiddleware } from "./payment-middleware";
 import { getAddress } from "viem";
+import { getFacilitatorClient } from "./facilitator";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {
@@ -101,9 +101,7 @@ const agentExecutor = new TravelAgentExecutor();
 const requestHandler = new DefaultRequestHandler(agentCard, new InMemoryTaskStore(), agentExecutor);
 
 // Setup x402 payment configuration
-const facilitatorClient = new HTTPFacilitatorClient({
-  url: process.env.X402_FACILITATOR_URL || "https://www.x402.org/facilitator",
-});
+const facilitatorClient = getFacilitatorClient();
 
 const resourceServer = new x402ResourceServer(facilitatorClient);
 const x402Network = (process.env.X402_NETWORK || "eip155:84532") as `${string}:${string}`;
