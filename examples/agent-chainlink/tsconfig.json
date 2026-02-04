@@ -12,7 +12,6 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "incremental": true
+    "isolatedModules": true
   }
 }

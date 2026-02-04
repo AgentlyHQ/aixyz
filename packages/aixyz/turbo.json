@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["tsconfig.json", "**/*.ts"],
+      "outputs": ["**/*.d.ts", "**/*.d.ts.map", "**/*.js"]
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}
