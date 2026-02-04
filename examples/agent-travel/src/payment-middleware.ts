@@ -31,7 +31,7 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
         return res.status(402).json({
           error: "Payment Required",
           message: result.error,
-          options: getPaymentOptions(req, config),
+          options: getPaymentOptions(config),
         });
       }
     }
@@ -51,7 +51,7 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
           error: "Payment Required",
           message: "Crypto payment temporarily unavailable",
           options: {
-            stripe: getStripeOptions(req, config),
+            stripe: getStripeOptions(config),
           },
         });
       }
@@ -61,18 +61,15 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
   };
 }
 
-function getStripeOptions(req: Request, config: UnifiedPaymentConfig) {
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
+function getStripeOptions(config: UnifiedPaymentConfig) {
   return {
     description: "Pay with credit card via Stripe",
-    createPaymentIntentEndpoint: `${baseUrl}/stripe/create-payment-intent`,
     header: "X-Stripe-Payment-Intent-Id",
     price: `$${(config.stripe.priceInCents / 100).toFixed(2)}`,
   };
 }
 
-function getPaymentOptions(req: Request, config: UnifiedPaymentConfig) {
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
+function getPaymentOptions(config: UnifiedPaymentConfig) {
   const options: Record<string, unknown> = {
     x402: {
       description: "Pay with cryptocurrency (USDC on Base)",
@@ -81,7 +78,7 @@ function getPaymentOptions(req: Request, config: UnifiedPaymentConfig) {
   };
 
   if (config.stripe.enabled) {
-    options.stripe = getStripeOptions(req, config);
+    options.stripe = getStripeOptions(config);
   }
 
   return options;
