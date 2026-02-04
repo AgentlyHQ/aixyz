@@ -20,6 +20,7 @@ import { agent } from "./agent";
 import { executeSearchFlights, POPULAR_DESTINATIONS, type SearchFlightsInput } from "./tools";
 import { initializeStripe, createPaymentIntent } from "./stripe";
 import { unifiedPaymentMiddleware } from "./payment-middleware";
+import { getAddress } from "viem";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {
@@ -114,9 +115,9 @@ resourceServer.registerExtension(bazaarResourceServerExtension);
 // Common payment configuration for all protected endpoints
 const commonPaymentConfig = {
   scheme: "exact" as const,
-  price: process.env.X402_AMOUNT || "$0.001",
+  price: "$0.01",
   network: x402Network,
-  payTo: process.env.X402_PAYMENT_ADDRESS || "0x0000000000000000000000000000000000000000",
+  payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
 };
 
 const x402Routes = {
