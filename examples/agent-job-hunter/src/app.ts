@@ -18,6 +18,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { z } from "zod";
 import { agent } from "./agent";
 import { executeJobSearch } from "./tools";
+import { getAddress } from "viem";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {
@@ -113,9 +114,9 @@ resourceServer.registerExtension(bazaarResourceServerExtension);
 // Common payment configuration for all protected endpoints
 const commonPaymentConfig = {
   scheme: "exact" as const,
-  price: process.env.X402_AMOUNT || "$0.001",
+  price: "$0.01",
   network: x402Network,
-  payTo: process.env.X402_PAYMENT_ADDRESS || "0x0000000000000000000000000000000000000000",
+  payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
 };
 
 const x402Routes = {
