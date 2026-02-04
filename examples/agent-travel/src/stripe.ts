@@ -10,12 +10,10 @@ export function initializeStripe(): Stripe | null {
     return null;
   }
 
-  stripe = new Stripe(secretKey);
-  console.log("[Stripe] Initialized successfully");
-  return stripe;
-}
-
-export function getStripe(): Stripe | null {
+  stripe = new Stripe(secretKey, {
+    apiVersion: "2026-01-28.clover",
+  });
+  console.log("[Stripe] Initialized successfully with API version 2026-01-28.clover");
   return stripe;
 }
 
