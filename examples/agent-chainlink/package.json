@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc",
     "dev": "bun --watch src/server.ts",
-    "start": "bun dist/server.js",
     "test": "bun test"
   },
   "dependencies": {

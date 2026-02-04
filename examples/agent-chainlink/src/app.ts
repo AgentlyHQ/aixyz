@@ -1,3 +1,6 @@
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import express from "express";
 import { randomUUID } from "crypto";
 import type { AgentCard, Message, TextPart } from "@a2a-js/sdk";
@@ -102,7 +105,7 @@ const facilitatorClient = new HTTPFacilitatorClient({
   url: process.env.X402_FACILITATOR_URL || "https://www.x402.org/facilitator",
 });
 
-const resourceServer = new x402ResourceServer(facilitatorClient);
+export const resourceServer = new x402ResourceServer(facilitatorClient);
 const x402Network = (process.env.X402_NETWORK || "eip155:84532") as `${string}:${string}`;
 registerExactEvmScheme(resourceServer, {
   networks: [x402Network], // Base Sepolia by default
@@ -278,39 +281,6 @@ app.post("/mcp", express.json(), async (req, res) => {
   res.on("finish", cleanup);
   res.on("close", cleanup);
 });
-
-// Initialize function for serverless environments (e.g., Vercel)
-let initializationPromise: Promise<void> | null = null;
-
-export async function initializeApp() {
-  if (!initializationPromise) {
-    initializationPromise = resourceServer.initialize();
-  }
-  return initializationPromise;
-}
-
-// Start server function for standalone use
-export async function startServer(port?: number) {
-  // Initialize resource server to fetch supported kinds from facilitator
-  await initializeApp();
-
-  const PORT = port || process.env.PORT || 3000;
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 Chainlink Price Oracle Agent server running on http://localhost:${PORT}`);
-    console.log(`📋 Agent card available at http://localhost:${PORT}/.well-known/agent-card.json`);
-    console.log(`🔗 JSON-RPC endpoint at http://localhost:${PORT}/`);
-    console.log(`🔌 MCP endpoint at http://localhost:${PORT}/mcp`);
-  });
-
-  // Handle server shutdown
-  process.on("SIGINT", () => {
-    console.log("Shutting down server...");
-    server.close();
-    process.exit(0);
-  });
-
-  return server;
-}
 
 // Default export for Vercel
 export default app;
