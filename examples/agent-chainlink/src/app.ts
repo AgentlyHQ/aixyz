@@ -118,7 +118,7 @@ const x402Routes = {
   "POST /agent": {
     accepts: {
       scheme: "exact",
-      price: "$0.001",
+      price: "$0.01",
       network: x402Network,
       payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
     },
@@ -154,7 +154,7 @@ const x402Routes = {
   "POST /mcp": {
     accepts: {
       scheme: "exact",
-      price: "$0.001",
+      price: "$0.01",
       network: x402Network,
       payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
     },
