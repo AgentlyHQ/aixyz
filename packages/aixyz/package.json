@@ -2,7 +2,20 @@
   "name": "aixyz",
   "version": "0.0.0",
   "private": false,
-  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AgentlyHQ/agently",
+    "directory": "packages/aixyz"
+  },
+  "files": [
+    "**/*.d.ts",
+    "**/*.d.ts.map",
+    "**/*.js"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "tsc --build --clean"
+  },
   "dependencies": {
     "@coinbase/x402": "^2.1.0",
     "@x402/core": "^2.2.0"

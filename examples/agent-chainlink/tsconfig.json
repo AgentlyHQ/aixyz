@@ -2,11 +2,17 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "include": ["src"],
   "compilerOptions": {
-    "strict": true,
-    "module": "nodenext",
-    "target": "esnext",
+    "target": "es5",
+    "lib": ["esnext"],
     "skipLibCheck": true,
-    "declaration": true,
-    "outDir": "dist"
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true
   }
 }
