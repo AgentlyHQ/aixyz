@@ -20,7 +20,7 @@ import { executeSearchFlights, POPULAR_DESTINATIONS, type SearchFlightsInput } f
 import { initializeStripe, createPaymentIntent } from "./stripe";
 import { unifiedPaymentMiddleware } from "./payment-middleware";
 import { getAddress } from "viem";
-import { getFacilitatorClient } from "./facilitator";
+import { getFacilitatorClient } from "aixyz/facilitator";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {

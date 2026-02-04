@@ -18,7 +18,7 @@ import { z } from "zod";
 import { agent } from "./agent";
 import { executeGetNewListedTokens, executeGetTokenPrice, executeGetTopGainersLosers } from "./tools";
 import { getAddress } from "viem";
-import { getFacilitatorClient } from "./facilitator";
+import { getFacilitatorClient } from "aixyz/facilitator";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {

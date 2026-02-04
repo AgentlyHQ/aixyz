@@ -18,7 +18,7 @@ import { z } from "zod";
 import { agent } from "./agent";
 import { executeJobSearch } from "./tools";
 import { getAddress } from "viem";
-import { getFacilitatorClient } from "./facilitator";
+import { getFacilitatorClient } from "aixyz/facilitator";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {
