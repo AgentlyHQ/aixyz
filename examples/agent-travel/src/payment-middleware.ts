@@ -36,8 +36,38 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
       }
     }
 
-    // 2. Fall through to x402 middleware (handles x402 headers AND returns proper 402 response)
-    return x402Middleware(req, res, next);
+    // 2. Fall through to x402 middleware with error handling
+    try {
+      await x402Middleware(req, res, next);
+    } catch (error) {
+      console.error("[x402] Runtime error:", error);
+
+      // Response already sent, nothing we can do
+      if (res.headersSent) return;
+
+      // Offer Stripe as fallback if available
+      if (config.stripe.enabled) {
+        return res.status(402).json({
+          error: "Payment Required",
+          message: "Crypto payment temporarily unavailable",
+          options: {
+            stripe: getStripeOptions(req, config),
+          },
+        });
+      }
+
+      return res.status(503).json({ error: "Payment service unavailable" });
+    }
+  };
+}
+
+function getStripeOptions(req: Request, config: UnifiedPaymentConfig) {
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  return {
+    description: "Pay with credit card via Stripe",
+    createPaymentIntentEndpoint: `${baseUrl}/stripe/create-payment-intent`,
+    header: "X-Stripe-Payment-Intent-Id",
+    price: `$${(config.stripe.priceInCents / 100).toFixed(2)}`,
   };
 }
 
@@ -51,12 +81,7 @@ function getPaymentOptions(req: Request, config: UnifiedPaymentConfig) {
   };
 
   if (config.stripe.enabled) {
-    options.stripe = {
-      description: "Pay with credit card via Stripe",
-      createPaymentIntentEndpoint: `${baseUrl}/stripe/create-payment-intent`,
-      header: "X-Stripe-Payment-Intent-Id",
-      price: `$${(config.stripe.priceInCents / 100).toFixed(2)}`,
-    };
+    options.stripe = getStripeOptions(req, config);
   }
 
   return options;
