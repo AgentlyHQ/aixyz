@@ -27,27 +27,100 @@ export { ValidationRegistryAbi_V1 as ValidationRegistryAbi } from "../abis/Valid
 
 // Chain ID constants
 export const CHAIN_ID = {
+  // Mainnets
   MAINNET: 1,
+  BASE: 8453,
+  POLYGON: 137,
+  SCROLL: 534352,
+  MONAD: 143,
+  BSC: 56,
+  // Testnets
   SEPOLIA: 11155111,
   BASE_SEPOLIA: 84532,
+  POLYGON_AMOY: 80002,
+  GNOSIS: 100,
+  SCROLL_SEPOLIA: 534351,
+  MONAD_TESTNET: 10143,
+  BSC_TESTNET: 97,
 } as const;
 
 export type SupportedChainId = (typeof CHAIN_ID)[keyof typeof CHAIN_ID];
 
 // Contract addresses by chain
 export const ADDRESSES = {
+  // =============================================================================
+  // Mainnets
+  // =============================================================================
   [CHAIN_ID.MAINNET]: {
     identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
     reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
     // TODO: this contract address is not officially announced (found through deployment by same owner as the rest)
     validationRegistry: "0x8004Cc8439f36fd5F9F049D9fF86523Df6dAAB58",
   },
+  [CHAIN_ID.BASE]: {
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    // TODO: this contract address is not officially announced (found through deployment by same owner as the rest)
+    validationRegistry: "0x8004cc8439f36fd5f9f049d9ff86523df6daab58",
+  },
+  [CHAIN_ID.POLYGON]: {
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    // TODO: this contract address is not officially announced (found through deployment by same owner as the rest)
+    validationRegistry: "0x8004cc8439f36fd5f9f049d9ff86523df6daab58",
+  },
+  [CHAIN_ID.SCROLL]: {
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    // TODO: this contract address is not officially announced (found through deployment by same owner as the rest)
+    validationRegistry: "0x8004cc8439f36fd5f9f049d9ff86523df6daab58",
+  },
+  [CHAIN_ID.MONAD]: {
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    // TODO: this contract address is not officially announced (found through deployment by same owner as the rest)
+    validationRegistry: "0x8004cc8439f36fd5f9f049d9ff86523df6daab58",
+  },
+  [CHAIN_ID.BSC]: {
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    // TODO: this contract address is not officially announced (found through deployment by same owner as the rest)
+    validationRegistry: "0x8004cc8439f36fd5f9f049d9ff86523df6daab58",
+  },
+  // =============================================================================
+  // Testnets
+  // =============================================================================
   [CHAIN_ID.SEPOLIA]: {
     identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
     reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
     validationRegistry: "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
   },
   [CHAIN_ID.BASE_SEPOLIA]: {
+    identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+    validationRegistry: "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  },
+  [CHAIN_ID.POLYGON_AMOY]: {
+    identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+    validationRegistry: "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  },
+  [CHAIN_ID.GNOSIS]: {
+    identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+    validationRegistry: "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  },
+  [CHAIN_ID.SCROLL_SEPOLIA]: {
+    identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+    validationRegistry: "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  },
+  [CHAIN_ID.MONAD_TESTNET]: {
+    identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+    validationRegistry: "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
+  },
+  [CHAIN_ID.BSC_TESTNET]: {
     identityRegistry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
     reputationRegistry: "0x8004B663056A597Dffe9eCcC1965A193B7388713",
     validationRegistry: "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",

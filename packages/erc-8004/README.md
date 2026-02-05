@@ -85,11 +85,28 @@ import { ValidationRegistryUpgradeable } from "@agentlyhq/erc-8004/contracts/Val
 
 ## Supported Chains
 
-| Chain        | Chain ID   | Constant                |
-| ------------ | ---------- | ----------------------- |
-| Mainnet      | `1`        | `CHAIN_ID.MAINNET`      |
-| Sepolia      | `11155111` | `CHAIN_ID.SEPOLIA`      |
-| Base Sepolia | `84532`    | `CHAIN_ID.BASE_SEPOLIA` |
+**Mainnets:**
+
+| Chain   | Chain ID | Constant           |
+| ------- | -------- | ------------------ |
+| Mainnet | `1`      | `CHAIN_ID.MAINNET` |
+| Base    | `8453`   | `CHAIN_ID.BASE`    |
+| Polygon | `137`    | `CHAIN_ID.POLYGON` |
+| Scroll  | `534352` | `CHAIN_ID.SCROLL`  |
+| Monad   | `143`    | `CHAIN_ID.MONAD`   |
+| BSC     | `56`     | `CHAIN_ID.BSC`     |
+
+**Testnets:**
+
+| Chain          | Chain ID   | Constant                  |
+| -------------- | ---------- | ------------------------- |
+| Sepolia        | `11155111` | `CHAIN_ID.SEPOLIA`        |
+| Base Sepolia   | `84532`    | `CHAIN_ID.BASE_SEPOLIA`   |
+| Polygon Amoy   | `80002`    | `CHAIN_ID.POLYGON_AMOY`   |
+| Gnosis         | `100`      | `CHAIN_ID.GNOSIS`         |
+| Scroll Sepolia | `534351`   | `CHAIN_ID.SCROLL_SEPOLIA` |
+| Monad Testnet  | `10143`    | `CHAIN_ID.MONAD_TESTNET`  |
+| BSC Testnet    | `97`       | `CHAIN_ID.BSC_TESTNET`    |
 
 ## ABIs
 
@@ -103,9 +120,9 @@ Versioned ABIs (e.g. `IdentityRegistryAbi_V1`, `ReputationRegistryAbi_V3`) are a
 
 ## Contract Addresses
 
-All contracts use UUPS proxies.
+All contracts use UUPS proxies. Addresses are consistent across all chains within each environment.
 
-**Mainnet:**
+**Mainnets** (Ethereum, Base, Polygon, Scroll, Monad, BSC):
 
 | Contract             | Address                                      |
 | -------------------- | -------------------------------------------- |
@@ -113,7 +130,7 @@ All contracts use UUPS proxies.
 | `reputationRegistry` | `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63` |
 | `validationRegistry` | `0x8004Cc8439f36fd5F9F049D9fF86523Df6dAAB58` |
 
-**Sepolia & Base Sepolia:**
+**Testnets** (Sepolia, Base Sepolia, Polygon Amoy, Gnosis, Scroll Sepolia, Monad Testnet, BSC Testnet):
 
 | Contract             | Address                                      |
 | -------------------- | -------------------------------------------- |
