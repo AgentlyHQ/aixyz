@@ -43,6 +43,7 @@ const agentCard: AgentCard = {
       name: "Chainlink Price Lookup",
       description: "Look up real-time cryptocurrency prices in USD using Chainlink price feeds",
       tags: ["crypto", "price", "oracle", "chainlink", "ethereum"],
+      examples: ["What is the current price of ETH?", "Look up the price of BTC", "Get me the latest LINK price"],
     },
   ],
 };

@@ -43,6 +43,12 @@ const agentCard: AgentCard = {
       description:
         "Search for the cheapest flights between airports with support for multiple departures, destinations, currencies, and trip types",
       tags: ["travel", "flights", "booking", "deals", "airlines"],
+      examples: [
+        "Find me the cheapest flights from Sao Paulo to Europe",
+        "Search for flights from GRU and CWB to any destination",
+        "What are the best flight deals from New York to Asia?",
+        "Find roundtrip flights from LAX with at least 10 days trip length",
+      ],
     },
   ],
 };
