@@ -6,8 +6,8 @@ All notable changes to the `@agentlyhq/erc-8004` package will be documented in t
 
 ### Added
 
-- **New mainnet chains**: Base (8453), Polygon (137), Scroll (534352), Monad (143), BSC (56)
-- **New testnet chains**: Polygon Amoy (80002), Gnosis (100), Scroll Sepolia (534351), Monad Testnet (10143), BSC Testnet (97)
+- **New mainnet chains**: Base (8453), Polygon (137), Scroll (534352), Monad (143), BSC (56), Gnosis (100)
+- **New testnet chains**: Polygon Amoy (80002), Scroll Sepolia (534351), Monad Testnet (10143), BSC Testnet (97)
 
 ### Changed
 
