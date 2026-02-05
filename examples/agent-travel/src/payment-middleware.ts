@@ -36,21 +36,38 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
       }
 
       // 2. Intercept 402 responses to add Stripe options
-      const originalJson = res.json.bind(res);
-      res.json = (body: unknown) => {
+      // Helper to augment 402 response body with Stripe options
+      const augment402Body = (body: unknown): unknown => {
         if (res.statusCode === 402 && typeof body === "object" && body !== null) {
           const bodyObj = body as Record<string, unknown>;
           const existingOptions = typeof bodyObj.paymentOptions === "object" ? bodyObj.paymentOptions : {};
-          const augmented = {
+          return {
             ...bodyObj,
             paymentOptions: {
               ...existingOptions,
               stripe: getStripeOptions(config),
             },
           };
-          return originalJson(augmented);
         }
-        return originalJson(body);
+        return body;
+      };
+
+      // Intercept res.json()
+      const originalJson = res.json.bind(res);
+      res.json = (body: unknown) => originalJson(augment402Body(body));
+
+      // Intercept res.send() - x402 middleware may use this instead of res.json()
+      const originalSend = res.send.bind(res);
+      res.send = (body: unknown) => {
+        if (res.statusCode === 402 && typeof body === "string") {
+          try {
+            const parsed = JSON.parse(body);
+            return originalSend(JSON.stringify(augment402Body(parsed)));
+          } catch {
+            // Not JSON, pass through
+          }
+        }
+        return originalSend(body);
       };
     }
 
@@ -63,14 +80,12 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
       // Response already sent, nothing we can do
       if (res.headersSent) return;
 
-      // Offer Stripe as fallback if available
+      // Offer both payment options as fallback
       if (config.stripe.enabled) {
         return res.status(402).json({
           error: "Payment Required",
           message: "Crypto payment temporarily unavailable",
-          options: {
-            stripe: getStripeOptions(config),
-          },
+          options: getPaymentOptions(config),
         });
       }
 
