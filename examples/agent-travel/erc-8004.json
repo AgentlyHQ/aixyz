@@ -3,7 +3,7 @@
   "name": "Travel Agent Flight Search",
   "description": "AI travel agent that finds the cheapest flights between multiple airports worldwide. Compare prices, find discounts, and get direct booking links for the best deals.",
   "image": "https://agent-travel.example.agently.to/icon.png",
-  "endpoints": [
+  "services": [
     {
       "name": "A2A",
       "endpoint": "https://agent-travel.example.agently.to/.well-known/agent-card.json",
