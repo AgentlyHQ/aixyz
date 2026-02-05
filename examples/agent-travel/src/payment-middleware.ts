@@ -34,9 +34,27 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
           options: getPaymentOptions(config),
         });
       }
+
+      // 2. Intercept 402 responses to add Stripe options
+      const originalJson = res.json.bind(res);
+      res.json = (body: unknown) => {
+        if (res.statusCode === 402 && typeof body === "object" && body !== null) {
+          const bodyObj = body as Record<string, unknown>;
+          const existingOptions = typeof bodyObj.paymentOptions === "object" ? bodyObj.paymentOptions : {};
+          const augmented = {
+            ...bodyObj,
+            paymentOptions: {
+              ...existingOptions,
+              stripe: getStripeOptions(config),
+            },
+          };
+          return originalJson(augmented);
+        }
+        return originalJson(body);
+      };
     }
 
-    // 2. Fall through to x402 middleware with error handling
+    // 3. Fall through to x402 middleware with error handling
     try {
       await x402Middleware(req, res, next);
     } catch (error) {
