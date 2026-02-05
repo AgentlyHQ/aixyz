@@ -3,7 +3,7 @@
   "name": "Price Gecky",
   "description": "Price Gecky - AI Agent that provides real-time cryptocurrency market data using CoinGecko Pro. Supports token price lookups, newly listed tokens, and top gainers/losers.",
   "image": "https://agent-price-oracle.example.agently.to/icon.png",
-  "endpoints": [
+  "services": [
     {
       "name": "A2A",
       "endpoint": "https://agent-price-oracle.example.agently.to/.well-known/agent-card.json",
