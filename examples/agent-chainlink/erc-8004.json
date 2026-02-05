@@ -1,6 +1,6 @@
 {
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
-  "name": "chainlink-price-oracle",
+  "name": "Chainlink Price Oracle",
   "description": "Real-time cryptocurrency price oracle powered by Chainlink. Provides accurate USD prices for crypto assets using decentralized Chainlink price feeds on Ethereum mainnet.",
   "image": "https://agent-chainlink.example.agently.to/icon.png",
   "endpoints": [
