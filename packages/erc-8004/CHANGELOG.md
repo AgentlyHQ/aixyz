@@ -2,6 +2,28 @@
 
 All notable changes to the `@agentlyhq/erc-8004` package will be documented in this file.
 
+## v0.0.4
+
+### Added
+
+- **New mainnet chains**: Base (8453), Polygon (137), Scroll (534352), Monad (143), BSC (56), Gnosis (100)
+- **New testnet chains**: Polygon Amoy (80002), Scroll Sepolia (534351), Monad Testnet (10143), BSC Testnet (97)
+
+### Changed
+
+- `CHAIN_ID` constant now includes all 13 supported chains
+- `ADDRESSES` object expanded with addresses for all new chains
+- Updated README with comprehensive chain support tables
+
+### Notes
+
+Contract addresses are consistent across environments:
+
+- All mainnets share the same proxy addresses
+- All testnets share the same proxy addresses
+
+---
+
 ## 26 Jan 2026
 
 ### Added
@@ -75,17 +97,3 @@ function giveFeedback(... int128 value, uint8 valueDecimals, ...)
 | `ValidationRegistryAbi_V1` | V1      | Initial version |
 
 ---
-
-## Contract Addresses
-
-### Proxy Addresses (UUPS)
-
-Same on all supported chains (Sepolia, Base Sepolia):
-
-| Contract           | Proxy Address                                |
-| ------------------ | -------------------------------------------- |
-| IdentityRegistry   | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
-| ReputationRegistry | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
-| ValidationRegistry | `0x8004Cb1BF31DAf7788923b405b754f57acEB4272` |
-
-> **Note:** Implementation addresses may change after contract upgrades. Always use proxy addresses for interactions.
