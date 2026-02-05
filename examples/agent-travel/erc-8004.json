@@ -1,17 +1,17 @@
 {
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
-  "name": "travel-agent-flight-search",
+  "name": "Travel Agent Flight Search",
   "description": "AI travel agent that finds the cheapest flights between multiple airports worldwide. Compare prices, find discounts, and get direct booking links for the best deals.",
-  "image": "https://agently.to/eip155/1/travel/agent.png",
+  "image": "https://agent-travel.example.agently.to/icon.png",
   "endpoints": [
     {
       "name": "A2A",
-      "endpoint": "https://agently.to/eip155/1/travel/.well-known/agent-card.json",
+      "endpoint": "https://agent-travel.example.agently.to/.well-known/agent-card.json",
       "version": "0.3.0"
     },
     {
       "name": "MCP",
-      "endpoint": "https://agently.to/eip155/1/travel/mcp",
+      "endpoint": "https://agent-travel.example.agently.to/mcp",
       "version": "2025-06-18"
     }
   ],
