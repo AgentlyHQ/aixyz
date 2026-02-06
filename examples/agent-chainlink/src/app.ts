@@ -281,5 +281,39 @@ app.post("/mcp", express.json(), async (req, res) => {
   res.on("close", cleanup);
 });
 
+// Initialize function for serverless environments (e.g., Vercel)
+let initializationPromise: Promise<void> | null = null;
+export async function initializeApp() {
+  if (!initializationPromise) {
+    initializationPromise = resourceServer.initialize().catch((error) => {
+      console.warn("[x402] Failed to initialize:", error instanceof Error ? error.message : error);
+      initializationPromise = null; // Allow retry on next request
+      throw error;
+    });
+  }
+  return initializationPromise;
+}
+
+// Start server function for standalone use
+export async function startServer(port?: number) {
+  await initializeApp();
+
+  const PORT = port || process.env.PORT || 3000;
+  const server = app.listen(PORT, () => {
+    console.log(`Chainlink Price Oracle Agent server running on http://localhost:${PORT}`);
+    console.log(`Agent card available at http://localhost:${PORT}/.well-known/agent-card.json`);
+    console.log(`A2A endpoint at http://localhost:${PORT}/agent`);
+    console.log(`MCP endpoint at http://localhost:${PORT}/mcp`);
+  });
+
+  process.on("SIGINT", () => {
+    console.log("Shutting down server...");
+    server.close();
+    process.exit(0);
+  });
+
+  return server;
+}
+
 // Default export for Vercel
 export default app;

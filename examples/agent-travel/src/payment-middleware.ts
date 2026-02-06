@@ -20,8 +20,11 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
   );
 
   return async (req: Request, res: Response, next: NextFunction) => {
+    // Check Stripe availability at runtime (handles Vercel cold start timing)
+    const isStripeEnabled = () => config.stripe.enabled && !!process.env.STRIPE_SECRET_KEY;
+
     // 1. Check for Stripe PaymentIntent ID first
-    if (config.stripe.enabled) {
+    if (isStripeEnabled()) {
       const stripePaymentIntentId = req.headers["x-stripe-payment-intent-id"] as string;
       if (stripePaymentIntentId) {
         const result = await validateAndConsumePaymentIntent(stripePaymentIntentId, config.stripe.priceInCents);
@@ -81,7 +84,7 @@ export function unifiedPaymentMiddleware(config: UnifiedPaymentConfig): RequestH
       if (res.headersSent) return;
 
       // Offer both payment options as fallback
-      if (config.stripe.enabled) {
+      if (isStripeEnabled()) {
         return res.status(402).json({
           error: "Payment Required",
           message: "Crypto payment temporarily unavailable",
@@ -110,7 +113,8 @@ function getPaymentOptions(config: UnifiedPaymentConfig) {
     },
   };
 
-  if (config.stripe.enabled) {
+  // Check Stripe availability at runtime (handles Vercel cold start timing)
+  if (config.stripe.enabled && !!process.env.STRIPE_SECRET_KEY) {
     options.stripe = getStripeOptions(config);
   }
 
