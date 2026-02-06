@@ -8,18 +8,23 @@ const serverlessApp: Express = express();
 
 // Initialize once on module load for Vercel cold start
 let isInitialized = false;
-const initPromise = initializeApp().then(() => {
-  isInitialized = true;
-});
+initializeApp()
+  .then(() => {
+    isInitialized = true;
+  })
+  .catch((error) => {
+    console.warn("[Init] Cold start initialization failed, will retry on first request:", error);
+  });
 
 // Initialization middleware - ensures app is ready before processing requests
 serverlessApp.use(async (req, res, next) => {
   if (!isInitialized) {
     try {
-      await initPromise;
+      await initializeApp();
+      isInitialized = true;
     } catch (error) {
       console.error("Initialization error:", error);
-      return res.status(500).json({ error: "Service initialization failed" });
+      return res.status(503).json({ error: "Service initialization failed, retrying..." });
     }
   }
   next();

@@ -357,7 +357,11 @@ let initializationPromise: Promise<void> | null = null;
 
 export async function initializeApp() {
   if (!initializationPromise) {
-    initializationPromise = resourceServer.initialize();
+    initializationPromise = resourceServer.initialize().catch((error) => {
+      console.warn("[x402] Failed to initialize:", error instanceof Error ? error.message : error);
+      initializationPromise = null; // Allow retry on next request
+      throw error;
+    });
   }
   return initializationPromise;
 }

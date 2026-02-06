@@ -355,12 +355,13 @@ export async function initializeApp() {
       // Initialize Stripe first (independent of x402)
       initializeStripe();
 
-      // Initialize x402 resource server (non-fatal if fails)
+      // Initialize x402 resource server (retry on failure)
       try {
         await resourceServer.initialize();
       } catch (error) {
         console.warn("[x402] Failed to initialize:", error instanceof Error ? error.message : error);
-        console.warn("[x402] x402 payments will not be available. Stripe payments will still work.");
+        initializationPromise = null; // Allow retry on next request
+        throw error;
       }
     })();
   }
