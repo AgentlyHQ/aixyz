@@ -155,3 +155,23 @@ export function getReputationRegistryAddress(chainId: number): string {
 export function getValidationRegistryAddress(chainId: number): string {
   return getRegistryAddress(chainId).validationRegistry;
 }
+
+// Helper function to determine if a chain is mainnet
+export function isMainnetChain(chainId: number): boolean {
+  if (isSupportedChainId(chainId) === false) {
+    throw new Error(`Unsupported chain ID: ${chainId}.`);
+  }
+
+  switch (chainId) {
+    case CHAIN_ID.MAINNET:
+    case CHAIN_ID.BASE:
+    case CHAIN_ID.POLYGON:
+    case CHAIN_ID.SCROLL:
+    case CHAIN_ID.MONAD:
+    case CHAIN_ID.BSC:
+    case CHAIN_ID.GNOSIS:
+      return true;
+    default:
+      return false;
+  }
+}

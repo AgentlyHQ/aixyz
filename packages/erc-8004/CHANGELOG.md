@@ -2,6 +2,14 @@
 
 All notable changes to the `@agentlyhq/erc-8004` package will be documented in this file.
 
+## v0.0.5
+
+### Added
+
+- `isMainnetChain(chainId)` helper function to determine if a given chain ID is a mainnet chain (Mainnet, Base, Polygon, Scroll, Monad, BSC, Gnosis)
+
+---
+
 ## v0.0.4
 
 ### Added
