@@ -2,7 +2,7 @@
   "name": "@examples/agent-chainlink",
   "private": true,
   "scripts": {
-    "build": "bun node_modules/aixyz/cli.js build",
+    "build": "bun node_modules/aixyz/cli/bin.js build",
     "dev": "bun --watch src/server.ts",
     "test": "bun test"
   },
