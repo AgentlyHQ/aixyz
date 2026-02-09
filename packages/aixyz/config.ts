@@ -1,4 +1,5 @@
-import { resolve } from "path";
+import { resolve, dirname } from "path";
+import { existsSync } from "fs";
 import { loadEnvConfig } from "@next/env";
 
 import type { AgentSkill as A2AAgentSkill } from "@a2a-js/sdk";
@@ -24,6 +25,27 @@ export type AixyzConfig = {
   };
   skills: AgentSkill[];
 };
+
+/**
+ * In serverless environments (e.g. Vercel), process.cwd() may return the
+ * deployment root (e.g. /var/task/) rather than the app's project directory.
+ * Walk up from the main module's location to find the nearest directory
+ * containing an aixyz config file, falling back to process.cwd().
+ */
+function findProjectRoot(): string {
+  if (require.main?.filename) {
+    let dir = dirname(require.main.filename);
+    while (true) {
+      if (existsSync(resolve(dir, "aixyz.config.ts")) || existsSync(resolve(dir, "aixyz.config.js"))) {
+        return dir;
+      }
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  return process.cwd();
+}
 
 const cwd = process.cwd();
 
@@ -99,7 +121,9 @@ export function loadAixyzConfig(): LoadedAixyzConfig {
 
   loadEnvConfig(cwd);
 
-  const configPath = resolve(cwd, "aixyz.config.ts");
+  const tsPath = resolve(cwd, "aixyz.config.ts");
+  const jsPath = resolve(cwd, "aixyz.config.js");
+  const configPath = existsSync(tsPath) ? tsPath : jsPath;
   const mod = require(configPath);
   const config = mod.default;
 

@@ -5,7 +5,9 @@ const config: AixyzConfig = {
   description:
     "AI agent that provides real-time cryptocurrency price data using Chainlink price feeds on Ethereum mainnet.",
   version: "1.0.0",
-  x402: {},
+  x402: {
+    // payTo: "0xYouAddress", or via env X402_PAY_TO: "0xYouAddress"
+  },
   skills: [
     {
       id: "chainlink-price-lookup",
