@@ -14,6 +14,7 @@ export type AixyzConfig = {
    * Version of the agent.
    */
   version: string;
+  network: `eip155:${number}`;
   url?: string;
   x402: {
     /**
@@ -22,35 +23,42 @@ export type AixyzConfig = {
      * Throws an error if neither is provided.
      */
     payTo: string;
+    /**
+     * The x402 network to use for the agent—separate from its identity.
+     * Defaults to `process.env.X402_NETWORK`, followed by `network` config set on the root.
+     */
+    network?: string;
   };
   skills: AgentSkill[];
 };
 
-const AixyzSchema = z.object({
-  name: z.string().nonempty(),
-  description: z.string().nonempty(),
-  version: z.string().nonempty(),
-  url: z
-    .string()
-    .optional()
-    .transform((val) => {
-      if (val) {
-        return val;
-      }
+const AixyzSchema = z
+  .object({
+    name: z.string().nonempty(),
+    description: z.string().nonempty(),
+    version: z.string().nonempty(),
+    network: z.string().nonempty(),
+    url: z
+      .string()
+      .optional()
+      .transform((val) => {
+        if (val) {
+          return val;
+        }
+        if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+          return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/`;
+        }
 
-      if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-        return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/`;
-      }
-
-      if (process.env.VERCEL_URL) {
-        return `https://${process.env.VERCEL_URL}/`;
-      }
+        if (process.env.VERCEL_URL) {
+          return `https://${process.env.VERCEL_URL}/`;
+        }
 
       return `http://localhost:3000/`;
     })
     .pipe(z.url()),
   x402: z.object({
     payTo: z.string(),
+    network: z.string().optional(),
   }),
   skills: z.array(
     z.object({

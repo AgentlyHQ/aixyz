@@ -14,9 +14,8 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { z } from "zod";
 import { agent } from "./agent";
 import { executeLookup } from "./tools";
-import { getAddress } from "viem";
 import { getFacilitatorClient } from "aixyz/facilitator";
-import { AixyzRequestHandler } from "aixyz";
+import { AixyzRequestHandler, loadAixyzConfig } from "aixyz";
 
 // Implement the AgentExecutor that wraps the ToolLoopAgent
 class ChainlinkAgentExecutor implements AgentExecutor {
@@ -67,6 +66,8 @@ class ChainlinkAgentExecutor implements AgentExecutor {
   }
 }
 
+const aixyzConfig = loadAixyzConfig();
+
 // Create the agent executor and request handler
 const agentExecutor = new ChainlinkAgentExecutor();
 const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), agentExecutor);
@@ -75,9 +76,8 @@ const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), agentExe
 const facilitatorClient = getFacilitatorClient();
 
 export const resourceServer = new x402ResourceServer(facilitatorClient);
-const x402Network = (process.env.X402_NETWORK || "eip155:84532") as `${string}:${string}`;
 registerExactEvmScheme(resourceServer, {
-  networks: [x402Network], // Base Sepolia by default
+  networks: [aixyzConfig.x402.network as any],
 });
 
 // Register bazaar extension for Coinbase x402 Bazaar compatibility
@@ -88,8 +88,8 @@ const x402Routes = {
     accepts: {
       scheme: "exact",
       price: "$0.01",
-      network: x402Network,
-      payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
+      network: aixyzConfig.x402.network as any,
+      payTo: aixyzConfig.x402.payTo,
     },
     mimeType: "application/json",
     description: "Payment for Chainlink Price Oracle Agent API access",
@@ -124,8 +124,8 @@ const x402Routes = {
     accepts: {
       scheme: "exact",
       price: "$0.01",
-      network: x402Network,
-      payTo: getAddress(process.env.X402_PAYMENT_ADDRESS!),
+      network: aixyzConfig.x402.network as any,
+      payTo: aixyzConfig.x402.payTo,
     },
     mimeType: "application/json",
     description: "Payment for MCP protocol access to Chainlink Price Oracle Agent",
