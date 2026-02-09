@@ -13,6 +13,7 @@ export type AixyzConfig = {
    * Version of the agent.
    */
   version: string;
+  url?: string;
   x402?: {
     /**
      * The address that will receive the payment from the agent.
@@ -30,6 +31,24 @@ const AixyzSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().nonempty(),
   version: z.string().nonempty(),
+  url: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (val) {
+        return val;
+      }
+      if (process.env.AIXYZ_BASE_URL) {
+        return process.env.AIXYZ_BASE_URL;
+      }
+
+      if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}/`;
+      }
+
+      return `http://localhost:3000/`;
+    })
+    .pipe(z.url()),
   x402: z
     .object({
       payTo: z.string().optional(),
@@ -60,6 +79,8 @@ const AixyzSchema = z.object({
 
 export type LoadedAixyzConfig = Omit<z.infer<typeof AixyzSchema>, "version"> & { version: string };
 
+let singleton: LoadedAixyzConfig | undefined;
+
 /**
  * Environment variables are looked up in the following places, in order, stopping once the variable is found.
  * 1. `process.env`
@@ -71,11 +92,15 @@ export type LoadedAixyzConfig = Omit<z.infer<typeof AixyzSchema>, "version"> & {
  * For example, if `NODE_ENV` is `development` and you define a variable in both `.env.development.local` and `.env,
  * the value in `.env.development.local` will be used.
  */
-export async function loadAixyzConfig(): Promise<LoadedAixyzConfig> {
+export function loadAixyzConfig(): LoadedAixyzConfig {
+  if (singleton) {
+    return singleton;
+  }
+
   loadEnvConfig(cwd);
 
   const configPath = resolve(cwd, "aixyz.config.ts");
-  const mod = await import(configPath);
+  const mod = require(configPath);
   const config = mod.default;
 
   if (!config || typeof config !== "object") {
@@ -87,5 +112,6 @@ export async function loadAixyzConfig(): Promise<LoadedAixyzConfig> {
     throw new Error(`aixyz.config.ts: ${parsedConfig.error}`);
   }
 
-  return parsedConfig.data as LoadedAixyzConfig;
+  singleton = parsedConfig.data as LoadedAixyzConfig;
+  return singleton;
 }

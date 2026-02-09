@@ -3,14 +3,8 @@ loadEnvConfig(process.cwd());
 
 import express from "express";
 import { randomUUID } from "crypto";
-import type { AgentCard, Message, TextPart } from "@a2a-js/sdk";
-import {
-  AgentExecutor,
-  RequestContext,
-  ExecutionEventBus,
-  DefaultRequestHandler,
-  InMemoryTaskStore,
-} from "@a2a-js/sdk/server";
+import type { Message, TextPart } from "@a2a-js/sdk";
+import { AgentExecutor, RequestContext, ExecutionEventBus, InMemoryTaskStore } from "@a2a-js/sdk/server";
 import { jsonRpcHandler, agentCardHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { registerExactEvmScheme } from "@x402/evm/exact/server";
@@ -22,31 +16,7 @@ import { agent } from "./agent";
 import { executeLookup } from "./tools";
 import { getAddress } from "viem";
 import { getFacilitatorClient } from "aixyz/facilitator";
-
-// Define the agent card metadata
-const agentCard: AgentCard = {
-  name: "Chainlink Price Oracle Agent",
-  description:
-    "An AI agent that provides real-time cryptocurrency price data using Chainlink price feeds on Ethereum mainnet",
-  protocolVersion: "0.3.0",
-  version: "1.0.0",
-  url: process.env.AGENT_URL || "http://localhost:3000/",
-  capabilities: {
-    streaming: false,
-    pushNotifications: false,
-  },
-  defaultInputModes: ["text/plain"],
-  defaultOutputModes: ["text/plain"],
-  skills: [
-    {
-      id: "chainlink-price-lookup",
-      name: "Chainlink Price Lookup",
-      description: "Look up real-time cryptocurrency prices in USD using Chainlink price feeds",
-      tags: ["crypto", "price", "oracle", "chainlink", "ethereum"],
-      examples: ["What is the current price of ETH?", "Look up the price of BTC", "Get me the latest LINK price"],
-    },
-  ],
-};
+import { AixyzRequestHandler } from "aixyz";
 
 // Implement the AgentExecutor that wraps the ToolLoopAgent
 class ChainlinkAgentExecutor implements AgentExecutor {
@@ -99,7 +69,7 @@ class ChainlinkAgentExecutor implements AgentExecutor {
 
 // Create the agent executor and request handler
 const agentExecutor = new ChainlinkAgentExecutor();
-const requestHandler = new DefaultRequestHandler(agentCard, new InMemoryTaskStore(), agentExecutor);
+const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), agentExecutor);
 
 // Setup x402 payment configuration
 const facilitatorClient = getFacilitatorClient();
