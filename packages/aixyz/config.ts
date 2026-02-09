@@ -47,8 +47,6 @@ function findProjectRoot(): string {
   return process.cwd();
 }
 
-const cwd = process.cwd();
-
 const AixyzSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().nonempty(),
@@ -119,6 +117,7 @@ export function loadAixyzConfig(): LoadedAixyzConfig {
     return singleton;
   }
 
+  const cwd = findProjectRoot();
   loadEnvConfig(cwd);
 
   const tsPath = resolve(cwd, "aixyz.config.ts");
