@@ -76,7 +76,7 @@ const AixyzSchema = z.object({
   ),
 });
 
-export type LoadedAixyzConfig = Omit<z.infer<typeof AixyzSchema>, "version"> & { version: string };
+export type LoadedAixyzConfig = z.infer<typeof AixyzSchema>;
 
 let singleton: LoadedAixyzConfig | undefined;
 
