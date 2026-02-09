@@ -1,4 +1,4 @@
-import { resolve, join } from "path";
+import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import type { BunPlugin } from "bun";
 
@@ -40,9 +40,6 @@ rmSync(outputDir, { recursive: true, force: true });
 // 5. Bundle with Bun.build()
 const funcDir = resolve(outputDir, "functions/index.func");
 mkdirSync(funcDir, { recursive: true });
-
-// Resolve the actual config.ts path in the aixyz package
-const aixyzConfigModule = resolve(import.meta.dir, "config.ts");
 
 const configPlugin: BunPlugin = {
   name: "aixyz-config",
