@@ -2,6 +2,9 @@
   "name": "aixyz",
   "version": "0.0.0",
   "private": false,
+  "bin": {
+    "aixyz": "cli.js"
+  },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
     "@next/env": "^16.1.6",

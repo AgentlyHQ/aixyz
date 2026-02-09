@@ -1,4 +1,4 @@
-import { resolve, dirname } from "path";
+import { resolve } from "path";
 import { existsSync } from "fs";
 import { loadEnvConfig } from "@next/env";
 
@@ -25,40 +25,6 @@ export type AixyzConfig = {
   };
   skills: AgentSkill[];
 };
-
-function hasConfig(dir: string): boolean {
-  return existsSync(resolve(dir, "aixyz.config.ts")) || existsSync(resolve(dir, "aixyz.config.js"));
-}
-
-function walkUp(startDir: string): string | undefined {
-  let dir = startDir;
-  while (true) {
-    if (hasConfig(dir)) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return undefined;
-}
-
-/**
- * In serverless environments (e.g. Vercel/Lambda), process.cwd() may return
- * the deployment root (e.g. /var/task/) rather than the app's project directory,
- * and require.main points to the runtime entry (e.g. /opt/rust/nodejs.js).
- *
- * Walk the module.parent chain (the require stack) and from each module's
- * directory walk upward to find the nearest directory containing an aixyz config.
- */
-function findProjectRoot(): string {
-  // eslint-disable-next-line @typescript-eslint/no-this-alias
-  let current: NodeModule | null | undefined = module;
-  while (current) {
-    const found = walkUp(dirname(current.filename));
-    if (found) return found;
-    current = current.parent ?? null;
-  }
-  return process.cwd();
-}
 
 const AixyzSchema = z.object({
   name: z.string().nonempty(),
@@ -130,7 +96,7 @@ export function loadAixyzConfig(): LoadedAixyzConfig {
     return singleton;
   }
 
-  const cwd = findProjectRoot();
+  const cwd = process.cwd();
   loadEnvConfig(cwd);
 
   const tsPath = resolve(cwd, "aixyz.config.ts");
