@@ -17,7 +17,7 @@
     "examples/agent-chainlink": {
       "name": "@examples/agent-chainlink",
       "dependencies": {
-        "@a2a-js/sdk": "^0.3.9",
+        "@a2a-js/sdk": "^0.3.10",
         "@ai-sdk/openai": "3.0.25",
         "@modelcontextprotocol/sdk": "^1.25.3",
         "@next/env": "^16",
@@ -42,7 +42,7 @@
     "examples/agent-job-hunter": {
       "name": "@examples/agent-job-hunter",
       "dependencies": {
-        "@a2a-js/sdk": "^0.3.9",
+        "@a2a-js/sdk": "^0.3.10",
         "@ai-sdk/openai": "3.0.25",
         "@modelcontextprotocol/sdk": "^1.25.3",
         "@next/env": "^16",
@@ -66,7 +66,7 @@
     "examples/agent-price-oracle": {
       "name": "@examples/agent-price-oracle",
       "dependencies": {
-        "@a2a-js/sdk": "^0.3.9",
+        "@a2a-js/sdk": "^0.3.10",
         "@ai-sdk/openai": "3.0.25",
         "@modelcontextprotocol/sdk": "^1.25.3",
         "@next/env": "^16",
@@ -90,7 +90,7 @@
     "examples/agent-travel": {
       "name": "@examples/agent-travel",
       "dependencies": {
-        "@a2a-js/sdk": "^0.3.9",
+        "@a2a-js/sdk": "^0.3.10",
         "@ai-sdk/openai": "3.0.25",
         "@modelcontextprotocol/sdk": "^1.25.3",
         "@next/env": "^16",
@@ -148,7 +148,7 @@
     },
   },
   "packages": {
-    "@a2a-js/sdk": ["@a2a-js/sdk@0.3.9", "", { "dependencies": { "uuid": "^11.1.0" }, "peerDependencies": { "@bufbuild/protobuf": "^2.10.2", "@grpc/grpc-js": "^1.11.0", "express": "^4.21.2 || ^5.1.0" }, "optionalPeers": ["@bufbuild/protobuf", "@grpc/grpc-js", "express"] }, "sha512-GWOSjL/dbkNRETfmLIKqtVV/fm+chPPp0uL5DUDKJlFmVjPCxRS75I6oiIkJeGo3/AM7QjaZTMb003Ia09ibtQ=="],
+    "@a2a-js/sdk": ["@a2a-js/sdk@0.3.10", "", { "dependencies": { "uuid": "^11.1.0" }, "peerDependencies": { "@bufbuild/protobuf": "^2.10.2", "@grpc/grpc-js": "^1.11.0", "express": "^4.21.2 || ^5.1.0" }, "optionalPeers": ["@bufbuild/protobuf", "@grpc/grpc-js", "express"] }, "sha512-t6w5ctnwJkSOMRl6M9rn95C1FTHCPqixxMR0yWXtzhZXEnF6mF1NAK0CfKlG3cz+tcwTxkmn287QZC3t9XPgrA=="],
 
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.10.1", "", {}, "sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw=="],
 
@@ -911,8 +911,6 @@
     "@x402/express/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "@x402/extensions/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
-
-    "aixyz/@a2a-js/sdk": ["@a2a-js/sdk@0.3.10", "", { "dependencies": { "uuid": "^11.1.0" }, "peerDependencies": { "@bufbuild/protobuf": "^2.10.2", "@grpc/grpc-js": "^1.11.0", "express": "^4.21.2 || ^5.1.0" }, "optionalPeers": ["@bufbuild/protobuf", "@grpc/grpc-js", "express"] }, "sha512-t6w5ctnwJkSOMRl6M9rn95C1FTHCPqixxMR0yWXtzhZXEnF6mF1NAK0CfKlG3cz+tcwTxkmn287QZC3t9XPgrA=="],
 
     "ansi-align/string-width": ["string-width@4.2.3", "", { "dependencies": { "emoji-regex": "^8.0.0", "is-fullwidth-code-point": "^3.0.0", "strip-ansi": "^6.0.1" } }, "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g=="],
 
