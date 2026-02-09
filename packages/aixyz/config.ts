@@ -26,23 +26,36 @@ export type AixyzConfig = {
   skills: AgentSkill[];
 };
 
+function hasConfig(dir: string): boolean {
+  return existsSync(resolve(dir, "aixyz.config.ts")) || existsSync(resolve(dir, "aixyz.config.js"));
+}
+
+function walkUp(startDir: string): string | undefined {
+  let dir = startDir;
+  while (true) {
+    if (hasConfig(dir)) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return undefined;
+}
+
 /**
- * In serverless environments (e.g. Vercel), process.cwd() may return the
- * deployment root (e.g. /var/task/) rather than the app's project directory.
- * Walk up from the main module's location to find the nearest directory
- * containing an aixyz config file, falling back to process.cwd().
+ * In serverless environments (e.g. Vercel/Lambda), process.cwd() may return
+ * the deployment root (e.g. /var/task/) rather than the app's project directory,
+ * and require.main points to the runtime entry (e.g. /opt/rust/nodejs.js).
+ *
+ * Walk the module.parent chain (the require stack) and from each module's
+ * directory walk upward to find the nearest directory containing an aixyz config.
  */
 function findProjectRoot(): string {
-  if (require.main?.filename) {
-    let dir = dirname(require.main.filename);
-    while (true) {
-      if (existsSync(resolve(dir, "aixyz.config.ts")) || existsSync(resolve(dir, "aixyz.config.js"))) {
-        return dir;
-      }
-      const parent = dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  let current: NodeModule | null | undefined = module;
+  while (current) {
+    const found = walkUp(dirname(current.filename));
+    if (found) return found;
+    current = current.parent ?? null;
   }
   return process.cwd();
 }
