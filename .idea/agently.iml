@@ -5,6 +5,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludePattern pattern=".turbo" />
+      <excludePattern pattern=".vercel" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

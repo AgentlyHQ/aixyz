@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
-import { lookup } from "./tools";
+import lookup from "./tools/lookup";
 
 // language=Markdown
 const SystemPrompt = `

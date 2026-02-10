@@ -11,7 +11,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import { agent } from "./agent";
-import { executeLookup } from "./tools";
+import { executeLookup } from "./tools/lookup";
 import { getFacilitatorClient } from "aixyz/facilitator";
 import { AixyzRequestHandler, loadAixyzConfig } from "aixyz";
 import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";

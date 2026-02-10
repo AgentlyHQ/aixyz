@@ -75,7 +75,7 @@ export async function executeLookup({ symbol }: { symbol: string }) {
   };
 }
 
-export const lookup = tool({
+export default tool({
   title: "Lookup Chainlink Price Feed",
   description:
     "Get the latest price data from Chainlink price feeds for cryptocurrency prices in USD. Provide a symbol like 'eth', 'btc', 'link' and it will look up the USD price feed.",
