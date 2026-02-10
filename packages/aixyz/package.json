@@ -22,5 +22,16 @@
     "commander": "^13.0.0",
     "jose": "^5.10.0",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "ai": "^6"
+  },
+  "peerDependencies": {
+    "ai": "^6"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    }
   }
 }
