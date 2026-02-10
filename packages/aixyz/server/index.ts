@@ -9,7 +9,7 @@ export function getAgentCard(): AgentCard {
     description: config.description,
     protocolVersion: "0.3.0",
     version: config.version,
-    url: config.url + "/agent",
+    url: new URL("/agent", config.url).toString(),
     capabilities: {
       streaming: false,
       pushNotifications: false,
