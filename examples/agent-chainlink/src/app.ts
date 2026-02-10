@@ -11,9 +11,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import { agent } from "./agent";
-import { executeLookup } from "./tools";
+import { executeLookup } from "./tools/lookup";
 import { getFacilitatorClient } from "aixyz/facilitator";
-import { AixyzRequestHandler, loadAixyzConfig } from "aixyz";
+import { AixyzRequestHandler, getExpressApp, loadAixyzConfig } from "aixyz";
 import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
 
 const aixyzConfig = loadAixyzConfig();
@@ -155,30 +155,11 @@ function createMcpServer() {
 }
 
 // Setup the Express app with A2A routes using specific middlewares
-const app: express.Express = express();
+const app = getExpressApp(requestHandler, x402Routes, resourceServer);
 export { app };
 
-// Add agent card handler at well-known path (no payment required for A2A discovery)
-app.use(
-  "/.well-known/agent-card.json",
-  agentCardHandler({
-    agentCardProvider: requestHandler,
-  }),
-);
-
-// Apply x402 payment middleware to protect the root JSON-RPC endpoint
-app.use(paymentMiddleware(x402Routes, resourceServer));
-
-// Add JSON-RPC handler at root (protected by x402 payment)
-app.use(
-  "/agent",
-  jsonRpcHandler({
-    requestHandler,
-    userBuilder: UserBuilder.noAuthentication,
-  }),
-);
-
-// MCP endpoint - stateless, one request per connection
+// TODO(@fuxingloh): fix this: not working properly,
+//  MCP endpoint - stateless, one request per connection
 app.post("/mcp", express.json(), async (req, res) => {
   const server = createMcpServer();
   const transport = new StreamableHTTPServerTransport({
@@ -210,27 +191,6 @@ export async function initializeApp() {
     });
   }
   return initializationPromise;
-}
-
-// Start server function for standalone use
-export async function startServer(port?: number) {
-  await initializeApp();
-
-  const PORT = port || process.env.PORT || 3000;
-  const server = app.listen(PORT, () => {
-    console.log(`Chainlink Price Oracle Agent server running on http://localhost:${PORT}`);
-    console.log(`Agent card available at http://localhost:${PORT}/.well-known/agent-card.json`);
-    console.log(`A2A endpoint at http://localhost:${PORT}/agent`);
-    console.log(`MCP endpoint at http://localhost:${PORT}/mcp`);
-  });
-
-  process.on("SIGINT", () => {
-    console.log("Shutting down server...");
-    server.close();
-    process.exit(0);
-  });
-
-  return server;
 }
 
 // Default export for Vercel
