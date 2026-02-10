@@ -15,13 +15,13 @@ export type AixyzConfig = {
    */
   version: string;
   url?: string;
-  x402?: {
+  x402: {
     /**
      * The address that will receive the payment from the agent.
      * Defaults to `process.env.X402_PAY_TO` if not set.
      * Throws an error if neither is provided.
      */
-    payTo?: string;
+    payTo: string;
   };
   skills: AgentSkill[];
 };
@@ -48,20 +48,9 @@ const AixyzSchema = z.object({
       return `http://localhost:3000/`;
     })
     .pipe(z.url()),
-  x402: z
-    .object({
-      payTo: z.string().optional(),
-    })
-    .optional()
-    .transform((val) => {
-      const payTo = val?.payTo ?? process.env.X402_PAY_TO;
-      if (!payTo) {
-        throw new Error(
-          "x402.payTo is required. Set it in aixyz.config.ts or via the X402_PAY_TO environment variable.",
-        );
-      }
-      return { payTo };
-    }),
+  x402: z.object({
+    payTo: z.string(),
+  }),
   skills: z.array(
     z.object({
       id: z.string().nonempty(),
@@ -90,6 +79,9 @@ let singleton: LoadedAixyzConfig | undefined;
  *
  * For example, if `NODE_ENV` is `development` and you define a variable in both `.env.development.local` and `.env,
  * the value in `.env.development.local` will be used.
+ *
+ * In production:
+ * This is a materialized config object that is cached for performance.
  */
 export function loadAixyzConfig(): LoadedAixyzConfig {
   if (singleton) {

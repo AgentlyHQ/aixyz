@@ -1,29 +1,10 @@
 import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
-import { pathToFileURL } from "url";
-import type { BunPlugin } from "bun";
+import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 
 export async function build(): Promise<void> {
   const cwd = process.cwd();
 
-  // 1. Validate — check aixyz.config.ts exists in cwd
-  const configTsPath = resolve(cwd, "aixyz.config.ts");
-  const configJsPath = resolve(cwd, "aixyz.config.js");
-  const configPath = existsSync(configTsPath) ? configTsPath : existsSync(configJsPath) ? configJsPath : undefined;
-
-  if (!configPath) {
-    throw new Error(`No aixyz.config.ts or aixyz.config.js found in ${cwd}`);
-  }
-
-  // 2. Load config at build time
-  const configMod = await import(pathToFileURL(configPath).href);
-  const rawConfig = configMod.default;
-
-  if (!rawConfig || typeof rawConfig !== "object") {
-    throw new Error("aixyz.config.ts must have a default export");
-  }
-
-  // 3. Determine entry point
   const srcIndex = resolve(cwd, "src/index.ts");
   const srcApp = resolve(cwd, "src/app.ts");
   const entrypoint = existsSync(srcIndex) ? srcIndex : existsSync(srcApp) ? srcApp : undefined;
@@ -40,20 +21,6 @@ export async function build(): Promise<void> {
   const funcDir = resolve(outputDir, "functions/index.func");
   mkdirSync(funcDir, { recursive: true });
 
-  const configPlugin: BunPlugin = {
-    name: "aixyz-config",
-    setup(build) {
-      build.onLoad({ filter: /packages\/aixyz\/config\.ts$/ }, () => ({
-        contents: `
-        export function loadAixyzConfig() {
-          return ${JSON.stringify(rawConfig)};
-        }
-      `,
-        loader: "ts",
-      }));
-    },
-  };
-
   console.log("Building", entrypoint);
 
   const result = await Bun.build({
@@ -62,7 +29,7 @@ export async function build(): Promise<void> {
     target: "node",
     format: "cjs",
     sourcemap: "linked",
-    plugins: [configPlugin],
+    plugins: [await AixyzConfigPlugin()],
   });
 
   if (!result.success) {
