@@ -2,9 +2,7 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 import express from "express";
-import { randomUUID } from "crypto";
-import type { Message, TextPart } from "@a2a-js/sdk";
-import { AgentExecutor, RequestContext, ExecutionEventBus, InMemoryTaskStore } from "@a2a-js/sdk/server";
+import { InMemoryTaskStore } from "@a2a-js/sdk/server";
 import { jsonRpcHandler, agentCardHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { registerExactEvmScheme } from "@x402/evm/exact/server";
@@ -16,61 +14,10 @@ import { agent } from "./agent";
 import { executeLookup } from "./tools";
 import { getFacilitatorClient } from "aixyz/facilitator";
 import { AixyzRequestHandler, loadAixyzConfig } from "aixyz";
-
-// Implement the AgentExecutor that wraps the ToolLoopAgent
-class ChainlinkAgentExecutor implements AgentExecutor {
-  async execute(requestContext: RequestContext, eventBus: ExecutionEventBus): Promise<void> {
-    try {
-      // Extract the user's message text
-      const userMessage = requestContext.userMessage;
-      const textParts = userMessage.parts.filter((part): part is TextPart => part.kind === "text");
-      const prompt = textParts.map((part) => part.text).join("\n");
-
-      // Generate a response using the ToolLoopAgent
-      const result = await agent.generate({ prompt });
-
-      // Publish the response message
-      const responseMessage: Message = {
-        kind: "message",
-        messageId: randomUUID(),
-        role: "agent",
-        parts: [{ kind: "text", text: result.text }],
-        contextId: requestContext.contextId,
-      };
-
-      eventBus.publish(responseMessage);
-      eventBus.finished();
-    } catch (error) {
-      // Handle errors by publishing an error message
-      const errorMessage: Message = {
-        kind: "message",
-        messageId: randomUUID(),
-        role: "agent",
-        parts: [
-          {
-            kind: "text",
-            text: `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
-          },
-        ],
-        contextId: requestContext.contextId,
-      };
-
-      eventBus.publish(errorMessage);
-      eventBus.finished();
-    }
-  }
-
-  async cancelTask(_taskId: string, eventBus: ExecutionEventBus): Promise<void> {
-    // The ToolLoopAgent doesn't support cancellation, so we just finish
-    eventBus.finished();
-  }
-}
+import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
 
 const aixyzConfig = loadAixyzConfig();
-
-// Create the agent executor and request handler
-const agentExecutor = new ChainlinkAgentExecutor();
-const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), agentExecutor);
+const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
 
 // Setup x402 payment configuration
 const facilitatorClient = getFacilitatorClient();
@@ -253,6 +200,7 @@ app.post("/mcp", express.json(), async (req, res) => {
 
 // Initialize function for serverless environments (e.g., Vercel)
 let initializationPromise: Promise<void> | null = null;
+
 export async function initializeApp() {
   if (!initializationPromise) {
     initializationPromise = resourceServer.initialize().catch((error) => {
