@@ -1,7 +1,4 @@
-import { loadEnvConfig } from "@next/env";
-
-loadEnvConfig(process.cwd());
-import app from "./app";
+import app from "./index";
 
 // Start server function for standalone use
 export async function startServer(port?: number) {
