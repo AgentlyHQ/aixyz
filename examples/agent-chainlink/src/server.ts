@@ -1,11 +1,8 @@
-import { loadEnvConfig } from "@next/env";
-
-loadEnvConfig(process.cwd());
-import app from "./app";
+import app from "./index";
 
 // Start server function for standalone use
-export async function startServer(port?: number) {
-  const PORT = port || process.env.PORT || 3000;
+export async function startServer() {
+  const PORT = process.env.PORT || 3000;
   const server = app.listen(PORT, () => {
     console.log(`Chainlink Price Oracle Agent server running on http://localhost:${PORT}`);
     console.log(`Agent card available at http://localhost:${PORT}/.well-known/agent-card.json`);
@@ -23,4 +20,4 @@ export async function startServer(port?: number) {
 }
 
 // Start the server when running standalone
-startServer(Number(process.env.PORT) || 3000);
+startServer();
