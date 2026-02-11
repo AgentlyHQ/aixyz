@@ -3,32 +3,16 @@ loadEnvConfig(process.cwd());
 
 import express from "express";
 import { InMemoryTaskStore } from "@a2a-js/sdk/server";
-import { jsonRpcHandler, agentCardHandler, UserBuilder } from "@a2a-js/sdk/server/express";
-import { paymentMiddleware, x402ResourceServer } from "@x402/express";
-import { registerExactEvmScheme } from "@x402/evm/exact/server";
-import { declareDiscoveryExtension, bazaarResourceServerExtension } from "@x402/extensions/bazaar";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import { agent } from "./agent";
 import { executeLookup } from "./tools/lookup";
-import { getFacilitatorClient } from "aixyz/facilitator";
-import { AixyzRequestHandler, getExpressApp, loadAixyzConfig } from "aixyz";
+import { AixyzRequestHandler, initExpressApp, loadAixyzConfig } from "aixyz";
 import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
 
 const aixyzConfig = loadAixyzConfig();
 const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
-
-// Setup x402 payment configuration
-const facilitatorClient = getFacilitatorClient();
-
-export const resourceServer = new x402ResourceServer(facilitatorClient);
-registerExactEvmScheme(resourceServer, {
-  networks: [aixyzConfig.x402.network as any],
-});
-
-// Register bazaar extension for Coinbase x402 Bazaar compatibility
-resourceServer.registerExtension(bazaarResourceServerExtension);
 
 const x402Routes = {
   "POST /agent": {
@@ -40,32 +24,6 @@ const x402Routes = {
     },
     mimeType: "application/json",
     description: "Payment for Chainlink Price Oracle Agent API access",
-    // Bazaar discovery extension for endpoint cataloging
-    ...declareDiscoveryExtension({
-      bodyType: "json",
-      input: {
-        jsonrpc: "2.0",
-        method: "string",
-        params: {},
-        id: "number|string",
-      },
-      inputSchema: {
-        properties: {
-          jsonrpc: { type: "string", const: "2.0" },
-          method: { type: "string" },
-          params: { type: "object" },
-          id: { type: ["number", "string"] },
-        },
-        required: ["jsonrpc", "method", "id"],
-      },
-      output: {
-        example: {
-          jsonrpc: "2.0",
-          result: { message: "Price data response" },
-          id: 1,
-        },
-      },
-    }),
   },
   "POST /mcp": {
     accepts: {
@@ -76,32 +34,6 @@ const x402Routes = {
     },
     mimeType: "application/json",
     description: "Payment for MCP protocol access to Chainlink Price Oracle Agent",
-    // Bazaar discovery extension for endpoint cataloging
-    ...declareDiscoveryExtension({
-      bodyType: "json",
-      input: {
-        jsonrpc: "2.0",
-        method: "string",
-        params: {},
-        id: "number|string",
-      },
-      inputSchema: {
-        properties: {
-          jsonrpc: { type: "string", const: "2.0" },
-          method: { type: "string" },
-          params: { type: "object" },
-          id: { type: ["number", "string"] },
-        },
-        required: ["jsonrpc", "method", "id"],
-      },
-      output: {
-        example: {
-          jsonrpc: "2.0",
-          result: { tools: [], protocolVersion: "2024-11-05" },
-          id: 1,
-        },
-      },
-    }),
   },
 };
 
@@ -155,7 +87,7 @@ function createMcpServer() {
 }
 
 // Setup the Express app with A2A routes using specific middlewares
-const app = getExpressApp(requestHandler, x402Routes, resourceServer);
+const app = await initExpressApp(requestHandler, x402Routes);
 export { app };
 
 // TODO(@fuxingloh): fix this: not working properly,
@@ -178,20 +110,6 @@ app.post("/mcp", express.json(), async (req, res) => {
   res.on("finish", cleanup);
   res.on("close", cleanup);
 });
-
-// Initialize function for serverless environments (e.g., Vercel)
-let initializationPromise: Promise<void> | null = null;
-
-export async function initializeApp() {
-  if (!initializationPromise) {
-    initializationPromise = resourceServer.initialize().catch((error) => {
-      console.warn("[x402] Failed to initialize:", error instanceof Error ? error.message : error);
-      initializationPromise = null; // Allow retry on next request
-      throw error;
-    });
-  }
-  return initializationPromise;
-}
 
 // Default export for Vercel
 export default app;

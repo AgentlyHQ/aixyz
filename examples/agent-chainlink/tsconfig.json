@@ -3,6 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "NodeNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
     "types": ["bun"]
