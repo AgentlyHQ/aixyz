@@ -88,7 +88,6 @@ function createMcpServer() {
 
 // Setup the Express app with A2A routes using specific middlewares
 const app = await initExpressApp(requestHandler, x402Routes);
-export { app };
 
 // TODO(@fuxingloh): fix this: not working properly,
 //  MCP endpoint - stateless, one request per connection

@@ -27,7 +27,7 @@ export async function build(): Promise<void> {
     entrypoints: [entrypoint],
     outdir: funcDir,
     target: "node",
-    format: "cjs",
+    format: "esm",
     sourcemap: "linked",
     plugins: [await AixyzConfigPlugin()],
   });
@@ -55,6 +55,9 @@ export async function build(): Promise<void> {
       2,
     ),
   );
+
+  // 6b. Write package.json for ESM support
+  await Bun.write(resolve(funcDir, "package.json"), JSON.stringify({ type: "module" }, null, 2));
 
   // 7. Write config.json
   await Bun.write(
