@@ -56,6 +56,9 @@ export async function build(): Promise<void> {
     ),
   );
 
+  // 6b. Write package.json for ESM support
+  await Bun.write(resolve(funcDir, "package.json"), JSON.stringify({ type: "module" }, null, 2));
+
   // 7. Write config.json
   await Bun.write(
     resolve(outputDir, "config.json"),
