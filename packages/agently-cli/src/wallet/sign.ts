@@ -1,7 +1,7 @@
 import type { Chain } from "viem";
-import { signWithBrowser } from "./browser.js";
-import { createWalletFromMethod, type WalletMethod } from "./index.js";
-import { CliError } from "../utils.js";
+import { signWithBrowser } from "./browser";
+import { createWalletFromMethod, type WalletMethod } from "./index";
+import { CliError } from "../utils";
 
 export interface TxRequest {
   to: `0x${string}`;

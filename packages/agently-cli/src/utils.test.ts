@@ -1,7 +1,7 @@
 import { describe, expect, test, afterAll, beforeAll } from "bun:test";
 import { rmSync } from "fs";
 import { mkdir } from "node:fs/promises";
-import { validatePrivateKey, CliError, resolveUri } from "./utils.js";
+import { validatePrivateKey, CliError, resolveUri } from "./utils";
 import { join } from "path";
 
 describe("validatePrivateKey", () => {

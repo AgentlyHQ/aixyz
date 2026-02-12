@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@agentlyhq/erc-8004";
-import { register } from "./register.js";
+import { register } from "./register";
 
 describe("register command chain configuration", () => {
   test("sepolia chain ID is correct", () => {

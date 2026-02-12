@@ -3,7 +3,7 @@ import { decryptKeystoreJson, isKeystoreJson } from "ethers";
 import { createWalletClient, http, type Chain, type WalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { password } from "@inquirer/prompts";
-import { CliError } from "../utils.js";
+import { CliError } from "../utils";
 
 export async function decryptKeystore(keystorePath: string): Promise<`0x${string}`> {
   const file = Bun.file(keystorePath);

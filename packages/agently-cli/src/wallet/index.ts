@@ -1,9 +1,9 @@
 import { homedir } from "node:os";
 import type { Chain, WalletClient } from "viem";
 import { select, input, password } from "@inquirer/prompts";
-import { createPrivateKeyWallet } from "./privatekey.js";
-import { createKeystoreWallet } from "./keystore.js";
-import { CliError } from "../utils.js";
+import { createPrivateKeyWallet } from "./privatekey";
+import { createKeystoreWallet } from "./keystore";
+import { CliError } from "../utils";
 
 export interface WalletOptions {
   keystore?: string;
@@ -81,4 +81,4 @@ export async function createWalletFromMethod(
   }
 }
 
-export { createPrivateKeyWallet } from "./privatekey.js";
+export { createPrivateKeyWallet } from "./privatekey";

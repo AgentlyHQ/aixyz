@@ -1,6 +1,6 @@
 import { createWalletClient, http, type Chain, type WalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { validatePrivateKey } from "../utils.js";
+import { validatePrivateKey } from "../utils";
 
 export function createPrivateKeyWallet(privateKey: string, chain: Chain, rpcUrl?: string): WalletClient {
   const key = validatePrivateKey(privateKey);

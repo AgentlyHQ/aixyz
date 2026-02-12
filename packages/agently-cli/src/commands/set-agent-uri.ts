@@ -1,45 +1,26 @@
 import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log } from "viem";
 import { IdentityRegistryAbi } from "@agentlyhq/erc-8004";
-import { selectWalletMethod, type WalletOptions } from "../wallet/index.js";
-import { signTransaction } from "../wallet/sign.js";
-import { CliError, resolveUri } from "../utils.js";
+import { selectWalletMethod } from "../wallet/index";
+import { signTransaction } from "../wallet/sign";
+import { CliError, resolveUri } from "../utils";
 import {
   resolveChainConfig,
   selectChain,
   resolveRegistryAddress,
   validateBrowserRpcConflict,
   getExplorerUrl,
-} from "../utils/chain.js";
-import { writeResultJson } from "../utils/result.js";
-import { label, truncateUri, broadcastAndConfirm, logSignResult } from "../utils/transaction.js";
+} from "../utils/chain";
+import { writeResultJson } from "../utils/result";
+import { label, truncateUri, broadcastAndConfirm, logSignResult } from "../utils/transaction";
 import { confirm, input } from "@inquirer/prompts";
 import chalk from "chalk";
 import boxen from "boxen";
+import type { BaseOptions } from "../index";
+import { promptAgentId, promptUri } from "../utils/prompt";
 
-export interface SetAgentUriOptions extends WalletOptions {
+export interface SetAgentUriOptions extends BaseOptions {
   agentId?: string;
   uri?: string;
-  chain?: string;
-  rpcUrl?: string;
-  registry?: string;
-  outDir?: string;
-}
-
-async function promptAgentId(): Promise<string> {
-  return input({
-    message: "Agent ID (token ID) to update:",
-    validate: (value) => {
-      const n = Number(value);
-      if (value.trim() === "" || !Number.isInteger(n) || n < 0) return "Must be a non-negative integer";
-      return true;
-    },
-  });
-}
-
-async function promptUri(): Promise<string> {
-  return input({
-    message: "New agent metadata URI or path to .json file (leave empty to clear):",
-  });
 }
 
 async function confirmEmptyUri(): Promise<void> {
