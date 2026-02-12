@@ -1,15 +1,14 @@
-import { resolve } from "path";
-import { existsSync } from "fs";
+import { resolve, relative } from "path";
+import { existsSync, watch } from "fs";
 import { loadEnvConfig } from "@next/env";
 import pkg from "../../package.json";
 
 export async function dev(options: { port?: string }): Promise<void> {
-  const startTime = performance.now();
   const cwd = process.cwd();
 
   // Load environment config
   const { loadedEnvFiles } = loadEnvConfig(cwd, true);
-  const envFileNames = loadedEnvFiles.map((f) => f.path.replace(cwd + "/", ""));
+  const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
 
   // Find entrypoint
   const srcIndex = resolve(cwd, "src/index.ts");
@@ -20,42 +19,91 @@ export async function dev(options: { port?: string }): Promise<void> {
     throw new Error(`No src/index.ts or src/app.ts found in ${cwd}`);
   }
 
-  // Import the app (default export should be an Express app)
-  const mod = await import(entrypoint);
-  const app = mod.default;
+  const port = options.port || process.env.PORT || "3000";
+  const baseUrl = `http://localhost:${port}`;
 
-  if (!app || typeof app.listen !== "function") {
-    throw new Error(`Entrypoint must default-export an Express app`);
+  // Print banner
+  console.log("");
+  console.log(`🐁  ai-xyz.dev v${pkg.version}`);
+  console.log("");
+  console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
+  console.log(`- MCP:          ${baseUrl}/mcp`);
+  if (envFileNames.length > 0) {
+    console.log(`- Environments: ${envFileNames.join(", ")}`);
+  }
+  console.log("");
+
+  // Spawn worker process
+  const workerPath = resolve(__dirname, "dev-worker.js");
+  let child: ReturnType<typeof Bun.spawn> | null = null;
+  let restarting = false;
+
+  function startServer() {
+    child = Bun.spawn(["bun", workerPath, entrypoint!, port], {
+      cwd,
+      stdout: "inherit",
+      stderr: "inherit",
+      env: process.env,
+    });
+    child.exited.then((code) => {
+      if (!restarting && code !== 0) {
+        console.log(`\nServer exited with code ${code}, waiting for changes...`);
+      }
+    });
   }
 
-  // Determine port
-  const port = parseInt(options.port || process.env.PORT || "3000", 10);
-
-  // Start server
-  const server = app.listen(port, () => {
-    const duration = Math.round(performance.now() - startTime);
-    const baseUrl = `http://localhost:${port}`;
-
-    console.log("");
-    console.log(`🐁  ai-xyz.dev v${pkg.version}`);
-    console.log("");
-    console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
-    console.log(`- MCP:          ${baseUrl}/mcp`);
-    if (envFileNames.length > 0) {
-      console.log(`- Environments: ${envFileNames.join(", ")}`);
+  async function restartServer(reason: string) {
+    restarting = true;
+    if (child) {
+      child.kill();
+      await child.exited;
+      child = null;
     }
-    console.log("");
-    console.log(`Ready in ${duration}ms`);
-    console.log("");
+    restarting = false;
+    console.log(`Restarting... ${reason}`);
+    startServer();
+  }
+
+  startServer();
+
+  // Watch src/ for changes
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function scheduleRestart(reason: string) {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      restartServer(reason);
+    }, 100);
+  }
+
+  watch(resolve(cwd, "src"), { recursive: true }, (_event, filename) => {
+    scheduleRestart(filename ? `${filename} changed` : "file changed");
   });
 
+  // Watch config file
+  const configFile = existsSync(resolve(cwd, "aixyz.config.ts"))
+    ? resolve(cwd, "aixyz.config.ts")
+    : existsSync(resolve(cwd, "aixyz.config.js"))
+      ? resolve(cwd, "aixyz.config.js")
+      : null;
+
+  if (configFile) {
+    watch(configFile, () => {
+      scheduleRestart("config changed");
+    });
+  }
+
+  // Handle shutdown
   process.on("SIGINT", () => {
-    server.close();
+    if (child) child.kill();
     process.exit(0);
   });
 
   process.on("SIGTERM", () => {
-    server.close();
+    if (child) child.kill();
     process.exit(0);
   });
+
+  // Keep the process alive
+  await new Promise(() => {});
 }
