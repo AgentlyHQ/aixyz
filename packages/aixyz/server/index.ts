@@ -46,10 +46,34 @@ async function initX402ResourceServer() {
   return server;
 }
 
-export async function initExpressApp(
-  requestHandler: AixyzRequestHandler,
-  x402Routes: RoutesConfig,
-): Promise<express.Express> {
+function getX402Routes(price: string) {
+  const config = loadAixyzConfig();
+
+  return {
+    "POST /agent": {
+      accepts: {
+        scheme: "exact",
+        price: price,
+        network: config.x402.network as any,
+        payTo: config.x402.payTo,
+      },
+      mimeType: "application/json",
+      description: `A2A payment: ${config.description}`,
+    },
+    "POST /mcp": {
+      accepts: {
+        scheme: "exact",
+        price: price,
+        network: config.x402.network as any,
+        payTo: config.x402.payTo,
+      },
+      mimeType: "application/json",
+      description: `MCP payment: ${config.description}`,
+    },
+  };
+}
+
+export async function initExpressApp(requestHandler: AixyzRequestHandler, price: string): Promise<express.Express> {
   const x402ResourceServer = await initX402ResourceServer();
   const app: express.Express = express();
 
@@ -60,7 +84,7 @@ export async function initExpressApp(
     }),
   );
 
-  // x402 Protected JSON-RPC endpoint
+  const x402Routes = getX402Routes(price);
   app.use(paymentMiddleware(x402Routes, x402ResourceServer));
   app.use(
     "/agent",
