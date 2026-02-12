@@ -3,7 +3,7 @@ import { stepCountIs, ToolLoopAgent } from "ai";
 import lookup from "./tools/lookup";
 
 // language=Markdown
-const SystemPrompt = `
+const instructions = `
 # Chainlink Price Oracle AI Agent
 
 You are an AI agent that provides real-time cryptocurrency price data using Chainlink price feeds. 
@@ -16,9 +16,13 @@ If they didn't provide a valid symbol, after you checked with the tool.
 You should suggest a valid symbol or provide an error message.
 `.trim();
 
+export const x402 = {
+  price: "$0.01",
+};
+
 export const agent = new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
-  instructions: SystemPrompt,
+  instructions: instructions,
   tools: {
     lookup,
   },

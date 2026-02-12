@@ -1,41 +1,12 @@
-import { loadEnvConfig } from "@next/env";
-loadEnvConfig(process.cwd());
-
 import express from "express";
 import { InMemoryTaskStore } from "@a2a-js/sdk/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
-import { agent } from "./agent";
+import { agent, x402 } from "./agent";
 import { executeLookup } from "./tools/lookup";
-import { AixyzRequestHandler, initExpressApp, loadAixyzConfig } from "aixyz";
+import { AixyzRequestHandler, initExpressApp } from "aixyz";
 import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
-
-const aixyzConfig = loadAixyzConfig();
-const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
-
-const x402Routes = {
-  "POST /agent": {
-    accepts: {
-      scheme: "exact",
-      price: "$0.01",
-      network: aixyzConfig.x402.network as any,
-      payTo: aixyzConfig.x402.payTo,
-    },
-    mimeType: "application/json",
-    description: "Payment for Chainlink Price Oracle Agent API access",
-  },
-  "POST /mcp": {
-    accepts: {
-      scheme: "exact",
-      price: "$0.01",
-      network: aixyzConfig.x402.network as any,
-      payTo: aixyzConfig.x402.payTo,
-    },
-    mimeType: "application/json",
-    description: "Payment for MCP protocol access to Chainlink Price Oracle Agent",
-  },
-};
 
 // Create MCP Server instance
 function createMcpServer() {
@@ -87,7 +58,8 @@ function createMcpServer() {
 }
 
 // Setup the Express app with A2A routes using specific middlewares
-const app = await initExpressApp(requestHandler, x402Routes);
+const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
+const app = await initExpressApp(requestHandler, x402.price);
 
 // TODO(@fuxingloh): fix this: not working properly,
 //  MCP endpoint - stateless, one request per connection
