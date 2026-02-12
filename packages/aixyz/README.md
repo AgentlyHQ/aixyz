@@ -1,4 +1,4 @@
-# aixyz
+# [aixyz](https://github.com/AgentlyHQ/agently/tree/main/packages/aixyz)
 
 [![npm](https://img.shields.io/npm/v/aixyz)](https://www.npmjs.com/package/aixyz)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
