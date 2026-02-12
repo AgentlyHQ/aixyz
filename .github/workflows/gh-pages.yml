@@ -54,7 +54,7 @@ jobs:
           </body>
           </html>
           LAYOUT
-          echo 'aixyz.dev' > _pages/CNAME
+          echo 'ai-xyz.dev' > _pages/CNAME
           printf '%s\n' '---' 'layout: default' '---' '' > _pages/index.md
           cat packages/aixyz/README.md >> _pages/index.md
       - name: Build with Jekyll
