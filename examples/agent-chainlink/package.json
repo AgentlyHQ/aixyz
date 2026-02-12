@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "bun node_modules/aixyz/cli/bin.js build",
-    "dev": "bun --watch src/server.ts",
+    "dev": "bun --watch node_modules/aixyz/cli/bin.js dev",
     "test": "bun test"
   },
   "dependencies": {

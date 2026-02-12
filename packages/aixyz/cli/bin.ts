@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { program } from "commander";
 import { build } from "./commands/build.js";
+import { dev } from "./commands/dev.js";
 import pkg from "../package.json";
 
 function handleAction(
@@ -17,6 +18,12 @@ function handleAction(
 }
 
 program.name("aixyz").description("CLI for building and deploying aixyz agents").version(pkg.version);
+
+program
+  .command("dev")
+  .description("Start a local development server")
+  .option("-p, --port <port>", "Port to listen on", "3000")
+  .action(handleAction(dev));
 
 program
   .command("build")
