@@ -1,10 +1,14 @@
 name: Deploy aixyz GitHub Pages
+
 on:
   push:
     branches: [main]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Copy README to docs
