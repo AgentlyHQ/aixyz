@@ -40,20 +40,34 @@ export async function register(options: RegisterOptions): Promise<void> {
     args: resolvedUri ? [resolvedUri] : [],
   });
 
+  const printTxDetails = (header: string) => {
+    console.log("");
+    console.log(chalk.dim(header));
+    console.log(`  ${label("To")}${registryAddress}`);
+    console.log(`  ${label("Data")}${data.slice(0, 10)}${chalk.dim("\u2026" + (data.length - 2) / 2 + " bytes")}`);
+    console.log(`  ${label("Chain")}${chainName}`);
+    console.log(`  ${label("Function")}${resolvedUri ? "register(string memory agentURI)" : "register()"}`);
+    if (resolvedUri) {
+      console.log(`  ${label("URI")}${truncateUri(resolvedUri)}`);
+    }
+    console.log("");
+  };
+
   validateBrowserRpcConflict(options.browser, options.rpcUrl);
+
+  if (!options.broadcast) {
+    if (options.browser || options.keystore || process.env.PRIVATE_KEY) {
+      console.warn("Note: --browser/--keystore/PRIVATE_KEY ignored in dry-run mode. Pass --broadcast to use a wallet.");
+    }
+    printTxDetails("Transaction details (dry-run)");
+    console.log("Dry-run complete. To sign and broadcast, re-run with --broadcast.");
+    return;
+  }
+
   const walletMethod = await selectWalletMethod(options);
   validateBrowserRpcConflict(walletMethod.type === "browser" || undefined, options.rpcUrl);
 
-  console.log("");
-  console.log(chalk.dim("Signing transaction..."));
-  console.log(`  ${label("To")}${registryAddress}`);
-  console.log(`  ${label("Data")}${data.slice(0, 10)}${chalk.dim("\u2026" + (data.length - 2) / 2 + " bytes")}`);
-  console.log(`  ${label("Chain")}${chainName}`);
-  console.log(`  ${label("Function")}${resolvedUri ? "register(string memory agentURI)" : "register()"}`);
-  if (resolvedUri) {
-    console.log(`  ${label("URI")}${truncateUri(resolvedUri)}`);
-  }
-  console.log("");
+  printTxDetails("Signing transaction...");
 
   const result = await signTransaction({
     walletMethod,

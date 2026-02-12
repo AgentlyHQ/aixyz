@@ -116,6 +116,12 @@ describe("set-agent-uri command validation", () => {
     ).rejects.toThrow("--rpc-url cannot be used with browser wallet");
   });
 
+  test("dry-run completes without wallet interaction when --broadcast is not set", async () => {
+    await expect(
+      setAgentUri({ agentId: "1", uri: "https://example.com/agent.json", chain: "sepolia" }),
+    ).resolves.toBeUndefined();
+  });
+
   test("rejects invalid agent ID (negative)", async () => {
     await expect(
       setAgentUri({ agentId: "-1", uri: "https://example.com/agent.json", chain: "sepolia" }),

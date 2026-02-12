@@ -36,6 +36,7 @@ program
   .option("--registry <address>", "Contract address of the IdentityRegistry (required for localhost)")
   .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
   .option("--browser", "Use browser extension wallet (any extension)")
+  .option("--broadcast", "Sign and broadcast the transaction (default: dry-run)")
   .option("--out-dir <path>", "Write deployment result as JSON to the given directory")
   .addHelpText(
     "after",
@@ -77,6 +78,12 @@ Option Details:
       The wallet handles both signing and broadcasting the transaction.
       Cannot be combined with --rpc-url.
 
+  --broadcast
+      Sign and broadcast the transaction on-chain. Without this flag the
+      command performs a dry-run: it encodes the transaction and prints
+      its details but does not interact with any wallet or send anything
+      to the network.
+
   --out-dir <path>
       Directory to write the deployment result as a JSON file. The file
       is named registration-<chainId>-<timestamp>.json.
@@ -87,10 +94,14 @@ Environment Variables:
                  for interactive use as the key may appear in shell history.
 
 Examples:
-  $ agently-cli register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default
-  $ PRIVATE_KEY=0x... agently-cli register --chain sepolia
-  $ agently-cli register --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --uri "./metadata.json"
-  $ agently-cli register --uri "./metadata.json" --chain sepolia --browser`,
+  # Dry-run (default) — shows encoded transaction, no wallet needed
+  $ agently-cli register --uri "./metadata.json" --chain sepolia
+
+  # Sign and broadcast
+  $ agently-cli register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
+  $ PRIVATE_KEY=0x... agently-cli register --chain sepolia --broadcast
+  $ agently-cli register --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --uri "./metadata.json" --broadcast
+  $ agently-cli register --uri "./metadata.json" --chain sepolia --browser --broadcast`,
   )
   .action(handleAction(register));
 
@@ -104,6 +115,7 @@ program
   .option("--registry <address>", "Contract address of the IdentityRegistry (required for localhost)")
   .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
   .option("--browser", "Use browser extension wallet (any extension)")
+  .option("--broadcast", "Sign and broadcast the transaction (default: dry-run)")
   .option("--out-dir <path>", "Write result as JSON to the given directory")
   .addHelpText(
     "after",
@@ -151,6 +163,12 @@ Option Details:
       The wallet handles both signing and broadcasting the transaction.
       Cannot be combined with --rpc-url.
 
+  --broadcast
+      Sign and broadcast the transaction on-chain. Without this flag the
+      command performs a dry-run: it encodes the transaction and prints
+      its details but does not interact with any wallet or send anything
+      to the network.
+
   --out-dir <path>
       Directory to write the result as a JSON file. The file
       is named set-agent-uri-<chainId>-<timestamp>.json.
@@ -161,10 +179,14 @@ Environment Variables:
                  for interactive use as the key may appear in shell history.
 
 Examples:
-  $ agently-cli set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default
-  $ PRIVATE_KEY=0x... agently-cli set-agent-uri --agent-id 42 --uri "https://example.com/agent.json" --chain sepolia
-  $ agently-cli set-agent-uri --agent-id 1 --uri "./metadata.json" --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3
-  $ agently-cli set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --browser`,
+  # Dry-run (default) — shows encoded transaction, no wallet needed
+  $ agently-cli set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia
+
+  # Sign and broadcast
+  $ agently-cli set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
+  $ PRIVATE_KEY=0x... agently-cli set-agent-uri --agent-id 42 --uri "https://example.com/agent.json" --chain sepolia --broadcast
+  $ agently-cli set-agent-uri --agent-id 1 --uri "./metadata.json" --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --broadcast
+  $ agently-cli set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --browser --broadcast`,
   )
   .action(handleAction(setAgentUri));
 

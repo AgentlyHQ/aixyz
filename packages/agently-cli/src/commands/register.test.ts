@@ -68,4 +68,8 @@ describe("register command validation", () => {
   test("localhost requires --registry flag", async () => {
     await expect(register({ chain: "localhost" })).rejects.toThrow("--registry is required for localhost");
   });
+
+  test("dry-run completes without wallet interaction when --broadcast is not set", async () => {
+    await expect(register({ chain: "sepolia", uri: "https://example.com/agent.json" })).resolves.toBeUndefined();
+  });
 });
