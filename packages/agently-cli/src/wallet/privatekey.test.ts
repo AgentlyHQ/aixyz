@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { sepolia } from "viem/chains";
-import { createPrivateKeyWallet } from "./privatekey.js";
+import { createPrivateKeyWallet } from "./privatekey";
 
 // Valid test private key (do not use in production!)
 const TEST_PRIVATE_KEY = "0x0000000000000000000000000000000000000000000000000000000000000001";

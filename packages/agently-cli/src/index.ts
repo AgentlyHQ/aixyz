@@ -1,9 +1,17 @@
 #!/usr/bin/env bun
 import { program } from "commander";
-import { register } from "./commands/register.js";
-import { setAgentUri } from "./commands/set-agent-uri.js";
-import { CliError } from "./utils.js";
+import { register } from "./commands/register";
+import { setAgentUri } from "./commands/set-agent-uri";
+import { CliError } from "./utils";
 import pkg from "../package.json";
+import type { WalletOptions } from "./wallet";
+
+export interface BaseOptions extends WalletOptions {
+  chain?: string;
+  rpcUrl?: string;
+  registry?: string;
+  outDir?: string;
+}
 
 function handleAction(
   action: (options: Record<string, unknown>) => Promise<void>,

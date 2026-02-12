@@ -1,7 +1,7 @@
 import { createPublicClient, http, type Chain, type Log } from "viem";
-import { startSpinner } from "./spinner.js";
-import { getExplorerUrl } from "./chain.js";
-import type { SignTransactionResult } from "../wallet/sign.js";
+import { startSpinner } from "./spinner";
+import { getExplorerUrl } from "./chain";
+import type { SignTransactionResult } from "../wallet/sign";
 import chalk from "chalk";
 import boxen from "boxen";
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@agentlyhq/erc-8004";
-import { setAgentUri, validateAgentId } from "./set-agent-uri.js";
+import { setAgentUri, validateAgentId } from "./set-agent-uri";
 
 describe("set-agent-uri command chain configuration", () => {
   test("sepolia chain ID is correct", () => {
