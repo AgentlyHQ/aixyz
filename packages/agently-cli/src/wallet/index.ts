@@ -8,6 +8,7 @@ import { CliError } from "../utils.js";
 export interface WalletOptions {
   keystore?: string;
   browser?: boolean;
+  broadcast?: boolean;
 }
 
 export type WalletMethod =
