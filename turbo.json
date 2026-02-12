@@ -5,6 +5,12 @@
     "clean": {
       "cache": false
     },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"],
+      "env": ["*"]
+    },
     "build": {
       "inputs": ["tsconfig.json", "src"],
       "outputs": ["dist"],
