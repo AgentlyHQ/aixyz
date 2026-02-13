@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
-    "@ai-sdk/openai": "3.0.25",
-    "ai": "6.0.69",
+    "@ai-sdk/openai": "3.0.29",
+    "ai": "6.0.86",
     "aixyz": "workspace:*",
     "viem": "2.44.4",
     "zod": "^4.3.6"
