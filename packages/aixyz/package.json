@@ -26,7 +26,9 @@
     "aixyz": "dist/cli/bin.js"
   },
   "files": [
-    "dist"
+    "**/*.d.ts",
+    "**/*.d.ts.map",
+    "**/*.js"
   ],
   "scripts": {
     "build": "bun build cli/bin.ts --outdir ./dist/cli --target bun",

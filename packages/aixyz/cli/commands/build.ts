@@ -13,11 +13,9 @@ export async function build(): Promise<void> {
     throw new Error(`No src/index.ts or src/app.ts found in ${cwd}`);
   }
 
-  // 4. Clean output directory
   const outputDir = resolve(cwd, ".vercel/output");
   rmSync(outputDir, { recursive: true, force: true });
 
-  // 5. Bundle with Bun.build()
   const funcDir = resolve(outputDir, "functions/index.func");
   mkdirSync(funcDir, { recursive: true });
 
@@ -26,6 +24,7 @@ export async function build(): Promise<void> {
   const result = await Bun.build({
     entrypoints: [entrypoint],
     outdir: funcDir,
+    naming: "index.js",
     target: "node",
     format: "esm",
     sourcemap: "linked",
@@ -85,8 +84,6 @@ export async function build(): Promise<void> {
   console.log("Build complete! Output:");
   console.log("  .vercel/output/config.json");
   console.log("  .vercel/output/functions/index.func/index.js");
-  console.log("  .vercel/output/functions/index.func/index.js.map");
-  console.log("  .vercel/output/functions/index.func/.vc-config.json");
   if (existsSync(publicDir)) {
     console.log("  .vercel/output/static/");
   }
