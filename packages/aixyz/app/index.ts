@@ -97,9 +97,8 @@ export async function initApp(
   );
 
   if (options?.tools) {
-    const config = getAixyzConfig();
     const { useMCP } = await import("./adapters/mcp.js");
-    useMCP(app, "/mcp", { name: config.name, version: config.version }, options.tools);
+    useMCP(app, options.tools);
   }
 
   return app;
