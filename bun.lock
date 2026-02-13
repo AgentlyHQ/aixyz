@@ -146,13 +146,16 @@
         "zod": "^4.3.6",
       },
       "devDependencies": {
+        "@modelcontextprotocol/sdk": "^1.25.3",
         "@types/express": "^5.0.6",
         "ai": "^6",
       },
       "peerDependencies": {
+        "@modelcontextprotocol/sdk": "^1.25.3",
         "ai": "^6",
       },
       "optionalPeers": [
+        "@modelcontextprotocol/sdk",
         "ai",
       ],
     },

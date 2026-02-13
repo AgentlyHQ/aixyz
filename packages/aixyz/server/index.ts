@@ -7,6 +7,7 @@ import { RoutesConfig, x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware } from "@x402/express";
 import { registerExactEvmScheme } from "@x402/evm/exact/server";
 import { getFacilitatorClient } from "../facilitator";
+import type { ToolSet } from "ai";
 
 // TODO(@fuxingloh): add back x402 Bazaar compatibility
 
@@ -46,7 +47,7 @@ async function initX402ResourceServer() {
   return server;
 }
 
-function getX402Routes(price: string) {
+function getX402Routes(price: string): RoutesConfig {
   const config = loadAixyzConfig();
 
   return {
@@ -73,7 +74,11 @@ function getX402Routes(price: string) {
   };
 }
 
-export async function initExpressApp(requestHandler: AixyzRequestHandler, price: string): Promise<express.Express> {
+export async function initApp(
+  requestHandler: AixyzRequestHandler,
+  price: string,
+  options?: { tools?: ToolSet },
+): Promise<express.Express> {
   const x402ResourceServer = await initX402ResourceServer();
   const app: express.Express = express();
 
@@ -93,5 +98,12 @@ export async function initExpressApp(requestHandler: AixyzRequestHandler, price:
       userBuilder: UserBuilder.noAuthentication,
     }),
   );
+
+  if (options?.tools) {
+    const config = loadAixyzConfig();
+    const { mountMcpEndpoint } = await import("./adapters/mcp.js");
+    mountMcpEndpoint(app, "/mcp", { name: config.name, version: config.version }, options.tools);
+  }
+
   return app;
 }

@@ -1,0 +1,74 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import type { ToolSet } from "ai";
+import express from "express";
+
+/**
+ * Registers all AI SDK tools onto an MCP server instance.
+ */
+export function registerAiToolsOnMcpServer(server: McpServer, tools: ToolSet): void {
+  for (const [name, aiTool] of Object.entries(tools)) {
+    const shape = (aiTool.inputSchema as any)?.shape;
+    server.registerTool(
+      name,
+      {
+        description: aiTool.description,
+        ...(shape && Object.keys(shape).length > 0 ? { inputSchema: shape } : {}),
+      } as any,
+      async (args: Record<string, unknown>) => {
+        try {
+          const result = await aiTool.execute!(args, { toolCallId: name, messages: [], type: "tool-call" } as any);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: typeof result === "string" ? result : JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      },
+    );
+  }
+}
+
+/**
+ * Mounts a stateless MCP endpoint on an Express app.
+ * Creates a new McpServer per request, registers all AI SDK tools, and handles the transport lifecycle.
+ */
+export function mountMcpEndpoint(
+  app: express.Express,
+  path: string,
+  config: { name: string; version: string },
+  tools: ToolSet,
+): void {
+  app.post(path, express.json(), async (req, res) => {
+    const server = new McpServer(config);
+    registerAiToolsOnMcpServer(server, tools);
+
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined, // Stateless mode
+    });
+
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+
+    const cleanup = () => {
+      transport.close();
+      server.close();
+    };
+
+    res.on("finish", cleanup);
+    res.on("close", cleanup);
+  });
+}
