@@ -22,8 +22,10 @@
   "license": "MIT",
   "author": "AgentlyHQ",
   "type": "commonjs",
-  "bin": {
-    "aixyz": "dist/cli/bin.js"
+  "exports": {
+    "./server": "./server/index.js",
+    "./facilitator": "./facilitator/index.js",
+    "./*": "./*.js"
   },
   "files": [
     "**/*.d.ts",
