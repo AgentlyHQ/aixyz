@@ -1,7 +1,17 @@
 import { randomUUID } from "node:crypto";
-import { AgentExecutor, ExecutionEventBus, RequestContext } from "@a2a-js/sdk/server";
-import { Message, TextPart } from "@a2a-js/sdk";
+import {
+  AgentExecutor,
+  DefaultRequestHandler,
+  ExecutionEventBus,
+  InMemoryTaskStore,
+  RequestContext,
+  TaskStore,
+} from "@a2a-js/sdk/server";
+import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
+import { getAixyzConfig } from "../../config";
+import { AixyzApp, X402Accepts } from "../index";
+import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
   constructor(private agent: ToolLoopAgent<never, TOOLS>) {}
@@ -49,4 +59,48 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
     // TODO(@fuxingloh): The ToolLoopAgent doesn't support cancellation, so we just finish
     eventBus.finished();
   }
+}
+
+export function getAgentCard(): AgentCard {
+  const config = getAixyzConfig();
+  return {
+    name: config.name,
+    description: config.description,
+    protocolVersion: "0.3.0",
+    version: config.version,
+    url: new URL("/agent", config.url).toString(),
+    capabilities: {
+      streaming: false,
+      pushNotifications: false,
+    },
+    defaultInputModes: ["text/plain"],
+    defaultOutputModes: ["text/plain"],
+    skills: config.skills,
+  };
+}
+
+export function useA2A<TOOLS extends ToolSet = ToolSet>(
+  app: AixyzApp,
+  agent: ToolLoopAgent<never, TOOLS>,
+  accepts: X402Accepts,
+  taskStore: TaskStore = new InMemoryTaskStore(),
+): void {
+  const agentExecutor = new ToolLoopAgentExecutor(agent);
+  const requestHandler = new DefaultRequestHandler(getAgentCard(), taskStore, agentExecutor);
+
+  app.express.use(
+    "/.well-known/agent-card.json",
+    agentCardHandler({
+      agentCardProvider: requestHandler,
+    }),
+  );
+
+  app.withX402("POST /agent", accepts);
+  app.express.use(
+    "/agent",
+    jsonRpcHandler({
+      requestHandler,
+      userBuilder: UserBuilder.noAuthentication,
+    }),
+  );
 }
