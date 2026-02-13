@@ -8,7 +8,7 @@ export type AgentSkill = A2AAgentSkill;
 
 export type Network = `${string}:${string}`;
 
-export const NetworkSchema = z.custom<Network>((val) => {
+const NetworkSchema = z.custom<Network>((val) => {
   return typeof val === "string" && val.includes(":");
 });
 

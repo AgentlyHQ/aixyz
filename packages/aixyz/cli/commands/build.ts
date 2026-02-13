@@ -17,12 +17,11 @@ export async function build(): Promise<void> {
   const funcDir = resolve(outputDir, "functions/index.func");
   mkdirSync(funcDir, { recursive: true });
 
-  console.log("Building", entrypoint);
+  console.log("Building", "./src/app.ts");
 
   const result = await Bun.build({
     entrypoints: [entrypoint],
     outdir: funcDir,
-    naming: "index.js",
     target: "node",
     format: "esm",
     sourcemap: "linked",

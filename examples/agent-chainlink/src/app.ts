@@ -1,9 +1,11 @@
-import { InMemoryTaskStore } from "@a2a-js/sdk/server";
-import { AixyzRequestHandler, initApp } from "aixyz/app";
-import { ToolLoopAgentExecutor } from "aixyz/app/adapters/ai";
+import { AixyzApp } from "aixyz/app";
+import { useMCP } from "aixyz/app/adapters/mcp";
+import { useA2A } from "aixyz/app/adapters/a2a";
+
 import agent, { x402 } from "./agent";
 
-const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
-const app = await initApp(requestHandler, x402.price, { tools: agent.tools });
+const app = await AixyzApp.init();
+useA2A(app, agent, x402);
+useMCP(app.express, agent.tools);
 
-export default app;
+export default app.express;
