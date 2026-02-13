@@ -98,8 +98,8 @@ export async function initApp(
 
   if (options?.tools) {
     const config = getAixyzConfig();
-    const { mountMcpEndpoint } = await import("./adapters/mcp.js");
-    mountMcpEndpoint(app, "/mcp", { name: config.name, version: config.version }, options.tools);
+    const { useMCP } = await import("./adapters/mcp.js");
+    useMCP(app, "/mcp", { name: config.name, version: config.version }, options.tools);
   }
 
   return app;

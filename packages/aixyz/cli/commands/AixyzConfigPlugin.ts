@@ -1,7 +1,7 @@
 import type { BunPlugin } from "bun";
 import { getAixyzConfig } from "../../config";
 
-export async function AixyzConfigPlugin(): Promise<BunPlugin> {
+export function AixyzConfigPlugin(): BunPlugin {
   const materialized = getAixyzConfig();
 
   console.log("AixyzConfig loaded:", materialized);

@@ -20,7 +20,7 @@ export const x402 = {
   price: "$0.01",
 };
 
-export const agent = new ToolLoopAgent({
+const agent = new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
   instructions: instructions,
   tools: {
