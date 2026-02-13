@@ -1,4 +1,4 @@
-name: Publish @agentlyhq/aixyz
+name: Publish aixyz
 
 on:
   release:
@@ -44,10 +44,10 @@ jobs:
           fi
 
       - name: Build
-        run: bun run build --filter @agentlyhq/aixyz
+        run: bun run build --filter aixyz
 
       - name: Lint
-        run: bun run lint --filter @agentlyhq/aixyz
+        run: bun run lint --filter aixyz
 
       - name: Set package version
         working-directory: packages/aixyz

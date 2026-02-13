@@ -1,43 +1,36 @@
 {
-  "name": "@agentlyhq/aixyz",
+  "name": "aixyz",
   "version": "0.0.0",
   "description": "AI agent framework for building autonomous agents with X402 and ERC-8004 support.",
-  "homepage": "https://github.com/AgentlyHQ/agently#readme",
+  "keywords": [
+    "ai",
+    "agent",
+    "a2a",
+    "mcp",
+    "x402",
+    "erc-8004",
+    "framework"
+  ],
+  "homepage": "https://ai-xyz.dev",
   "bugs": {
-    "url": "https://github.com/AgentlyHQ/agently/issues"
+    "url": "https://github.com/AgentlyHQ/aixyz/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AgentlyHQ/agently.git"
+    "url": "git+https://github.com/AgentlyHQ/aixyz.git"
   },
   "license": "MIT",
-  "author": {
-    "name": "kevzzsk"
-  },
+  "author": "AgentlyHQ",
   "type": "commonjs",
-  "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./*": {
-      "require": "./dist/*.js",
-      "default": "./dist/*.js"
-    }
-  },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "bin": {
-    "aixyz": "cli/bin.js"
+    "aixyz": "dist/cli/bin.js"
   },
   "files": [
-    "dist",
-    "cli"
+    "dist"
   ],
   "scripts": {
-    "build": "tsc",
-    "build:cli": "bun build cli/bin.ts --outdir cli/ --target bun",
-    "clean": "tsc --build --clean"
+    "build": "bun build cli/bin.ts --outdir ./dist/cli --target bun",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
@@ -66,5 +59,8 @@
     "ai": {
       "optional": true
     }
+  },
+  "engines": {
+    "bun": ">=1.3.0"
   }
 }
