@@ -11,12 +11,12 @@ async function main() {
   const mod = await import(entrypoint);
   const app = mod.default;
 
-  if (!app || typeof app.listen !== "function") {
-    console.error("Error: Entrypoint must default-export an Express app");
+  if (!app || typeof app.express?.listen !== "function") {
+    console.error("Error: Entrypoint must default-export an AixyzApp");
     process.exit(1);
   }
 
-  app.listen(port, () => {
+  app.express.listen(port, () => {
     const duration = Math.round(performance.now() - startTime);
     console.log(`Ready in ${duration}ms`);
     console.log("");

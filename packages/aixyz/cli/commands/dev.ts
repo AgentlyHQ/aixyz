@@ -22,12 +22,12 @@ export async function dev(options: { port?: string }): Promise<void> {
 
   // Print banner
   console.log("");
-  console.log(`🐁  ai-xyz.dev v${pkg.version}`);
+  console.log(`🐁 ai-xyz.dev v${pkg.version}`);
   console.log("");
-  console.log(` - A2A:          ${baseUrl}/.well-known/agent-card.json`);
-  console.log(` - MCP:          ${baseUrl}/mcp`);
+  console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
+  console.log(`- MCP:          ${baseUrl}/mcp`);
   if (envFileNames.length > 0) {
-    console.log(` - Environments: ${envFileNames.join(", ")}`);
+    console.log(`- Environments: ${envFileNames.join(", ")}`);
   }
   console.log("");
 
