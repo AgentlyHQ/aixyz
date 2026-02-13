@@ -1,9 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import type { ToolSet } from "ai";
+import type { ToolLoopAgent, ToolSet } from "ai";
 import express from "express";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { getAixyzConfig } from "../../config";
+import { AixyzApp } from "../index";
 
 /**
  * Registers all AI SDK tools onto an MCP server instance.
@@ -48,14 +49,14 @@ export function registerAiToolsOnMcpServer(server: McpServer, tools: ToolSet): v
  * Mounts a stateless MCP endpoint on an Express app.
  * Creates a new McpServer per request, registers all AI SDK tools, and handles the transport lifecycle.
  */
-export function useMCP(app: express.Express, tools: ToolSet): void {
+export function useMCP<TOOLS extends ToolSet = ToolSet>(app: AixyzApp, agent: ToolLoopAgent<never, TOOLS>): void {
   const config = getAixyzConfig();
-  app.post("/mcp", express.json(), async (req, res) => {
+  app.express.post("/mcp", express.json(), async (req, res) => {
     const server = new McpServer({
       name: config.name,
       version: config.version,
     });
-    registerAiToolsOnMcpServer(server, tools);
+    registerAiToolsOnMcpServer(server, agent.tools);
 
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined, // Stateless mode

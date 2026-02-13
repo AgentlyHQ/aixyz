@@ -6,6 +6,6 @@ import agent, { x402 } from "./agent";
 
 const app = await AixyzApp.init();
 useA2A(app, agent, x402);
-useMCP(app.express, agent.tools);
+useMCP(app, agent);
 
-export default app.express;
+export default app;
