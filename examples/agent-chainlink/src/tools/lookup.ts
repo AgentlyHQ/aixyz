@@ -43,7 +43,7 @@ function getAggregatorV3Contract(address: Address) {
 /**
  * Execute the Chainlink price lookup
  */
-export async function executeLookup({ symbol }: { symbol: string }) {
+async function executeLookup({ symbol }: { symbol: string }) {
   const ens = `${symbol.toLowerCase()}-usd.data.eth`;
   const address = await publicClient.getEnsAddress({
     name: normalize(ens),
