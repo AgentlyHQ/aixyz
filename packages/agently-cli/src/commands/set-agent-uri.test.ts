@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CHAIN_ID, getIdentityRegistryAddress } from "@agentlyhq/erc-8004";
+import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
 import { setAgentUri, validateAgentId } from "./set-agent-uri";
 
 describe("set-agent-uri command chain configuration", () => {

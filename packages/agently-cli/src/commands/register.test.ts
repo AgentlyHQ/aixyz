@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CHAIN_ID, getIdentityRegistryAddress } from "@agentlyhq/erc-8004";
+import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
 import { register } from "./register";
 
 describe("register command chain configuration", () => {

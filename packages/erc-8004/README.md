@@ -1,13 +1,13 @@
-# @agentlyhq/erc-8004
+# @aixyz/erc-8004
 
 TypeScript SDK for [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004), the decentralized agent registry standard. Provides contract ABIs, deployed addresses, and Zod schemas for agent registration and feedback files.
 
 ## Installation
 
 ```bash
-bun add @agentlyhq/erc-8004
+bun add @aixyz/erc-8004
 # or
-npm install @agentlyhq/erc-8004
+npm install @aixyz/erc-8004
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ npm install @agentlyhq/erc-8004
 ### Contract Interaction
 
 ```typescript
-import { IdentityRegistryAbi, ADDRESSES, CHAIN_ID } from "@agentlyhq/erc-8004";
+import { IdentityRegistryAbi, ADDRESSES, CHAIN_ID } from "@aixyz/erc-8004";
 import { createPublicClient, http } from "viem";
 import { sepolia } from "viem/chains";
 
@@ -37,7 +37,7 @@ const tokenURI = await client.readContract({
 ### Parsing Registration Files
 
 ```typescript
-import { parseRawRegistrationFile, getServices, hasX402Support } from "@agentlyhq/erc-8004";
+import { parseRawRegistrationFile, getServices, hasX402Support } from "@aixyz/erc-8004";
 
 // Parse an existing file fetched from an agent's tokenURI
 const result = parseRawRegistrationFile(fetchedData);
@@ -50,7 +50,7 @@ if (result.success) {
 ### Creating Registration Files
 
 ```typescript
-import { validateRegistrationFile } from "@agentlyhq/erc-8004";
+import { validateRegistrationFile } from "@aixyz/erc-8004";
 
 // Strict validation before on-chain submission — requires type literal and at least one service
 const result = validateRegistrationFile(newFile);
@@ -62,7 +62,7 @@ if (!result.success) {
 ### Parsing Feedback Files
 
 ```typescript
-import { parseRawFeedbackFile } from "@agentlyhq/erc-8004";
+import { parseRawFeedbackFile } from "@aixyz/erc-8004";
 
 const result = parseRawFeedbackFile(fetchedData);
 if (result.success) {
@@ -74,13 +74,13 @@ if (result.success) {
 
 ```toml
 # foundry.toml
-remappings = ["@agentlyhq/erc-8004/=node_modules/@agentlyhq/erc-8004/"]
+remappings = ["@aixyz/erc-8004/=node_modules/@aixyz/erc-8004/"]
 ```
 
 ```solidity
-import { IdentityRegistryUpgradeable } from "@agentlyhq/erc-8004/contracts/IdentityRegistryUpgradeable.sol";
-import { ReputationRegistryUpgradeable } from "@agentlyhq/erc-8004/contracts/ReputationRegistryUpgradeable.sol";
-import { ValidationRegistryUpgradeable } from "@agentlyhq/erc-8004/contracts/ValidationRegistryUpgradeable.sol";
+import { IdentityRegistryUpgradeable } from "@aixyz/erc-8004/contracts/IdentityRegistryUpgradeable.sol";
+import { ReputationRegistryUpgradeable } from "@aixyz/erc-8004/contracts/ReputationRegistryUpgradeable.sol";
+import { ValidationRegistryUpgradeable } from "@aixyz/erc-8004/contracts/ValidationRegistryUpgradeable.sol";
 ```
 
 ## Supported Chains

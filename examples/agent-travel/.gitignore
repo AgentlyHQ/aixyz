@@ -7,8 +7,8 @@ node_modules
 .yarn*
 pnpm-lock.yaml
 
-# agently
-.agently
+# aixyz
+.aixyz
 
 # env files (can opt-in for committing if needed)
 #.env

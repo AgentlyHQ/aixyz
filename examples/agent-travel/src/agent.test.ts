@@ -3,9 +3,9 @@ import { expect, test } from "bun:test";
 import { writeFile, mkdir } from "node:fs/promises";
 
 async function log(object: any) {
-  await mkdir(".agently", { recursive: true });
+  await mkdir(".aixyz", { recursive: true });
   const content = JSON.stringify(object, (_, v) => (typeof v === "bigint" ? Number(v) : v));
-  await writeFile(`.agently/${Date.now()}.json`, content);
+  await writeFile(`.aixyz/${Date.now()}.json`, content);
 }
 
 test("should search for flights from Sao Paulo", async () => {

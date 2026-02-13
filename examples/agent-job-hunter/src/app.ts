@@ -19,6 +19,7 @@ import { agent } from "./agent";
 import { executeJobSearch } from "./tools";
 import { getAddress } from "viem";
 import { getFacilitatorClient } from "aixyz/facilitator";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 // Define the agent card metadata
 const agentCard: AgentCard = {
@@ -264,7 +265,7 @@ app.post("/mcp", express.json(), async (req, res) => {
   });
 
   await server.connect(transport);
-  await transport.handleRequest(req, res, req.body);
+  await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
 
   // Clean up after response completes or connection closes
   const cleanup = () => {
