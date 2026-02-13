@@ -1,5 +1,4 @@
 import { resolve } from "path";
-import { existsSync } from "fs";
 import { loadEnvConfig } from "@next/env";
 
 import type { AgentSkill as A2AAgentSkill } from "@a2a-js/sdk";

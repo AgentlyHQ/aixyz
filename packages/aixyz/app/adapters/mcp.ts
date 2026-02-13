@@ -8,21 +8,21 @@ import type { IncomingMessage, ServerResponse } from "node:http";
  * Registers all AI SDK tools onto an MCP server instance.
  */
 export function registerAiToolsOnMcpServer(server: McpServer, tools: ToolSet): void {
-  for (const [name, aiTool] of Object.entries(tools)) {
-    const shape = (aiTool.inputSchema as any)?.shape;
+  for (const [name, tool] of Object.entries(tools)) {
+    const shape = (tool.inputSchema as any)?.shape;
     server.registerTool(
       name,
       {
-        description: aiTool.description,
+        description: tool.description,
         ...(shape && Object.keys(shape).length > 0 ? { inputSchema: shape } : {}),
       } as any,
       async (args: Record<string, unknown>) => {
         try {
-          const result = await aiTool.execute!(args, { toolCallId: name, messages: [], type: "tool-call" } as any);
+          const result = await tool.execute!(args, { toolCallId: name, messages: [], type: "tool-call" } as any);
           return {
             content: [
               {
-                type: "text" as const,
+                type: "text",
                 text: typeof result === "string" ? result : JSON.stringify(result, null, 2),
               },
             ],
@@ -31,7 +31,7 @@ export function registerAiToolsOnMcpServer(server: McpServer, tools: ToolSet): v
           return {
             content: [
               {
-                type: "text" as const,
+                type: "text",
                 text: `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
               },
             ],
@@ -47,7 +47,7 @@ export function registerAiToolsOnMcpServer(server: McpServer, tools: ToolSet): v
  * Mounts a stateless MCP endpoint on an Express app.
  * Creates a new McpServer per request, registers all AI SDK tools, and handles the transport lifecycle.
  */
-export function mountMcpEndpoint(
+export function useMCP(
   app: express.Express,
   path: string,
   config: { name: string; version: string },
