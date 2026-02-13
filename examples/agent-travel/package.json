@@ -22,7 +22,7 @@
     "aixyz": "workspace:*",
     "express": "^5.2.1",
     "stripe": "^20.2.0",
-    "viem": "2.44.4",
+    "viem": "2.45.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
