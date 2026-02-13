@@ -7,6 +7,12 @@ import { z } from "zod";
 
 export type AgentSkill = A2AAgentSkill;
 
+export type Network = `${string}:${string}`;
+
+export const NetworkSchema = z.custom<Network>((val) => {
+  return typeof val === "string" && val.includes(":");
+});
+
 export type AixyzConfig = {
   name: string;
   description: string;
@@ -14,7 +20,7 @@ export type AixyzConfig = {
    * Version of the agent.
    */
   version: string;
-  network: `eip155:${number}`;
+  network: Network;
   url?: string;
   x402: {
     /**
@@ -36,7 +42,7 @@ const AixyzSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().nonempty(),
   version: z.string().nonempty(),
-  network: z.string().nonempty(),
+  network: NetworkSchema,
   url: z
     .string()
     .optional()
@@ -57,7 +63,7 @@ const AixyzSchema = z.object({
     .pipe(z.url()),
   x402: z.object({
     payTo: z.string(),
-    network: z.string().optional(),
+    network: NetworkSchema.optional(),
   }),
   skills: z.array(
     z.object({
@@ -99,9 +105,7 @@ export function loadAixyzConfig(): LoadedAixyzConfig {
   const cwd = process.cwd();
   loadEnvConfig(cwd);
 
-  const tsPath = resolve(cwd, "aixyz.config.ts");
-  const jsPath = resolve(cwd, "aixyz.config.js");
-  const configPath = existsSync(tsPath) ? tsPath : jsPath;
+  const configPath = resolve(cwd, "aixyz.config.ts");
   const mod = require(configPath);
   const config = mod.default;
 

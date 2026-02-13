@@ -31,11 +31,12 @@
     "**/*.js"
   ],
   "scripts": {
-    "build": "bun build cli/bin.ts --outdir ./dist/cli --target bun",
+    "build": "bun build cli/bin.ts --outdir cli --target bun",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@next/env": "^16.1.6",
     "@x402/core": "^2.2.0",
     "@x402/evm": "^2.2.0",
@@ -46,18 +47,13 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
     "@types/express": "^5.0.6",
     "ai": "^6"
   },
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": "^1",
     "ai": "^6"
   },
   "peerDependenciesMeta": {
-    "@modelcontextprotocol/sdk": {
-      "optional": true
-    },
     "ai": {
       "optional": true
     }

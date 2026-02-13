@@ -75,6 +75,10 @@ async function executeLookup({ symbol }: { symbol: string }) {
   };
 }
 
+export const x402 = {
+  price: "$0.01",
+};
+
 export default tool({
   title: "Lookup Chainlink Price Feed",
   description:
