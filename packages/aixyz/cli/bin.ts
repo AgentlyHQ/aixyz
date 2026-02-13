@@ -35,17 +35,16 @@ Details:
   Bundles your aixyz agent into a Vercel serverless function output.
 
   The build process:
-    1. Loads aixyz.config.ts (or .js) from the current directory
-    2. Detects entrypoint (src/index.ts or src/app.ts)
-    3. Bundles with Bun.build() targeting Node.js (CJS)
-    4. Generates Vercel Build Output API v3 structure
-    5. Copies static assets from public/ (if present)
+    1. Loads aixyz.config.ts from the current directory
+    2. Detects entrypoint (src/app.ts)
+    3. Generates Vercel Build Output API v3 structure
+    4. Copies static assets from public/ (if present)
 
   Output is written to .vercel/output/ in the current directory.
 
 Prerequisites:
-  - An aixyz.config.ts or aixyz.config.js with a default export
-  - An entrypoint at src/index.ts or src/app.ts
+  - An aixyz.config.ts with a default export
+  - An entrypoint at src/app.ts
 
 Examples:
   $ aixyz build`,

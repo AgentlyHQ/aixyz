@@ -7,7 +7,6 @@
     "module": "NodeNext",
     "strict": true,
     "skipLibCheck": true,
-    "declaration": true,
-    "outDir": "dist"
+    "declaration": true
   }
 }

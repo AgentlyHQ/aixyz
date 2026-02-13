@@ -1,2 +1,4 @@
-# Build output
-dist/
+# tsconfig.json
+**/*.d.ts
+**/*.d.ts.map
+**/*.js

@@ -1,4 +1,6 @@
-# [aixyz](https://github.com/AgentlyHQ/aixyz)
+# 🐁 ai-dev.xyz
+
+> https://github.com/AgentlyHQ/aixyz
 
 [![npm](https://img.shields.io/npm/v/aixyz)](https://www.npmjs.com/package/aixyz)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

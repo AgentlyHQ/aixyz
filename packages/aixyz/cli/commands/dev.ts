@@ -11,12 +11,10 @@ export async function dev(options: { port?: string }): Promise<void> {
   const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
 
   // Find entrypoint
-  const srcIndex = resolve(cwd, "src/index.ts");
-  const srcApp = resolve(cwd, "src/app.ts");
-  const entrypoint = existsSync(srcIndex) ? srcIndex : existsSync(srcApp) ? srcApp : undefined;
+  const entrypoint = resolve(cwd, "src/app.ts");
 
-  if (!entrypoint) {
-    throw new Error(`No src/index.ts or src/app.ts found in ${cwd}`);
+  if (!existsSync(entrypoint)) {
+    throw new Error(`No src/app.ts found in ${cwd}`);
   }
 
   const port = options.port || process.env.PORT || "3000";
@@ -26,10 +24,10 @@ export async function dev(options: { port?: string }): Promise<void> {
   console.log("");
   console.log(`🐁  ai-xyz.dev v${pkg.version}`);
   console.log("");
-  console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
-  console.log(`- MCP:          ${baseUrl}/mcp`);
+  console.log(` - A2A:          ${baseUrl}/.well-known/agent-card.json`);
+  console.log(` - MCP:          ${baseUrl}/mcp`);
   if (envFileNames.length > 0) {
-    console.log(`- Environments: ${envFileNames.join(", ")}`);
+    console.log(` - Environments: ${envFileNames.join(", ")}`);
   }
   console.log("");
 
@@ -39,7 +37,7 @@ export async function dev(options: { port?: string }): Promise<void> {
   let restarting = false;
 
   function startServer() {
-    child = Bun.spawn(["bun", workerPath, entrypoint!, port], {
+    child = Bun.spawn(["bun", workerPath, entrypoint, port], {
       cwd,
       stdout: "inherit",
       stderr: "inherit",
@@ -81,13 +79,8 @@ export async function dev(options: { port?: string }): Promise<void> {
   });
 
   // Watch config file
-  const configFile = existsSync(resolve(cwd, "aixyz.config.ts"))
-    ? resolve(cwd, "aixyz.config.ts")
-    : existsSync(resolve(cwd, "aixyz.config.js"))
-      ? resolve(cwd, "aixyz.config.js")
-      : null;
-
-  if (configFile) {
+  const configFile = resolve(cwd, "aixyz.config.ts");
+  if (existsSync(configFile)) {
     watch(configFile, () => {
       scheduleRestart("config changed");
     });
