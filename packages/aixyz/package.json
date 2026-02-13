@@ -27,12 +27,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@types/express": "^5.0.6",
     "ai": "^6"
   },
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@modelcontextprotocol/sdk": "^1",
     "ai": "^6"
   },
   "peerDependenciesMeta": {
