@@ -1,4 +1,4 @@
-# 🐁 ai-dev.xyz
+# 🐁 ai-xyz.dev
 
 > https://github.com/AgentlyHQ/aixyz
 
