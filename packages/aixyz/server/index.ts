@@ -1,6 +1,6 @@
 import { DefaultRequestHandler, TaskStore, AgentExecutor } from "@a2a-js/sdk/server";
 import { AgentCard } from "@a2a-js/sdk";
-import { loadAixyzConfig } from "../config";
+import { getAixyzConfig } from "../config";
 import express from "express";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import { RoutesConfig, x402ResourceServer } from "@x402/core/server";
@@ -12,7 +12,7 @@ import { ExactEvmScheme } from "@x402/evm/exact/server";
 // TODO(@fuxingloh): add back x402 Bazaar compatibility
 
 export function getAgentCard(): AgentCard {
-  const config = loadAixyzConfig();
+  const config = getAixyzConfig();
   return {
     name: config.name,
     description: config.description,
@@ -36,7 +36,7 @@ export class AixyzRequestHandler extends DefaultRequestHandler {
 }
 
 async function initX402ResourceServer() {
-  const config = loadAixyzConfig();
+  const config = getAixyzConfig();
   const facilitator = getFacilitatorClient();
   const server = new x402ResourceServer(facilitator).register(config.x402.network as any, new ExactEvmScheme());
 
@@ -45,7 +45,7 @@ async function initX402ResourceServer() {
 }
 
 function getX402Routes(price: string): RoutesConfig {
-  const config = loadAixyzConfig();
+  const config = getAixyzConfig();
 
   return {
     "POST /agent": {
@@ -97,7 +97,7 @@ export async function initApp(
   );
 
   if (options?.tools) {
-    const config = loadAixyzConfig();
+    const config = getAixyzConfig();
     const { mountMcpEndpoint } = await import("./adapters/mcp.js");
     mountMcpEndpoint(app, "/mcp", { name: config.name, version: config.version }, options.tools);
   }
