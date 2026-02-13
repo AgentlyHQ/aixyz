@@ -76,7 +76,7 @@ export async function initApp(
   price: string,
   options?: { tools?: ToolSet },
 ): Promise<express.Express> {
-  const x402ResourceServer = await initX402ResourceServer();
+  const x402Server = await initX402ResourceServer();
   const app: express.Express = express();
 
   app.use(
@@ -87,7 +87,7 @@ export async function initApp(
   );
 
   const x402Routes = getX402Routes(price);
-  app.use(paymentMiddleware(x402Routes, x402ResourceServer));
+  app.use(paymentMiddleware(x402Routes, x402Server));
   app.use(
     "/agent",
     jsonRpcHandler({

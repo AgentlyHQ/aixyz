@@ -1,4 +1,4 @@
-import type { AixyzConfig } from "aixyz";
+import type { AixyzConfig } from "aixyz/config";
 
 const config: AixyzConfig = {
   name: "Chainlink Price Oracle",
