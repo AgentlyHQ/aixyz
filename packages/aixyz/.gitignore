@@ -1,5 +1,2 @@
 # Build output
 dist/
-
-# CLI binary is built separately and should be included
-!cli/bin.js
