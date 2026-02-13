@@ -1,14 +1,38 @@
 {
-  "name": "aixyz",
+  "name": "@agentlyhq/aixyz",
   "version": "0.0.0",
-  "private": false,
+  "description": "AI agent framework for building autonomous agents with X402 and ERC-8004 support.",
+  "homepage": "https://github.com/AgentlyHQ/agently#readme",
+  "bugs": {
+    "url": "https://github.com/AgentlyHQ/agently/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentlyHQ/agently.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "kevzzsk"
+  },
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "require": "./dist/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "aixyz": "cli/bin.js"
   },
   "files": [
-    "**/*.d.ts",
-    "**/*.d.ts.map",
-    "**/*.js"
+    "dist",
+    "cli"
   ],
   "scripts": {
     "build": "tsc",

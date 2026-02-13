@@ -1,4 +1,5 @@
-# tsconfig.json
-**/*.d.ts
-**/*.d.ts.map
-**/*.js
+# Build output
+dist/
+
+# CLI binary is built separately and should be included
+!cli/bin.js
