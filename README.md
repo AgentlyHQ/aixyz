@@ -61,12 +61,12 @@ export const agent = new ToolLoopAgent({
 
 ```ts
 // src/index.ts
-import { AixyzRequestHandler, initExpressApp, loadAixyzConfig } from "aixyz";
+import { AixyzRequestHandler, initExpressApp, getAixyzConfig } from "aixyz";
 import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
 import { InMemoryTaskStore } from "@a2a-js/sdk/server";
 import { agent } from "./agent";
 
-const config = loadAixyzConfig();
+const config = getAixyzConfig();
 const handler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
 
 const x402Routes = {

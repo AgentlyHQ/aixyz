@@ -97,7 +97,7 @@ let singleton: LoadedAixyzConfig | undefined;
  * In production:
  * This is a materialized config object that is cached for performance.
  */
-export function loadAixyzConfig(): LoadedAixyzConfig {
+export function getAixyzConfig(): LoadedAixyzConfig {
   if (singleton) {
     return singleton;
   }

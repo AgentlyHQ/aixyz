@@ -1,8 +1,8 @@
 import type { BunPlugin } from "bun";
-import { loadAixyzConfig } from "../../config";
+import { getAixyzConfig } from "../../config";
 
 export async function AixyzConfigPlugin(): Promise<BunPlugin> {
-  const materialized = loadAixyzConfig();
+  const materialized = getAixyzConfig();
 
   console.log("AixyzConfig loaded:", materialized);
 
@@ -12,7 +12,7 @@ export async function AixyzConfigPlugin(): Promise<BunPlugin> {
       build.onLoad({ filter: /packages\/aixyz\/config\.ts$/ }, () => ({
         contents: `
         const config = ${JSON.stringify(materialized)};
-        export function loadAixyzConfig() {
+        export function getAixyzConfig() {
           return config;
         }
       `,
