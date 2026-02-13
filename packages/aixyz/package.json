@@ -31,7 +31,7 @@
     "**/*.js"
   ],
   "scripts": {
-    "build": "bun build cli/bin.ts --outdir ./dist/cli --target bun",
+    "build": "bun build cli/bin.ts --outdir cli --target bun",
     "clean": "rm -rf dist"
   },
   "dependencies": {
