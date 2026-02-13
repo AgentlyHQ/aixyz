@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "include": ["*.ts", "cli/**/*.ts", "facilitator/**/*.ts", "server/**/*.ts"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules", "**/*.test.*", "cli/bin.js"],
   "compilerOptions": {
     "target": "ESNext",
