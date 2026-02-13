@@ -5,12 +5,10 @@ import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 export async function build(): Promise<void> {
   const cwd = process.cwd();
 
-  const srcIndex = resolve(cwd, "src/index.ts");
-  const srcApp = resolve(cwd, "src/app.ts");
-  const entrypoint = existsSync(srcIndex) ? srcIndex : existsSync(srcApp) ? srcApp : undefined;
+  const entrypoint = resolve(cwd, "src/app.ts");
 
-  if (!entrypoint) {
-    throw new Error(`No src/index.ts or src/app.ts found in ${cwd}`);
+  if (!existsSync(entrypoint)) {
+    throw new Error(`src/app.ts not found in ${cwd}`);
   }
 
   const outputDir = resolve(cwd, ".vercel/output");
@@ -28,7 +26,7 @@ export async function build(): Promise<void> {
     target: "node",
     format: "esm",
     sourcemap: "linked",
-    plugins: [await AixyzConfigPlugin()],
+    plugins: [AixyzConfigPlugin()],
   });
 
   if (!result.success) {
