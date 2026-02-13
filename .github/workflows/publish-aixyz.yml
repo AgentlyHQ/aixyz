@@ -53,6 +53,10 @@ jobs:
         working-directory: packages/aixyz
         run: bun pm version ${{ steps.version.outputs.version }} --no-git-tag-version
 
+      - name: Copy root README
+        run: cp ../../README.md ./README.md
+        working-directory: packages/aixyz
+
       - name: Publish
         working-directory: packages/aixyz
         run: bunx npm publish --access public --tag ${{ steps.version.outputs.dist_tag }}
