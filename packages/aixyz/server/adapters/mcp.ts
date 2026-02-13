@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { ToolSet } from "ai";
 import express from "express";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 /**
  * Registers all AI SDK tools onto an MCP server instance.
@@ -61,7 +62,7 @@ export function mountMcpEndpoint(
     });
 
     await server.connect(transport);
-    await transport.handleRequest(req, res, req.body);
+    await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
 
     const cleanup = () => {
       transport.close();
