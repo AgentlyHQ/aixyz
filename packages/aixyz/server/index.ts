@@ -5,9 +5,9 @@ import express from "express";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import { RoutesConfig, x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware } from "@x402/express";
-import { registerExactEvmScheme } from "@x402/evm/exact/server";
 import { getFacilitatorClient } from "../facilitator";
 import type { ToolSet } from "ai";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
 
 // TODO(@fuxingloh): add back x402 Bazaar compatibility
 
@@ -38,10 +38,7 @@ export class AixyzRequestHandler extends DefaultRequestHandler {
 async function initX402ResourceServer() {
   const config = loadAixyzConfig();
   const facilitator = getFacilitatorClient();
-  let server = new x402ResourceServer(facilitator);
-  server = registerExactEvmScheme(server, {
-    networks: [config.x402.network as any],
-  });
+  const server = new x402ResourceServer(facilitator).register(config.x402.network as any, new ExactEvmScheme());
 
   await server.initialize();
   return server;
