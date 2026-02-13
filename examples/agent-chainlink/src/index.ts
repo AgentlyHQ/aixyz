@@ -1,6 +1,6 @@
 import { InMemoryTaskStore } from "@a2a-js/sdk/server";
-import { AixyzRequestHandler, initApp } from "aixyz/server";
-import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
+import { AixyzRequestHandler, initApp } from "aixyz/app";
+import { ToolLoopAgentExecutor } from "aixyz/app/adapters/ai";
 import agent, { x402 } from "./agent";
 
 const requestHandler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
