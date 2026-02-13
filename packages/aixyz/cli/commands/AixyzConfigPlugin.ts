@@ -4,6 +4,7 @@ import { getAixyzConfig } from "../../config";
 export function AixyzConfigPlugin(): BunPlugin {
   const materialized = getAixyzConfig();
 
+  // TODO(@fuxingloh): change how this is formatted
   console.log("AixyzConfig loaded:", materialized);
 
   return {
