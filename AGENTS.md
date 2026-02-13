@@ -2,7 +2,7 @@
 
 ## Project overview
 
-- Monorepo for Agently, managed with Bun workspaces and Turbo.
+- Monorepo for aixyz, managed with Bun workspaces and Turbo.
 - Runtime: Bun (latest).
 - TypeScript tooling is present at the root; package contents are minimal so far.
 

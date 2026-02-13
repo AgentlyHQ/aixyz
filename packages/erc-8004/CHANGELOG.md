@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the `@agentlyhq/erc-8004` package will be documented in this file.
+All notable changes to the `@aixyz/erc-8004` package will be documented in this file.
 
 ## v0.0.5
 

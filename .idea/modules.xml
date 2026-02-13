@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/agently.iml" filepath="$PROJECT_DIR$/.idea/agently.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/aixyz.iml" filepath="$PROJECT_DIR$/.idea/aixyz.iml" />
     </modules>
   </component>
 </project>

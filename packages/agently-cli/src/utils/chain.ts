@@ -1,6 +1,6 @@
 import { isAddress, type Chain } from "viem";
 import { mainnet, sepolia, baseSepolia, foundry } from "viem/chains";
-import { CHAIN_ID, getIdentityRegistryAddress } from "@agentlyhq/erc-8004";
+import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
 import { select } from "@inquirer/prompts";
 import { CliError } from "../utils";
 

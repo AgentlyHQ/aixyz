@@ -23,4 +23,7 @@ out/
 # agently
 .agently
 
+# aixyz
+.aixyz
+
 .keystore
