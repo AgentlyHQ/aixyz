@@ -2,8 +2,8 @@
   "name": "@examples/agent-chainlink",
   "private": true,
   "scripts": {
-    "build": "bun ./node_modules/aixyz-cli/dist/bin.js build",
-    "dev": "bun ./node_modules/aixyz-cli/dist/bin.js dev",
+    "build": "bun ./node_modules/aixyz-cli/src/bin.ts build",
+    "dev": "bun ./node_modules/aixyz-cli/src/bin.ts dev",
     "test": "bun test"
   },
   "dependencies": {
