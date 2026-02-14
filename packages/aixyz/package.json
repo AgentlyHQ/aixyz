@@ -33,7 +33,7 @@
     "**/*.js"
   ],
   "scripts": {
-    "build": "bun build cli/bin.ts --outdir cli --target bun",
+    "build": "tsc",
     "clean": "rm -rf dist"
   },
   "dependencies": {
