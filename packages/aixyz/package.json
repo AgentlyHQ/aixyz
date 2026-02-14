@@ -23,6 +23,7 @@
   "author": "AgentlyHQ",
   "type": "commonjs",
   "exports": {
+    "./app": "./app/index.js",
     "./server": "./server/index.js",
     "./facilitator": "./facilitator/index.js",
     "./*": "./*.js"
