@@ -2,6 +2,22 @@
   "name": "aixyz-cli",
   "version": "0.0.0",
   "description": "CLI for building and deploying aixyz agents.",
+  "keywords": [
+    "ai",
+    "agent",
+    "cli",
+    "aixyz",
+    "erc-8004",
+    "deploy"
+  ],
+  "homepage": "https://ai-xyz.dev",
+  "bugs": {
+    "url": "https://github.com/AgentlyHQ/aixyz/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentlyHQ/aixyz.git"
+  },
   "license": "MIT",
   "author": "AgentlyHQ",
   "type": "module",
