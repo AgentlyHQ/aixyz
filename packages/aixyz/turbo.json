@@ -3,13 +3,9 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "inputs": ["tsconfig.json", "./**/*.ts", "!./cli/**/*.ts"],
-      "outputs": ["./**/*.js", "./**/*.d.ts", "./**/*.d.ts.map", "!./cli/**/*.js"],
-      "dependsOn": ["^build", "build:cli"]
-    },
-    "build:cli": {
-      "inputs": ["./cli/**/*.ts"],
-      "outputs": ["./cli/bin.js"]
+      "inputs": ["tsconfig.json", "./**/*.ts"],
+      "outputs": ["./**/*.js", "./**/*.d.ts", "./**/*.d.ts.map"],
+      "dependsOn": ["^build"]
     }
   }
 }

@@ -1,5 +1,5 @@
+import { getAixyzConfig } from "aixyz/config";
 import type { BunPlugin } from "bun";
-import { getAixyzConfig } from "../../config";
 
 export function ConfigPlugin(): BunPlugin {
   const materialized = getAixyzConfig();
