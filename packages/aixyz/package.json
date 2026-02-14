@@ -29,7 +29,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "tsc --build --clean"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
