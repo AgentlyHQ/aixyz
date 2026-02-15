@@ -2,8 +2,8 @@
   "name": "@examples/agent-chainlink",
   "private": true,
   "scripts": {
-    "build": "bun node_modules/aixyz/cli/bin.js build",
-    "dev": "bun node_modules/aixyz/cli/bin.js dev",
+    "build": "bun ./node_modules/aixyz-cli/src/bin.ts build",
+    "dev": "bun ./node_modules/aixyz-cli/src/bin.ts dev",
     "test": "bun test"
   },
   "dependencies": {
@@ -11,6 +11,7 @@
     "@ai-sdk/openai": "3.0.25",
     "ai": "6.0.69",
     "aixyz": "workspace:*",
+    "aixyz-cli": "workspace:*",
     "viem": "2.44.4",
     "zod": "^4.3.6"
   },

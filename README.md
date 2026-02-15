@@ -95,16 +95,16 @@ This gives you:
 ## CLI
 
 ```bash
-aixyz init          # Scaffold a new agent project
-aixyz build         # Bundle for deployment
-aixyz deploy        # Deploy
-aixyz register      # Register on-chain (ERC-8004)
+aixyz-cli init          # Scaffold a new agent project
+aixyz-cli build         # Bundle for deployment
+aixyz-cli deploy        # Deploy
+aixyz-cli register      # Register on-chain (ERC-8004)
 ```
 
-`aixyz build` loads your `aixyz.config.ts`, detects the entrypoint (`src/index.ts` or `src/app.ts`), bundles with
+`aixyz-cli build` loads your `aixyz.config.ts`, detects the entrypoint (`src/index.ts` or `src/app.ts`), bundles with
 `Bun.build()` targeting Node.js, and outputs Vercel Build Output API v3 structure.
 
-`aixyz register` creates an ERC-8004 on-chain identity for your agent so other agents and contracts can reference it.
+`aixyz-cli register` creates an ERC-8004 on-chain identity for your agent so other agents and contracts can reference it.
 
 ## Adapters
 

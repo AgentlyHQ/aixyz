@@ -36,7 +36,7 @@ export async function dev(options: { port?: string }): Promise<void> {
   console.log("");
 
   // Spawn worker process
-  const workerPath = resolve(__dirname, "dev-worker.js");
+  const workerPath = resolve(__dirname, "commands", "dev-worker.js");
   let child: ReturnType<typeof Bun.spawn> | null = null;
   let restarting = false;
 
