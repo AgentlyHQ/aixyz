@@ -22,18 +22,13 @@
   "author": "AgentlyHQ",
   "type": "module",
   "bin": {
-    "aixyz-cli": "dist/bin.js"
+    "aixyz-cli": "bin.ts"
   },
   "files": [
     "build",
     "dev",
-    "bin.ts",
-    "bin"
+    "bin.ts"
   ],
-    "scripts": {
-    "build": "bun build src/bin.ts src/commands/dev-worker.ts --outdir dist --target bun",
-    "clean": "rm -rf dist"
-  },
   "dependencies": {
     "@aixyz/config": "workspace:*",
     "@next/env": "^16.1.6",
