@@ -1,7 +1,7 @@
-import { getAixyzConfig } from "aixyz/config";
+import { getAixyzConfig } from "@aixyz/config";
 import type { BunPlugin } from "bun";
 
-export function ConfigPlugin(): BunPlugin {
+export function AixyzConfigPlugin(): BunPlugin {
   const materialized = getAixyzConfig();
 
   // TODO(@fuxingloh): change how this is formatted

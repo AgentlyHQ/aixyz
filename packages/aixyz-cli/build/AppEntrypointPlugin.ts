@@ -1,6 +1,6 @@
 import type { BunPlugin } from "bun";
 
-export function EntrypointPlugin(entrypoint: string): BunPlugin {
+export function AppEntrypointPlugin(entrypoint: string): BunPlugin {
   return {
     name: "aixyz-entrypoint",
     setup(build) {
