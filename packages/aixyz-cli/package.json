@@ -22,19 +22,21 @@
   "author": "AgentlyHQ",
   "type": "module",
   "bin": {
-    "aixyz-cli": "bin/aixyz-cli.mjs"
+    "aixyz-cli": "dist/bin.js"
   },
   "files": [
-    "dist",
+    "build",
+    "dev",
+    "bin.ts",
     "bin"
   ],
-  "scripts": {
+    "scripts": {
     "build": "bun build src/bin.ts src/commands/dev-worker.ts --outdir dist --target bun",
     "clean": "rm -rf dist"
   },
-  "devDependencies": {
+  "dependencies": {
+    "@aixyz/config": "workspace:*",
     "@next/env": "^16.1.6",
-    "aixyz": "workspace:*",
     "commander": "^13.0.0"
   },
   "engines": {

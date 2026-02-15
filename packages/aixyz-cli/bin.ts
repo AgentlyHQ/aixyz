@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import { program } from "commander";
-import { build } from "./commands/build.js";
-import { dev } from "./commands/dev.js";
-import pkg from "../package.json";
+import { build } from "./build";
+import { dev } from "./dev";
+import pkg from "./package.json";
 
 function handleAction(
   action: (options: Record<string, unknown>) => Promise<void>,

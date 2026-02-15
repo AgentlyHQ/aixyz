@@ -22,6 +22,7 @@
   "license": "MIT",
   "author": "AgentlyHQ",
   "type": "commonjs",
+  "bin": "bin.js",
   "files": [
     "**/*.d.ts",
     "**/*.d.ts.map",
@@ -33,12 +34,14 @@
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
+    "@aixyz/config": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@next/env": "^16.1.6",
     "@x402/core": "^2.3.0",
     "@x402/evm": "^2.3.1",
     "@x402/express": "^2.3.0",
     "@x402/mcp": "^2.3.0",
+    "aixyz-cli": "workspace:*",
     "commander": "^13.0.0",
     "express": "^5.2.1",
     "jose": "^5.10.0",

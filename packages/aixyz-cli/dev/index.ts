@@ -1,7 +1,7 @@
 import { resolve, relative } from "path";
 import { existsSync, watch } from "fs";
 import { loadEnvConfig } from "@next/env";
-import pkg from "../../package.json";
+import pkg from "../package.json";
 
 export async function dev(options: { port?: string }): Promise<void> {
   const cwd = process.cwd();
@@ -21,22 +21,17 @@ export async function dev(options: { port?: string }): Promise<void> {
   const baseUrl = `http://localhost:${port}`;
 
   console.log("");
-  // 1. Agent Icon is a Cursor
-  // 2. Cursor is also called a Mouse
-  // 3. Mouse is a Rodent
-  // 4. Rodent is a Cat's Prey
-  // 5. So we have a 🐈 for the ai-xyz.dev, the ultimate predator of agents.
-  console.log(`🐈  ai-xyz.dev v${pkg.version}`);
+  console.log(`⟡ ai-xyz.dev v${pkg.version}`);
   console.log("");
-  console.log(` - A2A:          ${baseUrl}/.well-known/agent-card.json`);
-  console.log(` - MCP:          ${baseUrl}/mcp`);
+  console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
+  console.log(`- MCP:          ${baseUrl}/mcp`);
   if (envFileNames.length > 0) {
-    console.log(` - Environments: ${envFileNames.join(", ")}`);
+    console.log(`- Environments: ${envFileNames.join(", ")}`);
   }
   console.log("");
 
   // Spawn worker process
-  const workerPath = resolve(__dirname, "commands", "dev-worker.js");
+  const workerPath = resolve(__dirname, "worker.js");
   let child: ReturnType<typeof Bun.spawn> | null = null;
   let restarting = false;
 

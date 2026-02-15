@@ -1,4 +1,4 @@
-import { getAixyzConfig, LoadedAixyzConfig, Network } from "../config";
+import { getAixyzConfig, Network } from "../config";
 import initExpress from "express";
 import { x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware, PaymentRequirements } from "@x402/express";
@@ -16,7 +16,7 @@ export type X402Accepts = {
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
 export class AixyzApp extends x402ResourceServer {
   constructor(
-    public config: LoadedAixyzConfig = getAixyzConfig(),
+    public config = getAixyzConfig(),
     public express: initExpress.Express = initExpress(),
   ) {
     super(getFacilitatorClient());

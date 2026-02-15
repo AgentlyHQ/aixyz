@@ -1,0 +1,34 @@
+{
+  "name": "@aixyz/config",
+  "version": "0.0.0",
+  "description": "",
+  "keywords": [
+    "ai",
+    "agent",
+    "a2a",
+    "mcp",
+    "x402",
+    "erc-8004",
+    "framework"
+  ],
+  "homepage": "https://ai-xyz.dev",
+  "bugs": {
+    "url": "https://github.com/AgentlyHQ/aixyz/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentlyHQ/aixyz.git"
+  },
+  "license": "MIT",
+  "author": "AgentlyHQ",
+  "type": "commonjs",
+  "files": [
+    "**/*.d.ts",
+    "**/*.d.ts.map",
+    "**/*.js"
+  ],
+  "dependencies": {
+    "@next/env": "^16.1.6",
+    "zod": "^4.3.6"
+  }
+}
