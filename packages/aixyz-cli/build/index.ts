@@ -1,7 +1,7 @@
 import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
-import { AppEntrypointPlugin } from "./AppEntrypointPlugin";
+import { AixyzServerPlugin } from "./AixyzServerPlugin";
 
 export async function build(): Promise<void> {
   const cwd = process.cwd();
@@ -25,7 +25,7 @@ export async function build(): Promise<void> {
     target: "node",
     format: "esm",
     sourcemap: "linked",
-    plugins: [AixyzConfigPlugin(), AppEntrypointPlugin(entrypoint)],
+    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint)],
   });
 
   if (!result.success) {
