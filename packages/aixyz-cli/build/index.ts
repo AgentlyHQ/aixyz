@@ -41,7 +41,7 @@ export async function build(): Promise<void> {
     resolve(funcDir, ".vc-config.json"),
     JSON.stringify(
       {
-        handler: "app.js",
+        handler: "server.js",
         runtime: "nodejs24.x",
         launcherType: "Nodejs",
         shouldAddHelpers: true,
