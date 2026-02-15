@@ -13,23 +13,14 @@ export type X402Accepts = {
   payTo?: string;
 };
 
-/**
- * With x402 configured.
- */
-export class AixyzApp {
+// TODO(@fuxingloh): rename to unstable_AixyzApp?
+export class AixyzApp extends x402ResourceServer {
   constructor(
-    public config: LoadedAixyzConfig,
-    public x402Server: x402ResourceServer,
+    public config: LoadedAixyzConfig = getAixyzConfig(),
     public express: initExpress.Express = initExpress(),
-  ) {}
-
-  static async init(): Promise<AixyzApp> {
-    const config = getAixyzConfig();
-    const facilitator = getFacilitatorClient();
-    const x402Server = new x402ResourceServer(facilitator).register(config.x402.network as any, new ExactEvmScheme());
-    await x402Server.initialize();
-
-    return new AixyzApp(config, x402Server);
+  ) {
+    super(getFacilitatorClient());
+    this.register(config.x402.network as any, new ExactEvmScheme());
   }
 
   // TODO(@fuxingloh): add back x402 Bazaar compatibility
@@ -53,18 +44,18 @@ export class AixyzApp {
     this.express.use(
       paymentMiddleware(
         {
-          "POST /agent": {
+          [route]: {
             accepts: this.withAccepts(accepts),
             mimeType: "application/json",
             description: `A2A Payment: ${this.config.description}`,
           },
         },
-        this.x402Server,
+        this,
       ),
     );
   }
 
   async withPaymentRequirements(accepts: X402Accepts): Promise<PaymentRequirements[]> {
-    return this.x402Server.buildPaymentRequirements(this.withAccepts(accepts));
+    return this.buildPaymentRequirements(this.withAccepts(accepts));
   }
 }
