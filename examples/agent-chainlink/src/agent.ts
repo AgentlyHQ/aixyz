@@ -20,7 +20,7 @@ export const accepts = {
   price: "$0.01",
 };
 
-const agent = new ToolLoopAgent({
+export default new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
   instructions: instructions,
   tools: {
@@ -28,5 +28,3 @@ const agent = new ToolLoopAgent({
   },
   stopWhen: stepCountIs(10),
 });
-
-export default agent;
