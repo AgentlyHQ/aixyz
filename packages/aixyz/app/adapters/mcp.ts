@@ -1,76 +1,91 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import type { ToolLoopAgent, ToolSet } from "ai";
+import type { Tool } from "ai";
 import express from "express";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { getAixyzConfig } from "../../config";
-import { AixyzApp } from "../index";
+import { AixyzApp, X402Accepts } from "../index";
+import { createPaymentWrapper } from "@x402/mcp";
 
-/**
- * Registers all AI SDK tools onto an MCP server instance.
- */
-export function registerAiToolsOnMcpServer(server: McpServer, tools: ToolSet): void {
-  for (const [name, tool] of Object.entries(tools)) {
-    const shape = (tool.inputSchema as any)?.shape;
-    server.registerTool(
-      name,
-      {
-        description: tool.description,
-        ...(shape && Object.keys(shape).length > 0 ? { inputSchema: shape } : {}),
-      } as any,
-      async (args: Record<string, unknown>) => {
-        try {
-          const result = await tool.execute!(args, { toolCallId: name, messages: [], type: "tool-call" } as any);
-          return {
-            content: [
-              {
-                type: "text",
-                text: typeof result === "string" ? result : JSON.stringify(result, null, 2),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
-              },
-            ],
-            isError: true,
-          };
-        }
-      },
-    );
-  }
-}
+export class AixyzMCP {
+  private registeredTools: Array<{
+    name: string;
+    config: any;
+    handler: any;
+  }> = [];
 
-/**
- * Mounts a stateless MCP endpoint on an Express app.
- * Creates a new McpServer per request, registers all AI SDK tools, and handles the transport lifecycle.
- */
-export function useMCP<TOOLS extends ToolSet = ToolSet>(app: AixyzApp, agent: ToolLoopAgent<never, TOOLS>): void {
-  const config = getAixyzConfig();
-  app.express.post("/mcp", express.json(), async (req, res) => {
+  constructor(private app: AixyzApp) {}
+
+  private createServer(): McpServer {
     const server = new McpServer({
-      name: config.name,
-      version: config.version,
+      name: this.app.config.name,
+      version: this.app.config.version,
     });
-    registerAiToolsOnMcpServer(server, agent.tools);
+    for (const { name, config, handler } of this.registeredTools) {
+      server.registerTool(name, config, handler);
+    }
+    return server;
+  }
 
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined, // Stateless mode
+  public async connect() {
+    this.app.express.post("/mcp", express.json(), async (req, res) => {
+      const server = this.createServer();
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+      });
+
+      await server.connect(transport);
+      await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
+
+      const cleanup = () => {
+        transport.close();
+        server.close();
+      };
+      res.on("finish", cleanup);
+      res.on("close", cleanup);
     });
+  }
 
-    await server.connect(transport);
-    await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
+  private async withPayment(accepts: X402Accepts) {
+    const payments = await this.app.withPaymentRequirements(accepts);
+    return createPaymentWrapper(this.app, {
+      accepts: payments,
+    });
+  }
 
-    const cleanup = () => {
-      transport.close();
-      server.close();
+  async register(
+    name: string,
+    exports: {
+      default: Tool;
+      accepts: X402Accepts;
+    },
+  ) {
+    const tool = exports.default;
+    if (!tool.execute) {
+      throw new Error(`Tool "${name}" has no execute function`);
+    }
+
+    // TODO(@fuxingloh): add ext-app support:
+    //  import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
+
+    const paid = await this.withPayment(exports.accepts);
+    const execute = tool.execute;
+    const config = {
+      description: tool.description,
+      ...(tool.inputSchema && "shape" in tool.inputSchema ? { inputSchema: tool.inputSchema.shape } : {}),
     };
-
-    res.on("finish", cleanup);
-    res.on("close", cleanup);
-  });
+    this.registeredTools.push({
+      name,
+      config,
+      handler: paid(async (args: Record<string, unknown>) => {
+        try {
+          const result = await execute(args, { toolCallId: name, messages: [] });
+          const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+          return { content: [{ type: "text" as const, text }] };
+        } catch (error) {
+          const text = error instanceof Error ? error.message : "An unknown error occurred";
+          return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
+        }
+      }),
+    });
+  }
 }

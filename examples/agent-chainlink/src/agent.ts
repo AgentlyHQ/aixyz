@@ -16,7 +16,7 @@ If they didn't provide a valid symbol, after you checked with the tool.
 You should suggest a valid symbol or provide an error message.
 `.trim();
 
-export const x402 = {
+export const accepts = {
   price: "$0.01",
 };
 

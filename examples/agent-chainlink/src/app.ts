@@ -1,11 +1,17 @@
+import { AixyzMCP } from "aixyz/app/adapters/mcp";
 import { AixyzApp } from "aixyz/app";
-import { useMCP } from "aixyz/app/adapters/mcp";
 import { useA2A } from "aixyz/app/adapters/a2a";
 
-import agent, { x402 } from "./agent";
+import * as agent from "./agent";
+import * as lookup from "./tools/lookup";
 
-const app = await AixyzApp.init();
-useA2A(app, agent, x402);
-useMCP(app, agent);
+const app = new AixyzApp();
+await app.initialize();
+
+useA2A(app, agent);
+
+const mcp = new AixyzMCP(app);
+await mcp.register("lookup", lookup);
+await mcp.connect();
 
 export default app;

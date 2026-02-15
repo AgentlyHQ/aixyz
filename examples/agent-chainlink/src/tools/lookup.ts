@@ -75,7 +75,7 @@ async function executeLookup({ symbol }: { symbol: string }) {
   };
 }
 
-export const x402 = {
+export const accepts = {
   price: "$0.01",
 };
 
