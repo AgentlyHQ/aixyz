@@ -6,12 +6,12 @@ import * as agent from "./agent";
 import * as lookup from "./tools/lookup";
 
 const app = new AixyzApp();
+await app.initialize();
+
 useA2A(app, agent);
 
 const mcp = new AixyzMCP(app);
 await mcp.register("lookup", lookup);
 await mcp.connect();
-
-await app.initialize();
 
 export default app;

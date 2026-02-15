@@ -41,6 +41,7 @@ export class AixyzApp extends x402ResourceServer {
   }
 
   withX402(route: `${"GET" | "POST"} /${string}`, accepts: X402Accepts) {
+    // this part is deleting
     this.express.use(
       paymentMiddleware(
         {
@@ -51,6 +52,9 @@ export class AixyzApp extends x402ResourceServer {
           },
         },
         this,
+        undefined,
+        undefined,
+        false,
       ),
     );
   }
