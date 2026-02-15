@@ -87,47 +87,38 @@ export class AixyzMCP {
     });
   }
 
-  async register<INPUT, OUTPUT>(
+  async register(
     name: string,
     exports: {
-      default: Tool<INPUT, OUTPUT>;
+      default: Tool;
       accepts: X402Accepts;
     },
   ) {
-    const paid = await this.withPayment(exports.accepts);
+    const tool = exports.default;
+    if (!tool.execute) {
+      throw new Error(`Tool "${name}" has no execute function`);
+    }
 
     // TODO(@fuxingloh): add ext-app support:
     //  import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 
-    const tool = exports.default;
+    const paid = await this.withPayment(exports.accepts);
+    const execute = tool.execute;
     const config = {
       description: tool.description,
-      ...(tool.inputSchema ? { inputSchema: (tool.inputSchema as any).shape } : {}),
+      ...(tool.inputSchema && "shape" in tool.inputSchema ? { inputSchema: tool.inputSchema.shape } : {}),
     };
     this.registeredTools.push({
       name,
       config,
       handler: paid(async (args: Record<string, unknown>) => {
         try {
-          const result = await tool.execute!(args as any, { toolCallId: name, messages: [], type: "tool-call" } as any);
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: typeof result === "string" ? result : JSON.stringify(result, null, 2),
-              },
-            ],
-          };
+          const result = await execute(args, { toolCallId: name, messages: [] });
+          const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+          return { content: [{ type: "text" as const, text }] };
         } catch (error) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
-              },
-            ],
-            isError: true,
-          };
+          const text = error instanceof Error ? error.message : "An unknown error occurred";
+          return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
         }
       }),
     });
