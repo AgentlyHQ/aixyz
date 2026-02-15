@@ -10,7 +10,7 @@ import {
 import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
 import { getAixyzConfig } from "../../config";
-import { AixyzApp, X402Accepts } from "../index";
+import { AixyzServer, X402Accepts } from "../index";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
@@ -80,7 +80,7 @@ export function getAgentCard(): AgentCard {
 }
 
 export function useA2A<TOOLS extends ToolSet = ToolSet>(
-  app: AixyzApp,
+  app: AixyzServer,
   exports: {
     default: ToolLoopAgent<never, TOOLS>;
     accepts: X402Accepts;

@@ -1,10 +1,10 @@
 import type { BunPlugin } from "bun";
 
-export function AppEntrypointPlugin(entrypoint: string): BunPlugin {
+export function AixyzServerPlugin(entrypoint: string): BunPlugin {
   return {
     name: "aixyz-entrypoint",
     setup(build) {
-      build.onLoad({ filter: /app\.ts$/ }, async (args) => {
+      build.onLoad({ filter: /server\.ts$/ }, async (args) => {
         if (args.path !== entrypoint) return;
 
         const source = await Bun.file(args.path).text();

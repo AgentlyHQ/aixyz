@@ -7,7 +7,6 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@a2a-js/sdk": "^0.3.10",
     "@ai-sdk/openai": "3.0.25",
     "ai": "6.0.69",
     "aixyz": "workspace:*",

@@ -11,10 +11,10 @@ export async function dev(options: { port?: string }): Promise<void> {
   const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
 
   // Find entrypoint
-  const entrypoint = resolve(cwd, "src/app.ts");
+  const entrypoint = resolve(cwd, "app/server.ts");
 
   if (!existsSync(entrypoint)) {
-    throw new Error(`No src/app.ts found in ${cwd}`);
+    throw new Error(`No app/server.ts found in ${cwd}`);
   }
 
   const port = options.port || process.env.PORT || "3000";
@@ -63,7 +63,7 @@ export async function dev(options: { port?: string }): Promise<void> {
 
   startServer();
 
-  // Watch src/ for changes
+  // Watch app/ for changes
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   function scheduleRestart(reason: string) {
@@ -73,7 +73,7 @@ export async function dev(options: { port?: string }): Promise<void> {
     }, 100);
   }
 
-  watch(resolve(cwd, "src"), { recursive: true }, (_event, filename) => {
+  watch(resolve(cwd, "app"), { recursive: true }, (_event, filename) => {
     scheduleRestart(filename ? `${filename} changed` : "file changed");
   });
 

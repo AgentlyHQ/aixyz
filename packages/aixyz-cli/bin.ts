@@ -36,7 +36,7 @@ Details:
 
   The build process:
     1. Loads aixyz.config.ts from the current directory
-    2. Detects entrypoint (src/app.ts)
+    2. Detects entrypoint (app/server.ts)
     3. Generates Vercel Build Output API v3 structure
     4. Copies static assets from public/ (if present)
 
@@ -44,7 +44,7 @@ Details:
 
 Prerequisites:
   - An aixyz.config.ts with a default export
-  - An entrypoint at src/app.ts
+  - An entrypoint at app/server.ts
 
 Examples:
   $ aixyz build`,

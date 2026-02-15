@@ -17,7 +17,6 @@
     "examples/agent-chainlink": {
       "name": "@examples/agent-chainlink",
       "dependencies": {
-        "@a2a-js/sdk": "^0.3.10",
         "@ai-sdk/openai": "3.0.25",
         "ai": "6.0.69",
         "aixyz": "workspace:*",
@@ -151,6 +150,9 @@
     "packages/aixyz-cli": {
       "name": "aixyz-cli",
       "version": "0.0.0",
+      "bin": {
+        "aixyz-cli": "bin.ts",
+      },
       "dependencies": {
         "@aixyz/config": "workspace:*",
         "@next/env": "^16.1.6",
