@@ -6,10 +6,10 @@ import { AppEntrypointPlugin } from "./AppEntrypointPlugin";
 export async function build(): Promise<void> {
   const cwd = process.cwd();
 
-  const entrypoint = resolve(cwd, "ai/app.ts");
+  const entrypoint = resolve(cwd, "app/server.ts");
 
   if (!existsSync(entrypoint)) {
-    throw new Error(`ai/app.ts not found in ${cwd}`);
+    throw new Error(`app/server.ts not found in ${cwd}`);
   }
 
   const outputDir = resolve(cwd, ".vercel/output");
@@ -77,11 +77,11 @@ export async function build(): Promise<void> {
     console.log("Copied public/ →", staticDir);
   }
 
-  const iconFile = resolve(cwd, "ai/icon.png");
+  const iconFile = resolve(cwd, "app/icon.png");
   if (existsSync(iconFile)) {
     mkdirSync(staticDir, { recursive: true });
     cpSync(iconFile, resolve(staticDir, "icon.png"));
-    console.log("Copied ai/icon.png →", staticDir);
+    console.log("Copied app/icon.png →", staticDir);
   }
 
   // Log summary

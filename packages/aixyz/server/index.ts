@@ -14,7 +14,7 @@ export type X402Accepts = {
 };
 
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
-export class AixyzApp extends x402ResourceServer {
+export class AixyzServer extends x402ResourceServer {
   constructor(
     public config = getAixyzConfig(),
     public express: initExpress.Express = initExpress(),

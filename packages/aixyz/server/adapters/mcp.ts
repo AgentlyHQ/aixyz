@@ -3,7 +3,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import type { Tool } from "ai";
 import express from "express";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { AixyzApp, X402Accepts } from "../index";
+import { AixyzServer, X402Accepts } from "../index";
 import { createPaymentWrapper } from "@x402/mcp";
 
 export class AixyzMCP {
@@ -13,7 +13,7 @@ export class AixyzMCP {
     handler: any;
   }> = [];
 
-  constructor(private app: AixyzApp) {}
+  constructor(private app: AixyzServer) {}
 
   private createServer(): McpServer {
     const server = new McpServer({
