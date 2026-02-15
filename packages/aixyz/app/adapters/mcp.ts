@@ -5,7 +5,6 @@ import express from "express";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { AixyzApp, X402Accepts } from "../index";
 import { createPaymentWrapper } from "@x402/mcp";
-import { randomUUID } from "node:crypto";
 
 export class AixyzMCP {
   private registeredTools: Array<{
@@ -28,55 +27,21 @@ export class AixyzMCP {
   }
 
   public async connect() {
-    // TODO(@fuxingloh): use signed x402 address for the session id?
-    const transports = new Map<string, StreamableHTTPServerTransport>();
-
     this.app.express.post("/mcp", express.json(), async (req, res) => {
-      const sessionId = req.headers["mcp-session-id"] as string | undefined;
+      const server = this.createServer();
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+      });
 
-      if (sessionId) {
-        const transport = transports.get(sessionId);
-        if (!transport) {
-          res.status(404).end();
-          return;
-        }
-        await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
-      } else {
-        const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID(),
-        });
-        transport.onclose = () => {
-          if (transport.sessionId) {
-            transports.delete(transport.sessionId);
-          }
-        };
-        const server = this.createServer();
-        await server.connect(transport);
-        await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
-        if (transport.sessionId) {
-          transports.set(transport.sessionId, transport);
-        }
-      }
-    });
+      await server.connect(transport);
+      await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
 
-    this.app.express.get("/mcp", async (req, res) => {
-      const sessionId = req.headers["mcp-session-id"] as string | undefined;
-      const transport = sessionId ? transports.get(sessionId) : undefined;
-      if (!transport) {
-        res.status(400).end();
-        return;
-      }
-      await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse);
-    });
-
-    this.app.express.delete("/mcp", async (req, res) => {
-      const sessionId = req.headers["mcp-session-id"] as string | undefined;
-      const transport = sessionId ? transports.get(sessionId) : undefined;
-      if (!transport) {
-        res.status(400).end();
-        return;
-      }
-      await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse);
+      const cleanup = () => {
+        transport.close();
+        server.close();
+      };
+      res.on("finish", cleanup);
+      res.on("close", cleanup);
     });
   }
 
