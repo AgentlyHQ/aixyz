@@ -6,10 +6,10 @@ import { AppEntrypointPlugin } from "./AppEntrypointPlugin";
 export async function build(): Promise<void> {
   const cwd = process.cwd();
 
-  const entrypoint = resolve(cwd, "src/app.ts");
+  const entrypoint = resolve(cwd, "ai/app.ts");
 
   if (!existsSync(entrypoint)) {
-    throw new Error(`src/app.ts not found in ${cwd}`);
+    throw new Error(`ai/app.ts not found in ${cwd}`);
   }
 
   const outputDir = resolve(cwd, ".vercel/output");
@@ -18,6 +18,7 @@ export async function build(): Promise<void> {
   const funcDir = resolve(outputDir, "functions/index.func");
   mkdirSync(funcDir, { recursive: true });
 
+  // Write functions/index.func
   const result = await Bun.build({
     entrypoints: [entrypoint],
     outdir: funcDir,
@@ -35,7 +36,7 @@ export async function build(): Promise<void> {
     process.exit(1);
   }
 
-  // 6. Write .vc-config.json
+  // Write .vc-config.json
   await Bun.write(
     resolve(funcDir, ".vc-config.json"),
     JSON.stringify(
@@ -51,10 +52,10 @@ export async function build(): Promise<void> {
     ),
   );
 
-  // 6b. Write package.json for ESM support
+  // Write package.json for ESM support
   await Bun.write(resolve(funcDir, "package.json"), JSON.stringify({ type: "module" }, null, 2));
 
-  // 7. Write config.json
+  // Write config.json
   await Bun.write(
     resolve(outputDir, "config.json"),
     JSON.stringify(
@@ -67,20 +68,26 @@ export async function build(): Promise<void> {
     ),
   );
 
-  // 8. Copy static assets (public/ → .vercel/output/static/)
+  // Copy static assets (public/ → .vercel/output/static/)
+  const staticDir = resolve(outputDir, "static");
+
   const publicDir = resolve(cwd, "public");
   if (existsSync(publicDir)) {
-    const staticDir = resolve(outputDir, "static");
     cpSync(publicDir, staticDir, { recursive: true });
     console.log("Copied public/ →", staticDir);
   }
 
-  // 9. Log summary
+  const iconFile = resolve(cwd, "ai/icon.png");
+  if (existsSync(iconFile)) {
+    mkdirSync(staticDir, { recursive: true });
+    cpSync(iconFile, resolve(staticDir, "icon.png"));
+    console.log("Copied ai/icon.png →", staticDir);
+  }
+
+  // Log summary
   console.log("");
   console.log("Build complete! Output:");
   console.log("  .vercel/output/config.json");
   console.log("  .vercel/output/functions/index.func/index.js");
-  if (existsSync(publicDir)) {
-    console.log("  .vercel/output/static/");
-  }
+  console.log("  .vercel/output/static/");
 }

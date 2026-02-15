@@ -4,7 +4,7 @@ import lookup from "./tools/lookup";
 
 // language=Markdown
 const instructions = `
-# Chainlink Price Oracle AI Agent
+# Chainlink Price Oracle
 
 You are an AI agent that provides real-time cryptocurrency price data using Chainlink price feeds. 
 You can look up the latest price for any cryptocurrency in USD by its symbol (e.g., 'eth', 'btc', 'link'). 
