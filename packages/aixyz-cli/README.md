@@ -13,7 +13,7 @@ bunx aixyz-cli dev
 npx aixyz-cli dev
 ```
 
-> Note: Requires [Bun](https://bun.sh) to be installed in the system.
+> Note: Requires [Bun](https://bun.sh) to be installed on your system.
 
 ## Installation
 
