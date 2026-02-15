@@ -79,17 +79,15 @@ export function getAgentCard(): AgentCard {
   };
 }
 
-type Options<TOOLS extends ToolSet> = {
-  default: ToolLoopAgent<never, TOOLS>;
-  accepts: X402Accepts;
-};
-
 export function useA2A<TOOLS extends ToolSet = ToolSet>(
   app: AixyzApp,
-  options: Options<TOOLS>,
+  exports: {
+    default: ToolLoopAgent<never, TOOLS>;
+    accepts: X402Accepts;
+  },
   taskStore: TaskStore = new InMemoryTaskStore(),
 ): void {
-  const agentExecutor = new ToolLoopAgentExecutor(options.default);
+  const agentExecutor = new ToolLoopAgentExecutor(exports.default);
   const requestHandler = new DefaultRequestHandler(getAgentCard(), taskStore, agentExecutor);
 
   app.express.use(
@@ -99,7 +97,7 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
     }),
   );
 
-  app.withX402("POST /agent", options.accepts);
+  app.withX402("POST /agent", exports.accepts);
   app.express.use(
     "/agent",
     jsonRpcHandler({
