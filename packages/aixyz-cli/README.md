@@ -4,6 +4,17 @@
 
 CLI for building and deploying [aixyz](https://ai-xyz.dev) agents.
 
+## Quick Start
+
+Run without installing:
+
+```bash
+bunx aixyz-cli dev
+npx aixyz-cli dev
+```
+
+> Note: Requires [Bun](https://bun.sh) to be installed on your system.
+
 ## Installation
 
 ```bash
