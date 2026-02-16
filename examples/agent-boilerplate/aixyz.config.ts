@@ -5,9 +5,11 @@ const config: AixyzConfig = {
   description: "AI agent that provides current weather information for any location worldwide.",
   version: "0.1.0",
   network: "eip155:84532",
+  // You can use `process.env.YOUR_ENV_KEY` to conditionally set values based on the environment
+  // .env, .env.local, .env.production, .env.development are supported
   x402: {
     payTo: "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
-    network: "eip155:84532",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
   },
   skills: [
     {
