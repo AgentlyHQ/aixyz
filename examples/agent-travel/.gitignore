@@ -13,3 +13,8 @@ pnpm-lock.yaml
 # env files (can opt-in for committing if needed)
 #.env
 .env.local
+
+# compiled output
+*.js
+!*.config.js
+dist
