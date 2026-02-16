@@ -7,7 +7,7 @@ const config: AixyzConfig = {
   version: "1.0.0",
   network: "eip155:84532",
   x402: {
-    payTo: process.env.X402_PAY_TO || process.env.X402_PAYMENT_ADDRESS || "",
+    payTo: process.env.X402_PAY_TO || "0xYourX402WalletAddress",
     network: process.env.X402_NETWORK || "eip155:84532",
   },
   skills: [

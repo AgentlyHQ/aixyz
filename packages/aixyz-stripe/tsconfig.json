@@ -1,13 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "**/*.test.*", "dist"],
+  "exclude": ["node_modules", "**/*.test.*"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "NodeNext",
     "strict": true,
     "skipLibCheck": true,
-    "declaration": true,
-    "outDir": "dist"
+    "declaration": true
   }
 }

@@ -41,10 +41,5 @@
   "peerDependencies": {
     "aixyz": "workspace:*",
     "stripe": "^20"
-  },
-  "peerDependenciesMeta": {
-    "stripe": {
-      "optional": false
-    }
   }
 }
