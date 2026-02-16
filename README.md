@@ -158,11 +158,25 @@ my-agent/
 
 ## Contributing
 
+### Local Development
+
 ```bash
 bun install
 bun run dev
 bun run format  # before committing
 ```
+
+### GitHub Codespaces
+
+This repository is fully configured for [GitHub Codespaces](https://github.com/features/codespaces) with Bun pre-installed.
+
+Click the **Code** button → **Codespaces** → **Create codespace** to start developing in your browser with zero setup.
+
+Features:
+
+- Pre-configured Bun 1.3.9 environment
+- Automatic dependency installation
+- VS Code extensions for Bun and TypeScript development
 
 ## License
 
