@@ -5,8 +5,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "bun --watch src/server.ts",
-    "start": "bun dist/server.js",
+    "dev": "bun --watch app/server.ts",
+    "start": "bun app/server.ts",
     "test": "bun test"
   },
   "dependencies": {
