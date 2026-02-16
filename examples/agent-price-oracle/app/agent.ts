@@ -1,9 +1,11 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
-import { getNewListedTokens, getTokenPrice, getTopGainersLosers } from "./tools";
+import getNewListedTokens from "./tools/getNewListedTokens";
+import getTokenPrice from "./tools/getTokenPrice";
+import getTopGainersLosers from "./tools/getTopGainersLosers";
 
 // language=Markdown
-const SystemPrompt = `
+const instructions = `
 # Price Gecky - Price Oracle AI Agent
 
 You are Price Gecky, an autonomous AI Agent created by aixyz, specialized in providing real-time cryptocurrency market data using CoinGecko Pro.
@@ -52,9 +54,13 @@ If a user asks for something outside your capabilities, politely explain that yo
 - Stay within your defined scope at all times
 `.trim();
 
-export const agent = new ToolLoopAgent({
+export const accepts = {
+  price: "$0.01",
+};
+
+export default new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
-  instructions: SystemPrompt,
+  instructions: instructions,
   tools: {
     getNewListedTokens,
     getTokenPrice,
@@ -62,5 +68,3 @@ export const agent = new ToolLoopAgent({
   },
   stopWhen: stepCountIs(15),
 });
-
-export default agent;
