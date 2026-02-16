@@ -108,7 +108,7 @@ Once dependencies are installed successfully:
 ## Benefits
 
 1. **Better Documentation** - Organized, searchable, with navigation
-2. **Modern Stack** - Next.js 14 + Nextra for great developer experience
+2. **Modern Stack** - Next.js 15 + Nextra for great developer experience
 3. **Vercel Optimized** - Native support for serverless deployment
 4. **Maintainable** - MDX files for easy content updates
 5. **Scalable** - Easy to add new pages and sections
