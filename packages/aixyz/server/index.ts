@@ -5,19 +5,7 @@ import { paymentMiddleware, PaymentRequirements } from "@x402/express";
 import { getFacilitatorClient } from "../facilitator";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { z } from "zod";
-
-export type Accepts = AcceptsX402 | AcceptsFree;
-
-export type AcceptsX402 = {
-  scheme: "exact";
-  price: string;
-  network?: string;
-  payTo?: string;
-};
-
-export type AcceptsFree = {
-  scheme: "free";
-};
+import { AcceptsX402 } from "../accepts";
 
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
 export class AixyzServer extends x402ResourceServer {

@@ -10,8 +10,9 @@ import {
 import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
 import { getAixyzConfig } from "../../config";
-import { AixyzServer, Accepts } from "../index";
+import { AixyzServer } from "../index";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
+import { Accepts } from "../../accepts";
 
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
   constructor(private agent: ToolLoopAgent<never, TOOLS>) {}
