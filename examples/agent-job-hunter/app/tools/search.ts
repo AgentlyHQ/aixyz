@@ -1,4 +1,5 @@
 import { tool } from "ai";
+import type { Accepts } from "aixyz/accepts";
 import { z } from "zod";
 
 const JOBICY_BASE_URL = "https://jobicy.com/api/v2/remote-jobs";
@@ -33,7 +34,8 @@ async function executeJobSearch({ geo }: { geo: string }) {
   return JobicyResponseSchema.parse(data);
 }
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 

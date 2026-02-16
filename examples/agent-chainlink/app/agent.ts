@@ -1,5 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
 import lookup from "./tools/lookup";
 
 // language=Markdown
@@ -16,7 +17,8 @@ If they didn't provide a valid symbol, after you checked with the tool.
 You should suggest a valid symbol or provide an error message.
 `.trim();
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 

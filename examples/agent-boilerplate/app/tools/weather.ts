@@ -1,5 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
+import { Accepts } from "aixyz/accepts";
 
 interface GeocodingResponse {
   results?: {
@@ -55,7 +56,8 @@ function getWeatherCondition(code: number): string {
   return conditions[code] ?? "Unknown";
 }
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.0001",
 };
 
