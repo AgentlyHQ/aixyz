@@ -1,10 +1,25 @@
 # Protocols
 
-ai-xyz.dev supports multiple protocols to enable agent discovery, communication, tool sharing, and payments.
+ai-xyz.dev integrates four key protocols to create a complete agent infrastructure: discovery, communication, payments, and identity.
+
+## Overview
+
+| Protocol     | Purpose                      | Key Feature                                 |
+| ------------ | ---------------------------- | ------------------------------------------- |
+| **A2A**      | Agent-to-agent communication | JSON-RPC with standardized discovery        |
+| **MCP**      | Tool sharing                 | Expose agent capabilities to AI clients     |
+| **x402**     | Payment infrastructure       | Blockchain micropayments (no subscriptions) |
+| **ERC-8004** | Identity & reputation        | Decentralized on-chain registry             |
 
 ## A2A (Agent-to-Agent)
 
-**A2A** generates your agent card and JSON-RPC endpoint so other agents can discover and talk to yours.
+**A2A** enables standardized agent discovery and communication through JSON-RPC endpoints.
+
+### Why A2A?
+
+- **Discoverability** - Agents publish standardized metadata for others to find
+- **Interoperability** - Common JSON-RPC interface across all agents
+- **Autonomy** - Agents can discover and interact without human intervention
 
 ### Agent Card
 
@@ -42,21 +57,25 @@ curl -X POST https://my-agent.example.com/agent \
   }'
 ```
 
+**Use Cases:**
+
+- Multi-agent workflows where agents delegate tasks
+- Agent marketplaces with automated service discovery
+- Autonomous agent collaboration
+
 ## MCP (Model Context Protocol)
 
-**MCP** exposes your tools to any MCP-compatible client.
+**MCP** exposes your agent's tools to MCP-compatible clients, allowing AI assistants to use your agent's capabilities.
 
-Your agent's MCP endpoint is available at `/mcp`:
+### Why MCP?
 
-```bash
-curl https://my-agent.example.com/mcp
-```
-
-This allows AI assistants like Claude Desktop to discover and use your agent's tools.
+- **Tool Sharing** - Your agent becomes a tool provider for AI assistants
+- **Standardization** - Works with any MCP-compatible client (Claude Desktop, etc.)
+- **Composability** - Combine tools from multiple agents seamlessly
 
 ### Tool Discovery
 
-MCP clients can list available tools:
+Your agent's MCP endpoint is available at `/mcp`. MCP clients can list available tools:
 
 ```json
 {
@@ -82,9 +101,22 @@ MCP clients can execute tools:
 }
 ```
 
+**Use Cases:**
+
+- Expose specialized agent capabilities to Claude Desktop
+- Build tool marketplaces for AI assistants
+- Create reusable agent components
+
 ## x402 (HTTP Payment Protocol)
 
-**x402** gates requests behind HTTP 402 micropayments. No custodial wallets, no subscriptions.
+**x402** enables blockchain-based micropayments for agent services. No custodial wallets, no subscriptions—just pay-per-use.
+
+### Why x402?
+
+- **Micropayments** - Pay only for what you use (e.g., $0.01 per request)
+- **Non-Custodial** - Users pay directly from their wallets
+- **No Subscriptions** - No recurring charges or lock-in
+- **Facilitator Support** - Integrates with payment facilitators like Coinbase
 
 ### Payment Configuration
 
@@ -96,7 +128,7 @@ const x402Routes = {
     accepts: {
       scheme: "exact",
       price: "$0.01",
-      network: "eip155:8453",
+      network: "eip155:8453", // Base network
       payTo: config.x402.payTo,
     },
     mimeType: "application/json",
@@ -104,6 +136,156 @@ const x402Routes = {
   },
 };
 ```
+
+### Payment Flow
+
+1. **Request without payment** - Client sends initial request
+2. **402 Response** - Server returns `402 Payment Required` with payment details
+3. **Blockchain transaction** - Client sends USDC payment on-chain
+4. **Retry with proof** - Client retries request with payment proof header
+5. **Validation & execution** - Server validates payment and processes request
+
+### Supported Networks
+
+| Network  | Chain ID       | Use Case               |
+| -------- | -------------- | ---------------------- |
+| Base     | `eip155:8453`  | Recommended (low fees) |
+| Ethereum | `eip155:1`     | Mainnet support        |
+| Optimism | `eip155:10`    | L2 scalability         |
+| Arbitrum | `eip155:42161` | L2 scalability         |
+| Polygon  | `eip155:137`   | Low-cost option        |
+
+**Dual Payment Support:**
+
+You can also accept traditional payments via Stripe alongside x402:
+
+```ts
+import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
+
+// One-line Stripe integration
+experimental_useStripePaymentIntent(server);
+```
+
+**Use Cases:**
+
+- Monetize agent APIs with crypto payments
+- Build pay-per-use agent services
+- Accept payments from decentralized clients
+
+## ERC-8004 (On-Chain Identity)
+
+**ERC-8004** provides decentralized identity and reputation for agents through an on-chain registry.
+
+### Why ERC-8004?
+
+- **Verifiable Identity** - Cryptographically prove your agent's identity
+- **Reputation System** - Build trust through on-chain feedback
+- **Discoverability** - Agents can be found via on-chain registry
+- **Interoperability** - Standard identity format across all agents
+
+### Register Your Agent
+
+Use the CLI to register your agent on-chain:
+
+```bash
+aixyz-cli register
+```
+
+This creates an ERC-8004 identity with:
+
+| Feature          | Description                          |
+| ---------------- | ------------------------------------ |
+| **Token ID**     | Unique on-chain identifier           |
+| **Metadata URI** | Points to agent registration file    |
+| **Services**     | A2A, MCP endpoints with payment info |
+| **Verification** | Cryptographic proof of ownership     |
+
+### Registry Components
+
+The ERC-8004 system consists of three registries:
+
+1. **Identity Registry** - ERC-721 based agent registration
+2. **Reputation Registry** - Feedback and ratings from clients
+3. **Validation Registry** - Third-party verifications
+
+### Supported Chains
+
+**Mainnets:**
+
+- Ethereum (1)
+- Base (8453)
+- Polygon (137)
+- Scroll (534352)
+- BSC (56)
+- Gnosis (100)
+
+**Testnets:**
+
+- Sepolia (11155111)
+- Base Sepolia (84532)
+- Polygon Amoy (80002)
+
+All contracts use consistent addresses across chains within each environment.
+
+**Use Cases:**
+
+- Establish trust for new agents
+- Build reputation over time
+- Enable on-chain agent marketplaces
+- Integrate with DeFi and other blockchain systems
+
+## Protocol Integration
+
+All four protocols work together to create a complete agent infrastructure:
+
+```
+┌─────────────────────────────────────────────────┐
+│            Client/Consumer Agent                │
+└────────────────┬────────────────────────────────┘
+                 │
+    ┌────────────┼────────────┐
+    │            │            │
+    ▼            ▼            ▼
+┌────────┐  ┌────────┐  ┌────────────┐
+│  A2A   │  │  MCP   │  │  ERC-8004  │
+│Discovery│  │ Tools  │  │  Registry  │
+└────┬───┘  └───┬────┘  └─────┬──────┘
+     │          │              │
+     │   ┌──────┴──────────────┘
+     │   │
+     ▼   ▼
+┌─────────────┐
+│  x402 Gate  │  ← Payments
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────┐
+│    Your Agent Logic     │
+│  (Vercel AI / LangChain)│
+└─────────────────────────┘
+```
+
+### Example: Complete Agent Interaction
+
+1. **Discovery** - Consumer finds agent via ERC-8004 registry or A2A agent card
+2. **Tool Inspection** - Consumer queries `/mcp` to see available tools
+3. **Payment Setup** - Consumer sees x402 requirements from A2A metadata
+4. **Execution** - Consumer pays via x402 and calls agent via A2A JSON-RPC
+5. **Feedback** - Consumer submits rating to ERC-8004 reputation registry
+
+## Next Steps
+
+- [Configure protocols](/configuration) - Set up payments and identity
+- [Learn about adapters](/adapters) - Connect your AI framework
+- [Deploy with the CLI](/cli) - Build and register your agent
+- [View examples](/examples) - See real-world implementations
+  },
+  mimeType: "application/json",
+  description: "Payment for agent API access",
+  },
+  };
+
+````
 
 ### Payment Flow
 
@@ -131,7 +313,7 @@ Use the CLI to register your agent on-chain:
 
 ```bash
 aixyz-cli register
-```
+````
 
 This creates an ERC-8004 identity that:
 

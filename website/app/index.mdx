@@ -1,28 +1,85 @@
 # 🐁 ai-xyz.dev
 
-Bundle AI agents from any framework into deployable services. A2A, MCP, x402 payments, and ERC-8004 identity get wired up for you.
+**The deployment and monetization layer for autonomous AI agents**
 
 [![npm](https://img.shields.io/npm/v/aixyz)](https://www.npmjs.com/package/aixyz)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/AgentlyHQ/aixyz/blob/main/LICENSE)
 
-## Features
+## What is ai-xyz.dev?
 
-- **Framework Agnostic** - Works with Vercel AI SDK, LangChain, Mastra, and more
-- **Protocol Support** - A2A, MCP, x402 payments, and ERC-8004 identity
-- **Vercel Deployment** - Built-in support for serverless deployment
-- **Type-Safe** - Full TypeScript support
+ai-xyz.dev bundles AI agents from any framework into production-ready, monetizable services. Write your agent logic once with your preferred framework (Vercel AI SDK, LangChain, Mastra), and we handle:
+
+- **Multi-Protocol Communication** - A2A, MCP tool sharing, and agent discovery
+- **Payment Infrastructure** - Blockchain (x402) and traditional (Stripe) payment options
+- **Identity & Reputation** - On-chain agent registry with ERC-8004
+- **Serverless Deployment** - Optimized Vercel Build Output API v3 structure
+
+## Why ai-xyz.dev?
+
+### The Problem
+
+Building production AI agents today requires piecing together:
+
+- ❌ Multiple communication protocols manually
+- ❌ Custom payment and monetization logic
+- ❌ Agent discovery and identity mechanisms
+- ❌ Framework-specific deployment configurations
+
+### The Solution
+
+ai-xyz.dev provides a **unified deployment layer** that:
+
+- ✅ Works with any AI framework via adapters
+- ✅ Auto-wires A2A, MCP, x402, and ERC-8004 protocols
+- ✅ Includes built-in payment options (crypto + traditional)
+- ✅ Generates server configs and metadata automatically
+- ✅ Deploys to Vercel with zero configuration
+
+## Key Features
+
+### Framework Agnostic
+
+Works seamlessly with:
+
+- **Vercel AI SDK** - ToolLoopAgentExecutor
+- **LangChain** - LangChainAgentExecutor
+- **Mastra** - MastraAgentExecutor
+- **Custom** - Implement the simple AgentExecutor interface
+
+### Multi-Protocol Support
+
+Your agent automatically exposes:
+
+- **A2A** - JSON-RPC endpoint for agent-to-agent communication
+- **MCP** - Tool sharing with MCP-compatible clients (e.g., Claude Desktop)
+- **x402** - Blockchain-based micropayments (USDC on Base)
+- **ERC-8004** - Decentralized identity and reputation registry
+
+### Flexible Payments
+
+- **Crypto Payments** - x402 protocol with facilitator integration (Coinbase support)
+- **Traditional Payments** - Stripe integration with one-line setup
+- **Mixed Mode** - Accept both payment types simultaneously
+
+### Type-Safe & Developer-Friendly
+
+- Full TypeScript support with Zod validation
+- CLI auto-generates server code from your tools
+- Minimal boilerplate - focus on agent logic, not infrastructure
 
 ## Get Started
 
 Jump right in with the [Quickstart Guide](/quickstart) or explore specific topics:
 
-- [Installation](/installation)
-- [Configuration](/configuration)
-- [CLI Commands](/cli)
-- [Adapters](/adapters)
-- [Protocols](/protocols)
+- [Installation](/installation) - Set up your first agent
+- [Configuration](/configuration) - Configure identity, payments, and skills
+- [Adapters](/adapters) - Connect your AI framework
+- [CLI Commands](/cli) - Build, deploy, and register agents
+- [Protocols](/protocols) - Deep dive into A2A, MCP, x402, and ERC-8004
 
 ## Quick Example
+
+Create a new agent in seconds:
 
 ```bash
 pnpm create aixyz-app my-agent
@@ -31,15 +88,28 @@ pnpm install
 bun run dev
 ```
 
-This gives you:
+This scaffolds a complete agent with:
 
 | Endpoint                       | Protocol | Description                    |
 | ------------------------------ | -------- | ------------------------------ |
 | `/.well-known/agent-card.json` | A2A      | Agent discovery metadata       |
 | `/agent`                       | A2A      | JSON-RPC endpoint (x402-gated) |
-| `/mcp`                         | MCP      | Tool sharing                   |
+| `/mcp`                         | MCP      | Tool sharing with MCP clients  |
+
+## Use Cases
+
+- **Agent APIs** - Monetize your AI agents as paid services
+- **Multi-Agent Systems** - Enable agents to discover and communicate with each other
+- **Tool Marketplaces** - Share agent capabilities via MCP
+- **Blockchain Integration** - Build crypto-native agents with on-chain identity
+- **Enterprise Deployment** - Deploy agents with payment and identity infrastructure
 
 ## Community
 
 - [GitHub](https://github.com/AgentlyHQ/aixyz)
 - [npm](https://www.npmjs.com/package/aixyz)
+- [Discord](#) _(coming soon)_
+
+---
+
+**Ready to build?** Start with the [Quickstart Guide →](/quickstart)

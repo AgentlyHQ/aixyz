@@ -1,0 +1,355 @@
+# Architecture
+
+Understanding how ai-xyz.dev works under the hood.
+
+## System Overview
+
+ai-xyz.dev is a **deployment and monetization layer** that sits between your AI agent logic and the outside world. It handles protocol integration, payments, and identity while you focus on agent capabilities.
+
+```
+┌──────────────────────────────────────────────────┐
+│          Your Agent Logic (Any Framework)        │
+│     Vercel AI SDK / LangChain / Mastra / Custom  │
+└─────────────────┬────────────────────────────────┘
+                  │
+                  │ AgentExecutor Interface
+                  ▼
+┌──────────────────────────────────────────────────┐
+│               AixyzRequestHandler                │
+│  • Task management (InMemoryTaskStore)           │
+│  • Executor delegation                           │
+│  • Request/response formatting                   │
+└─────────────────┬────────────────────────────────┘
+                  │
+                  ▼
+┌──────────────────────────────────────────────────┐
+│              AixyzServer (Express)               │
+│  ┌────────────────────────────────────────────┐  │
+│  │  x402ResourceServer (Payment Middleware)   │  │
+│  │  • Validates blockchain payments           │  │
+│  │  • Returns 402 for unpaid requests        │  │
+│  └────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────┐  │
+│  │  A2A Endpoints                             │  │
+│  │  • /.well-known/agent-card.json           │  │
+│  │  • POST /agent (JSON-RPC)                 │  │
+│  └────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────┐  │
+│  │  MCP Endpoints                             │  │
+│  │  • /mcp (tool discovery & execution)       │  │
+│  └────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────┘
+```
+
+## Core Components
+
+### 1. AgentExecutor Interface
+
+The adapter pattern that connects any AI framework to ai-xyz.dev:
+
+```ts
+interface AgentExecutor {
+  execute(input: AgentInput): Promise<AgentOutput>;
+}
+
+interface AgentInput {
+  prompt: string;
+  context?: Record<string, any>;
+}
+
+interface AgentOutput {
+  message: string;
+  metadata?: Record<string, any>;
+}
+```
+
+**Built-in Adapters:**
+
+- `ToolLoopAgentExecutor` - Vercel AI SDK
+- `LangChainAgentExecutor` - LangChain
+- `MastraAgentExecutor` - Mastra
+
+**Custom Adapters:**
+Implement the interface to connect any framework.
+
+### 2. AixyzRequestHandler
+
+Manages task lifecycle and delegates to the agent executor:
+
+- **Task Store** - Tracks active agent tasks (in-memory or persistent)
+- **Executor Delegation** - Routes requests to your agent
+- **Protocol Formatting** - Converts between protocols and executor format
+
+### 3. AixyzServer
+
+Express-based server with protocol endpoints:
+
+```ts
+class AixyzServer extends x402ResourceServer {
+  // Inherits x402 payment middleware
+  // Adds A2A and MCP endpoints
+  // Configures routes and handlers
+}
+```
+
+**Key Features:**
+
+- Extends `x402ResourceServer` for automatic payment gating
+- Auto-generates A2A agent card from `aixyz.config.ts`
+- Registers MCP tools from your `app/tools/` directory
+- Handles CORS, error middleware, and logging
+
+### 4. x402 Payment Layer
+
+Payment validation happens via middleware:
+
+```
+Request → x402 Middleware → Check Payment → Handler
+                ↓ No Payment
+            402 Response
+```
+
+**Payment Validation:**
+
+1. Check for `X-402-Proof` header
+2. Validate blockchain transaction
+3. Verify amount, recipient, and timestamp
+4. Allow request if valid, return 402 if not
+
+**Facilitator Integration:**
+Supports payment facilitators (e.g., Coinbase) for smoother UX.
+
+## Request Flow
+
+### A2A Request Flow
+
+```
+1. Client → POST /agent
+   {
+     "jsonrpc": "2.0",
+     "method": "execute",
+     "params": { "prompt": "..." },
+     "id": 1
+   }
+
+2. x402 Middleware → Validates payment
+
+3. AixyzRequestHandler → Creates task
+
+4. AgentExecutor → Runs agent logic
+
+5. Response →
+   {
+     "jsonrpc": "2.0",
+     "result": { "message": "..." },
+     "id": 1
+   }
+```
+
+### MCP Request Flow
+
+```
+1. Client → POST /mcp
+   {
+     "jsonrpc": "2.0",
+     "method": "tools/call",
+     "params": {
+       "name": "my-tool",
+       "arguments": { ... }
+     },
+     "id": 1
+   }
+
+2. AixyzMCP → Finds tool in registry
+
+3. Tool → Executes directly (no payment for tools)
+
+4. Response →
+   {
+     "jsonrpc": "2.0",
+     "result": { ... },
+     "id": 1
+   }
+```
+
+## Configuration Flow
+
+### Build Time (CLI)
+
+```bash
+aixyz-cli build
+```
+
+1. **Load Config** - Read `aixyz.config.ts`
+2. **Scan Tools** - Find all tools in `app/tools/`
+3. **Generate Server** - Create `app/server.ts` (if not exists)
+4. **Bundle** - Bun.build() with Node.js target
+5. **Output** - Vercel Build Output API v3 structure
+
+### Runtime (Server)
+
+```ts
+// Auto-generated or custom app/server.ts
+import { initExpressApp } from "aixyz";
+
+const config = getAixyzConfig(); // Loads aixyz.config.ts
+const handler = new AixyzRequestHandler(store, executor);
+const server = await initExpressApp(handler, x402Routes);
+```
+
+1. **Load Config** - Parse agent metadata
+2. **Initialize Handler** - Set up task store and executor
+3. **Configure Routes** - Apply x402 pricing per endpoint
+4. **Start Server** - Express listens on port 3000
+
+## Tool Registration
+
+Tools are automatically discovered and registered:
+
+```
+app/tools/
+├── my-tool.ts       → Registered as "my-tool"
+├── another-tool.ts  → Registered as "another-tool"
+└── _helper.ts       → Ignored (underscore prefix)
+```
+
+**Auto-Registration:**
+
+- CLI scans `app/tools/` directory
+- Generates MCP tool registry
+- Files starting with `_` are excluded (helpers)
+
+**Manual Registration:**
+Customize in `app/server.ts`:
+
+```ts
+import { AixyzMCP } from "aixyz/server";
+
+const mcp = new AixyzMCP(server);
+mcp.registerTool("custom-name", myTool);
+```
+
+## Payment Schemes
+
+### Exact Scheme (Recommended)
+
+```ts
+accepts: {
+  scheme: "exact",
+  price: "$0.01",
+  network: "eip155:8453",
+  payTo: config.x402.payTo,
+}
+```
+
+- **Fixed Price** - Exact USDC amount required
+- **Simple** - No calculation or negotiation
+- **Fast** - Quick validation
+
+### Other Schemes
+
+- **Discount** - Percentage discount codes
+- **Free** - No payment required (for public endpoints)
+- **Custom** - Implement your own pricing logic
+
+## Deployment Architecture
+
+### Vercel (Recommended)
+
+```
+Build Output v3:
+.vercel/output/
+├── config.json         # Build metadata
+├── functions/          # Serverless functions
+│   └── index.func/     # Your agent
+│       ├── .vc-config.json
+│       └── index.js
+└── static/             # Public assets
+```
+
+**Advantages:**
+
+- Serverless scaling
+- Edge network CDN
+- Zero-config deployment
+- Automatic HTTPS
+
+### Docker
+
+```dockerfile
+FROM oven/bun:1.3.9
+WORKDIR /app
+COPY . .
+RUN bun install
+RUN bun run build
+CMD ["bun", "run", "start"]
+```
+
+**Advantages:**
+
+- Self-hosted control
+- Custom infrastructure
+- Consistent environments
+
+## Security Considerations
+
+### Payment Validation
+
+- **Proof Verification** - All x402 proofs validated cryptographically
+- **Replay Protection** - Timestamps prevent proof reuse
+- **Amount Verification** - Exact price matching required
+
+### API Security
+
+- **CORS** - Configure allowed origins
+- **Rate Limiting** - Add middleware for DOS protection
+- **Input Validation** - Zod schemas validate all inputs
+
+### Environment Variables
+
+Store secrets in environment variables:
+
+- `X402_PAY_TO` - Payment recipient address
+- `OPENAI_API_KEY` - AI provider keys
+- `STRIPE_SECRET_KEY` - Payment processor keys
+
+Never commit secrets to version control.
+
+## Monitoring & Debugging
+
+### Logging
+
+Built-in logging for key events:
+
+- Payment validations
+- Task lifecycle
+- Tool executions
+- Errors and exceptions
+
+### Vercel Analytics
+
+When deployed to Vercel:
+
+- Request metrics
+- Function performance
+- Error tracking
+- Cost monitoring
+
+### Custom Telemetry
+
+Add your own monitoring:
+
+```ts
+import { AixyzServer } from "aixyz/server";
+
+server.on("request", (req) => {
+  // Log to your monitoring service
+});
+```
+
+## Next Steps
+
+- [Configuration](/configuration) - Configure your agent
+- [Adapters](/adapters) - Connect your AI framework
+- [CLI Commands](/cli) - Build and deploy
+- [Examples](/examples) - See real implementations
