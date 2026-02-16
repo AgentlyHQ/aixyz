@@ -1,12 +1,5 @@
-import type { RequestHandler } from "express";
 import express from "express";
 import type { AixyzServer } from "../index";
-
-export type StripeConfig = {
-  enabled: boolean;
-  priceInCents: number;
-  secretKey?: string;
-};
 
 let stripe: any = null;
 
@@ -91,38 +84,48 @@ async function validateAndConsumePaymentIntent(
   }
 }
 
-export function useStripe(app: AixyzServer, config: StripeConfig): RequestHandler {
-  const secretKey = config.secretKey || process.env.STRIPE_SECRET_KEY;
+/**
+ * Experimental Stripe PaymentIntent adapter for aixyz.
+ * Automatically configures Stripe payment validation from environment variables.
+ *
+ * Environment variables:
+ * - STRIPE_SECRET_KEY: Stripe secret key (required to enable Stripe)
+ * - STRIPE_PRICE_CENTS: Price per request in cents (default: 100)
+ */
+export function experimental_useStripePaymentIntent(app: AixyzServer): void {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const priceInCents = Number(process.env.STRIPE_PRICE_CENTS) || 100;
 
-  if (config.enabled && secretKey) {
-    initializeStripe(secretKey);
-
-    // Add endpoint to create payment intents
-    app.express.post("/stripe/create-payment-intent", express.json(), async (req, res) => {
-      console.log("[Stripe] create-payment-intent endpoint hit");
-      try {
-        const result = await createPaymentIntent({
-          priceInCents: config.priceInCents,
-        });
-        res.json(result);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to create payment intent";
-        console.error("[Stripe] Failed to create payment intent:", message);
-        const status = message === "Stripe not configured" ? 503 : 500;
-        res.status(status).json({ error: message });
-      }
-    });
+  if (!secretKey) {
+    console.log("[Stripe] STRIPE_SECRET_KEY not set, Stripe payments disabled");
+    return;
   }
 
-  // Return middleware that checks for Stripe payments
-  return async (req, res, next) => {
-    if (!config.enabled || !secretKey || !stripe) {
+  initializeStripe(secretKey);
+
+  // Add endpoint to create payment intents
+  app.express.post("/stripe/create-payment-intent", express.json(), async (req, res) => {
+    console.log("[Stripe] create-payment-intent endpoint hit");
+    try {
+      const result = await createPaymentIntent({ priceInCents });
+      res.json(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create payment intent";
+      console.error("[Stripe] Failed to create payment intent:", message);
+      const status = message === "Stripe not configured" ? 503 : 500;
+      res.status(status).json({ error: message });
+    }
+  });
+
+  // Add middleware that checks for Stripe payments
+  app.express.use(async (req, res, next) => {
+    if (!stripe) {
       return next();
     }
 
     const stripePaymentIntentId = req.headers["x-stripe-payment-intent-id"] as string;
     if (stripePaymentIntentId) {
-      const result = await validateAndConsumePaymentIntent(stripePaymentIntentId, config.priceInCents);
+      const result = await validateAndConsumePaymentIntent(stripePaymentIntentId, priceInCents);
       if (result.valid) {
         return next();
       }
@@ -134,5 +137,5 @@ export function useStripe(app: AixyzServer, config: StripeConfig): RequestHandle
 
     // No Stripe payment provided, continue to x402
     return next();
-  };
+  });
 }

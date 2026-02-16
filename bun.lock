@@ -144,9 +144,11 @@
       },
       "peerDependencies": {
         "ai": "^6",
+        "stripe": "^20",
       },
       "optionalPeers": [
         "ai",
+        "stripe",
       ],
     },
     "packages/aixyz-cli": {
