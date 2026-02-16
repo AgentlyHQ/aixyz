@@ -79,7 +79,7 @@ async function validateAndConsumePaymentIntent(
     console.log(`[Stripe] PaymentIntent validated and consumed: ${paymentIntentId}`);
     return { valid: true };
   } catch (error) {
-    console.error(`[Stripe] Error validating PaymentIntent ${paymentIntentId}:`, error);
+    console.error("[Stripe] Error validating PaymentIntent %s:", paymentIntentId, error);
     return { valid: false, error: "Invalid payment ID" };
   }
 }
