@@ -1,0 +1,197 @@
+# Contributing
+
+Thank you for your interest in contributing to ai-xyz.dev! This guide will help you get started.
+
+## Ways to Contribute
+
+- **Report bugs** - Found a bug? Open an issue
+- **Suggest features** - Have an idea? We'd love to hear it
+- **Write documentation** - Help improve our docs
+- **Submit code** - Fix bugs or add features
+- **Share examples** - Build cool agents? Share them!
+
+## Development Setup
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/AgentlyHQ/aixyz.git
+cd aixyz
+```
+
+2. **Install dependencies**
+
+```bash
+bun install
+```
+
+3. **Run in development mode**
+
+```bash
+bun run dev
+```
+
+## Project Structure
+
+```
+aixyz/
+├── packages/          # Core packages
+│   ├── aixyz/        # Main package
+│   ├── aixyz-cli/    # CLI tools
+│   ├── erc-8004/     # ERC-8004 implementation
+│   └── ...
+├── examples/         # Example agents
+├── website/          # Documentation site
+└── ...
+```
+
+## Making Changes
+
+1. **Create a branch**
+
+```bash
+git checkout -b feature/my-feature
+```
+
+2. **Make your changes**
+
+- Write clean, readable code
+- Follow existing code style
+- Add tests for new features
+- Update documentation
+
+3. **Format your code**
+
+```bash
+bun run format
+```
+
+This runs Prettier on all files to ensure consistent formatting (120 character line width).
+
+4. **Run tests**
+
+```bash
+bun run test
+```
+
+5. **Commit your changes**
+
+```bash
+git add .
+git commit -m "feat: add my feature"
+```
+
+We use conventional commits:
+
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `chore:` - Maintenance tasks
+- `test:` - Test changes
+
+## Pull Request Process
+
+1. **Push your branch**
+
+```bash
+git push origin feature/my-feature
+```
+
+2. **Open a pull request**
+
+- Go to the repository on GitHub
+- Click "New Pull Request"
+- Select your branch
+- Fill in the PR template
+- Submit!
+
+3. **Address feedback**
+
+Maintainers may request changes. Make the updates and push again.
+
+4. **Merge**
+
+Once approved, your PR will be merged!
+
+## Code Style
+
+- **TypeScript** - We use TypeScript for type safety
+- **Prettier** - All code is formatted with Prettier (printWidth: 120)
+- **ESLint** - We use ESLint for code quality
+- **Conventional Commits** - Follow the conventional commits specification
+
+## Testing
+
+- Write tests for new features
+- Ensure existing tests pass
+- Aim for good test coverage
+
+Run tests:
+
+```bash
+bun run test
+```
+
+## Documentation
+
+Documentation lives in the `website/` directory and is built with Next.js and Nextra.
+
+To update docs:
+
+1. Edit or create `.mdx` files in `website/pages/`
+2. Update `website/pages/_meta.json` if adding new pages
+3. Run locally to preview:
+
+```bash
+cd website
+bun install
+bun run dev
+```
+
+## Adding Examples
+
+To add a new example agent:
+
+1. Create a directory in `examples/`
+2. Follow the standard project structure
+3. Add a README with setup instructions
+4. Update `website/pages/examples.mdx` to list your example
+
+## Package Development
+
+When working on core packages:
+
+1. Make changes in `packages/<package-name>/`
+2. Build the package: `cd packages/<package-name> && bun run build`
+3. Test in an example: `cd examples/<example-name> && bun run dev`
+
+## Monorepo Commands
+
+The project uses Turbo for monorepo management:
+
+- `bun run build` - Build all packages
+- `bun run dev` - Run all packages in dev mode
+- `bun run test` - Run all tests
+- `bun run lint` - Lint all packages
+- `bun run format` - Format all code
+- `bun run clean` - Clean build artifacts
+
+## Getting Help
+
+- **Discord** - Join our community (coming soon)
+- **GitHub Issues** - Ask questions or report bugs
+- **Documentation** - Check the docs at [ai-xyz.dev](https://ai-xyz.dev)
+
+## Code of Conduct
+
+Be respectful and inclusive. We're here to build great software together.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+## Questions?
+
+If you have questions about contributing, open an issue or reach out to the maintainers.
+
+Thank you for contributing to ai-xyz.dev! 🚀

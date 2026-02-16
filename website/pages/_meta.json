@@ -6,5 +6,7 @@
   "adapters": "Adapters",
   "cli": "CLI Commands",
   "protocols": "Protocols",
-  "deployment": "Deployment"
+  "deployment": "Deployment",
+  "examples": "Examples",
+  "contributing": "Contributing"
 }

@@ -1,0 +1,215 @@
+# Examples
+
+Explore example agents built with ai-xyz.dev.
+
+## Available Examples
+
+The repository includes several example agents to help you get started:
+
+### Agent Travel
+
+A travel planning agent that helps users book flights and hotels.
+
+**Location:** `examples/agent-travel`
+
+**Features:**
+
+- Flight search and booking
+- Hotel recommendations
+- Itinerary planning
+- Payment integration via x402
+
+**Run locally:**
+
+```bash
+cd examples/agent-travel
+bun install
+bun run dev
+```
+
+### Agent Chainlink
+
+An agent that interacts with Chainlink oracles for price feeds.
+
+**Location:** `examples/agent-chainlink`
+
+**Features:**
+
+- Real-time price data
+- Oracle integration
+- Multi-chain support
+- On-chain identity via ERC-8004
+
+**Run locally:**
+
+```bash
+cd examples/agent-chainlink
+bun install
+bun run dev
+```
+
+### Agent Price Oracle
+
+A price oracle agent for cryptocurrency and asset prices.
+
+**Location:** `examples/agent-price-oracle`
+
+**Features:**
+
+- Multi-asset price feeds
+- Historical data
+- Price alerts
+- API integration
+
+**Run locally:**
+
+```bash
+cd examples/agent-price-oracle
+bun install
+bun run dev
+```
+
+### Agent Job Hunter
+
+An agent that helps users find and apply for jobs.
+
+**Location:** `examples/agent-job-hunter`
+
+**Features:**
+
+- Job search
+- Resume analysis
+- Application tracking
+- Interview scheduling
+
+**Run locally:**
+
+```bash
+cd examples/agent-job-hunter
+bun install
+bun run dev
+```
+
+### Agent Boilerplate
+
+A minimal boilerplate to start building your own agent.
+
+**Location:** `examples/agent-boilerplate`
+
+**Features:**
+
+- Basic project structure
+- Example tool implementation
+- Configuration templates
+- Development setup
+
+**Run locally:**
+
+```bash
+cd examples/agent-boilerplate
+bun install
+bun run dev
+```
+
+### Agent with Custom Server
+
+An example showing how to implement a custom server with advanced features.
+
+**Location:** `examples/agent-with-custom-server`
+
+**Features:**
+
+- Custom Express server setup
+- Advanced routing
+- Middleware integration
+- Custom authentication
+
+**Run locally:**
+
+```bash
+cd examples/agent-with-custom-server
+bun install
+bun run dev
+```
+
+## Example Structure
+
+Each example follows the standard ai-xyz.dev structure:
+
+```
+example-agent/
+├── aixyz.config.ts     # Agent configuration
+├── app/
+│   ├── server.ts       # Server setup
+│   └── tools/          # Agent tools
+│       └── my-tool.ts
+├── package.json
+└── tsconfig.json
+```
+
+## Learning from Examples
+
+1. **Start with the boilerplate** - Get familiar with the basic structure
+2. **Explore specific examples** - Find one that matches your use case
+3. **Customize and build** - Use the example as a starting point
+
+## Common Patterns
+
+### Tool Implementation
+
+```ts
+// app/tools/my-tool.ts
+import { tool } from "ai";
+import { z } from "zod";
+
+export const myTool = tool({
+  description: "What this tool does",
+  parameters: z.object({
+    input: z.string().describe("Input parameter"),
+  }),
+  execute: async ({ input }) => {
+    // Tool logic here
+    return { result: "output" };
+  },
+});
+```
+
+### Server Setup
+
+```ts
+// app/server.ts
+import { AixyzRequestHandler, initExpressApp, getAixyzConfig } from "aixyz";
+import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
+import { InMemoryTaskStore } from "@a2a-js/sdk/server";
+import { agent } from "./agent";
+
+const config = getAixyzConfig();
+const handler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
+
+const x402Routes = {
+  "POST /agent": {
+    accepts: {
+      scheme: "exact",
+      price: "$0.01",
+      network: config.x402.network,
+      payTo: config.x402.payTo,
+    },
+    mimeType: "application/json",
+    description: "Payment for agent API access",
+  },
+};
+
+export default await initExpressApp(handler, x402Routes);
+```
+
+## Contributing Examples
+
+Have an interesting agent example? We'd love to include it!
+
+See the [Contributing Guide](/contributing) for details on how to submit your example.
+
+## Next Steps
+
+- [Create your own agent](/quickstart)
+- [Learn about adapters](/adapters)
+- [Deploy your agent](/deployment)
