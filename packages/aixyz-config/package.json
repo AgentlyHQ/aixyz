@@ -29,6 +29,10 @@
     "**/*.d.ts.map",
     "**/*.js"
   ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "tsc --build --clean"
+  },
   "dependencies": {
     "@next/env": "^16.1.6",
     "zod": "^4.3.6"
