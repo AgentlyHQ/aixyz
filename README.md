@@ -176,8 +176,7 @@ Features:
 
 - Pre-configured Bun 1.3.9 environment
 - Automatic dependency installation
-- VS Code extensions for TypeScript/Bun development
-- Port forwarding for local testing
+- VS Code extensions for Bun and TypeScript development
 
 ## License
 
