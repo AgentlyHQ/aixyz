@@ -123,7 +123,7 @@ export async function executeSearchFlights(input: SearchFlightsInput): Promise<S
   return data;
 }
 
-export const searchFlights = tool({
+const searchFlights = tool({
   title: "Search Cheapest Flights",
   description:
     "Search for the cheapest flights between multiple departure airports and destinations. Returns flight deals with prices, dates, discounts, and booking links. Use IATA airport codes (e.g., GRU for Sao Paulo, LAX for Los Angeles).",
@@ -133,3 +133,9 @@ export const searchFlights = tool({
   }),
   execute: executeSearchFlights,
 });
+
+export const accepts = {
+  price: "$0.01",
+};
+
+export default searchFlights;

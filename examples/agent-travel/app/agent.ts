@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
-import { searchFlights } from "./tools";
+import * as searchFlights from "./tools/searchFlights";
 
 // language=Markdown
 const SystemPrompt = `
@@ -46,13 +46,17 @@ When presenting flight results:
 If the user doesn't provide specific airports, ask them to clarify or suggest popular options.
 `.trim();
 
-export const agent = new ToolLoopAgent({
+const agent = new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
   instructions: SystemPrompt,
   tools: {
-    searchFlights,
+    searchFlights: searchFlights.default,
   },
   stopWhen: stepCountIs(10),
 });
+
+export const accepts = {
+  price: "$0.01",
+};
 
 export default agent;
