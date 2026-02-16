@@ -12,8 +12,8 @@
       "env": ["*"]
     },
     "build": {
-      "inputs": ["tsconfig.json", "src"],
-      "outputs": ["dist", ".vercel/output"],
+      "inputs": ["tsconfig.json", "src", "pages", "next.config.mjs", "theme.config.tsx"],
+      "outputs": ["dist", ".vercel/output", ".next"],
       "dependsOn": ["^build"],
       "env": ["*"]
     },

@@ -8,6 +8,8 @@
 Bundle AI agents from any framework into deployable services. A2A, MCP, x402 payments, and ERC-8004 identity get wired
 up for you.
 
+**📚 [View full documentation](https://ai-xyz.dev)**
+
 ## Quickstart
 
 ```bash
