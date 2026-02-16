@@ -1,7 +1,7 @@
 import { AixyzMCP } from "aixyz/server/adapters/mcp";
 import { AixyzServer } from "aixyz/server";
 import { useA2A } from "aixyz/server/adapters/a2a";
-import { experimental_useStripePaymentIntent } from "aixyz/server/adapters/stripe";
+import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
 
 import * as agent from "./agent";
 import * as searchFlights from "./tools/searchFlights";

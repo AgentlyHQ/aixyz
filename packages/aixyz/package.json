@@ -52,14 +52,10 @@
     "ai": "^6"
   },
   "peerDependencies": {
-    "ai": "^6",
-    "stripe": "^20"
+    "ai": "^6"
   },
   "peerDependenciesMeta": {
     "ai": {
-      "optional": true
-    },
-    "stripe": {
       "optional": true
     }
   },

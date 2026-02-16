@@ -1,5 +1,5 @@
-import express from "express";
-import type { AixyzServer } from "../index";
+import express, { type Request, type Response, type NextFunction } from "express";
+import type { AixyzServer } from "aixyz/server";
 
 let stripe: any = null;
 
@@ -104,7 +104,7 @@ export function experimental_useStripePaymentIntent(app: AixyzServer): void {
   initializeStripe(secretKey);
 
   // Add endpoint to create payment intents
-  app.express.post("/stripe/create-payment-intent", express.json(), async (req, res) => {
+  app.express.post("/stripe/create-payment-intent", express.json(), async (req: Request, res: Response) => {
     console.log("[Stripe] create-payment-intent endpoint hit");
     try {
       const result = await createPaymentIntent({ priceInCents });
@@ -118,7 +118,7 @@ export function experimental_useStripePaymentIntent(app: AixyzServer): void {
   });
 
   // Add middleware that checks for Stripe payments
-  app.express.use(async (req, res, next) => {
+  app.express.use(async (req: Request, res: Response, next: NextFunction) => {
     if (!stripe) {
       return next();
     }
