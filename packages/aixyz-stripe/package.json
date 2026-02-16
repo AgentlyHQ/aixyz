@@ -19,9 +19,9 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
   "files": [
     "**/*.d.ts",
     "**/*.d.ts.map",

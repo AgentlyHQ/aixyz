@@ -21,7 +21,15 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./config": "./config.js",
+    "./accepts": "./accepts.js",
+    "./server": "./server/index.js",
+    "./server/adapters/a2a": "./server/adapters/a2a.js",
+    "./server/adapters/mcp": "./server/adapters/mcp.js"
+  },
   "bin": "bin.js",
   "files": [
     "**/*.d.ts",

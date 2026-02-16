@@ -1,18 +1,10 @@
-"use strict";
-var __importDefault =
-  (this && this.__importDefault) ||
-  function (mod) {
-    return mod && mod.__esModule ? mod : { default: mod };
-  };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.experimental_useStripePaymentIntent = experimental_useStripePaymentIntent;
-const express_1 = __importDefault(require("express"));
+import express from "express";
 let stripe = null;
-function initializeStripe(secretKey) {
+async function initializeStripe(secretKey) {
   if (stripe) return;
   try {
     // Dynamically import Stripe to avoid requiring it as a dependency
-    const Stripe = require("stripe");
+    const { default: Stripe } = await import("stripe");
     stripe = new Stripe(secretKey, {
       apiVersion: "2026-01-28.clover",
     });
@@ -75,16 +67,16 @@ async function validateAndConsumePaymentIntent(paymentIntentId, expectedAmountCe
  * - STRIPE_SECRET_KEY: Stripe secret key (required to enable Stripe)
  * - STRIPE_PRICE_CENTS: Price per request in cents (default: 100)
  */
-function experimental_useStripePaymentIntent(app) {
+export async function experimental_useStripePaymentIntent(app) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const priceInCents = Number(process.env.STRIPE_PRICE_CENTS) || 100;
   if (!secretKey) {
     console.log("[Stripe] STRIPE_SECRET_KEY not set, Stripe payments disabled");
     return;
   }
-  initializeStripe(secretKey);
+  await initializeStripe(secretKey);
   // Add endpoint to create payment intents
-  app.express.post("/stripe/create-payment-intent", express_1.default.json(), async (req, res) => {
+  app.express.post("/stripe/create-payment-intent", express.json(), async (req, res) => {
     console.log("[Stripe] create-payment-intent endpoint hit");
     try {
       const result = await createPaymentIntent({ priceInCents });

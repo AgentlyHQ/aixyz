@@ -3,12 +3,12 @@ import type { AixyzServer } from "aixyz/server";
 
 let stripe: any = null;
 
-function initializeStripe(secretKey: string): void {
+async function initializeStripe(secretKey: string): Promise<void> {
   if (stripe) return;
 
   try {
     // Dynamically import Stripe to avoid requiring it as a dependency
-    const Stripe = require("stripe");
+    const { default: Stripe } = await import("stripe");
     stripe = new Stripe(secretKey, {
       apiVersion: "2026-01-28.clover" as any,
     });
@@ -92,7 +92,7 @@ async function validateAndConsumePaymentIntent(
  * - STRIPE_SECRET_KEY: Stripe secret key (required to enable Stripe)
  * - STRIPE_PRICE_CENTS: Price per request in cents (default: 100)
  */
-export function experimental_useStripePaymentIntent(app: AixyzServer): void {
+export async function experimental_useStripePaymentIntent(app: AixyzServer): Promise<void> {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const priceInCents = Number(process.env.STRIPE_PRICE_CENTS) || 100;
 
@@ -101,7 +101,7 @@ export function experimental_useStripePaymentIntent(app: AixyzServer): void {
     return;
   }
 
-  initializeStripe(secretKey);
+  await initializeStripe(secretKey);
 
   // Add endpoint to create payment intents
   app.express.post("/stripe/create-payment-intent", express.json(), async (req: Request, res: Response) => {

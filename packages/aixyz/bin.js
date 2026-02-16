@@ -1,2 +1,2 @@
 #!/usr/bin/env bun
-require("aixyz-cli/bin");
+import "aixyz-cli/bin.ts";

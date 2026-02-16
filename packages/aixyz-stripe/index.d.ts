@@ -7,4 +7,4 @@ import type { AixyzServer } from "aixyz/server";
  * - STRIPE_SECRET_KEY: Stripe secret key (required to enable Stripe)
  * - STRIPE_PRICE_CENTS: Price per request in cents (default: 100)
  */
-export declare function experimental_useStripePaymentIntent(app: AixyzServer): void;
+export declare function experimental_useStripePaymentIntent(app: AixyzServer): Promise<void>;

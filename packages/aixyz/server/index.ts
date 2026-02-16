@@ -1,11 +1,11 @@
-import { getAixyzConfig, Network } from "../config";
+import { getAixyzConfig, Network } from "../config.js";
 import initExpress from "express";
 import { x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware, PaymentRequirements } from "@x402/express";
-import { getFacilitatorClient } from "../facilitator";
+import { getFacilitatorClient } from "../facilitator/index.js";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { z } from "zod";
-import { AcceptsX402 } from "../accepts";
+import { AcceptsX402 } from "../accepts.js";
 
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
 export class AixyzServer extends x402ResourceServer {

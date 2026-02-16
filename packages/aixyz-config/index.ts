@@ -1,5 +1,6 @@
 import { resolve } from "path";
 import { loadEnvConfig } from "@next/env";
+import { createRequire } from "node:module";
 
 import { z } from "zod";
 
@@ -101,6 +102,7 @@ export function getAixyzConfig(): GetAixyzConfig {
   loadEnvConfig(cwd);
 
   const configPath = resolve(cwd, "aixyz.config.ts");
+  const require = createRequire(import.meta.url);
   const mod = require(configPath);
   const config = mod.default;
 

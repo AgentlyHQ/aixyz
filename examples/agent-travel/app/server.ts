@@ -9,7 +9,7 @@ import * as searchFlights from "./tools/searchFlights";
 const server = new AixyzServer();
 await server.initialize();
 
-experimental_useStripePaymentIntent(server);
+await experimental_useStripePaymentIntent(server);
 useA2A(server, agent);
 
 const mcp = new AixyzMCP(server);
