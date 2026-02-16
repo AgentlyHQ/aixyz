@@ -58,16 +58,16 @@ bun install
 
 ### For specific packages
 
-Use Turbo or Bun filters for package-specific tasks:
+Use Turbo filters for package-specific tasks:
 
 ```bash
-# Using turbo
-turbo run dev --filter=aixyz
-turbo run build --filter=@examples/agent-travel
+# Filter specific packages
+bun run dev --filter=aixyz
+bun run build --filter=@examples/agent-travel
 
-# Using bun
-bun --filter aixyz run build
-bun --filter @examples/agent-travel run dev
+# Or navigate to the package directly
+cd packages/aixyz && bun run build
+cd examples/agent-travel && bun run dev
 ```
 
 ### Building example agents
@@ -143,7 +143,7 @@ Note: Only A2A and MCP adapters are currently in the codebase (`server/adapters/
 
 ## Working conventions
 
-- Use Turbo or `bun --filter <package>` for package-specific tasks
+- Use `bun run <script> --filter=<package>` for package-specific tasks (e.g., `bun run build --filter=aixyz`)
 - Keep edits consistent with Prettier formatting (printWidth: 120)
 - Examples use `app/` directory structure (not `src/`)
 - All packages use TypeScript with strict type checking
