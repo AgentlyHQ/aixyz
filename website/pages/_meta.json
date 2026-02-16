@@ -1,0 +1,9 @@
+{
+  "index": "Introduction",
+  "quickstart": "Quickstart",
+  "installation": "Installation",
+  "configuration": "Configuration",
+  "adapters": "Adapters",
+  "cli": "CLI Commands",
+  "protocols": "Protocols"
+}

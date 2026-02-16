@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd website && bun run build",
+  "outputDirectory": "website/.next",
+  "devCommand": "cd website && bun run dev",
+  "installCommand": "bun install",
+  "framework": "nextjs",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}

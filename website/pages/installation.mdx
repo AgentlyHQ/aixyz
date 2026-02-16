@@ -1,0 +1,64 @@
+# Installation
+
+## Prerequisites
+
+- Node.js 18+ or Bun 1.0+
+- pnpm, npm, yarn, or bun
+
+## Create a New Project
+
+The easiest way to get started is with the create-aixyz-app scaffolding tool:
+
+```bash
+pnpm create aixyz-app my-agent
+# or
+npm create aixyz-app my-agent
+# or
+yarn create aixyz-app my-agent
+# or
+bunx create-aixyz-app my-agent
+```
+
+This creates a new project with:
+
+- Basic project structure
+- Example configuration
+- TypeScript setup
+- Development scripts
+
+## Install in Existing Project
+
+If you want to add aixyz to an existing project:
+
+```bash
+pnpm add aixyz
+# or
+npm install aixyz
+# or
+yarn add aixyz
+# or
+bun add aixyz
+```
+
+## Project Structure
+
+A typical aixyz project looks like this:
+
+```
+my-agent/
+  aixyz.config.ts     # Agent configuration
+  src/
+    index.ts          # Entrypoint (adapter + express app)
+    agent.ts          # Agent definition
+    tools/
+      my-tool.ts      # Tools
+  public/             # Static assets (optional)
+  package.json
+  tsconfig.json
+```
+
+## Next Steps
+
+- [Configure your agent](/configuration)
+- [Follow the quickstart](/quickstart)
+- [Choose an adapter](/adapters)

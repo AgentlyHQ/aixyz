@@ -1,0 +1,121 @@
+# Configuration
+
+Configure your agent using `aixyz.config.ts` in your project root.
+
+## Configuration File
+
+```ts
+import type { AixyzConfig } from "aixyz";
+
+const config: AixyzConfig = {
+  name: "My Agent",
+  description: "What your agent does in one sentence.",
+  version: "1.0.0",
+  network: "eip155:1",
+  url: "https://my-agent.example.com",
+  x402: {
+    payTo: process.env.X402_PAY_TO!,
+    network: "eip155:8453",
+  },
+  skills: [
+    {
+      id: "my-skill",
+      name: "My Skill",
+      description: "Describe what this skill does",
+      tags: ["example"],
+    },
+  ],
+};
+
+export default config;
+```
+
+## Configuration Options
+
+### Required Fields
+
+| Field         | Type               | Description                               |
+| ------------- | ------------------ | ----------------------------------------- |
+| `name`        | `string`           | Display name of your agent                |
+| `description` | `string`           | Short description of what your agent does |
+| `version`     | `string`           | Semver version (e.g., "1.0.0")            |
+| `network`     | `eip155:${number}` | Chain ID for identity (e.g., "eip155:1")  |
+| `x402.payTo`  | `string`           | Payment recipient address                 |
+| `skills`      | `AgentSkill[]`     | Array of skills your agent exposes        |
+
+### Optional Fields
+
+| Field          | Type     | Description                                                     |
+| -------------- | -------- | --------------------------------------------------------------- |
+| `url`          | `string` | Base URL. Auto-detected on Vercel, defaults to `localhost:3000` |
+| `x402.network` | `string` | Payment network (e.g., "eip155:8453"). Defaults to `network`    |
+
+## Skills Configuration
+
+Each skill in the `skills` array describes a capability your agent provides:
+
+```ts
+{
+  id: "data-analysis",
+  name: "Data Analysis",
+  description: "Analyzes datasets and generates insights",
+  tags: ["analytics", "data"],
+}
+```
+
+### Skill Fields
+
+| Field         | Type       | Required | Description                     |
+| ------------- | ---------- | -------- | ------------------------------- |
+| `id`          | `string`   | Yes      | Unique identifier for the skill |
+| `name`        | `string`   | Yes      | Display name                    |
+| `description` | `string`   | Yes      | What the skill does             |
+| `tags`        | `string[]` | Yes      | Categorization tags             |
+
+## Environment Variables
+
+Sensitive values should be stored in environment variables:
+
+```bash
+# .env
+X402_PAY_TO=0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+```
+
+Then reference them in your config:
+
+```ts
+x402: {
+  payTo: process.env.X402_PAY_TO!,
+  network: "eip155:8453",
+}
+```
+
+## Loading Configuration
+
+Use the `getAixyzConfig()` helper to load your configuration:
+
+```ts
+import { getAixyzConfig } from "aixyz";
+
+const config = getAixyzConfig();
+```
+
+This automatically loads `aixyz.config.ts` from your project root.
+
+## Network IDs
+
+Common network identifiers:
+
+| Network  | ID             |
+| -------- | -------------- |
+| Ethereum | `eip155:1`     |
+| Base     | `eip155:8453`  |
+| Optimism | `eip155:10`    |
+| Arbitrum | `eip155:42161` |
+| Polygon  | `eip155:137`   |
+
+## Next Steps
+
+- [Write your first agent](/quickstart)
+- [Learn about protocols](/protocols)
+- [Deploy with the CLI](/cli)

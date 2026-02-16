@@ -1,0 +1,106 @@
+# Quickstart
+
+Get started with ai-xyz.dev in minutes.
+
+## Installation
+
+Create a new aixyz agent project:
+
+```bash
+pnpm create aixyz-app my-agent
+cd my-agent
+pnpm install
+```
+
+## Configure Your Agent
+
+Create an `aixyz.config.ts` file:
+
+```ts
+import type { AixyzConfig } from "aixyz";
+
+const config: AixyzConfig = {
+  name: "My Agent",
+  description: "What your agent does in one sentence.",
+  version: "1.0.0",
+  network: "eip155:1",
+  x402: {
+    payTo: process.env.X402_PAY_TO!,
+    network: "eip155:8453",
+  },
+  skills: [
+    {
+      id: "my-skill",
+      name: "My Skill",
+      description: "Describe what this skill does",
+      tags: ["example"],
+    },
+  ],
+};
+
+export default config;
+```
+
+## Write Your Agent
+
+Choose your preferred framework and write your agent logic:
+
+```ts
+// src/agent.ts
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import myTool from "./tools/my-tool";
+
+export const agent = new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful agent that...",
+  tools: { myTool },
+  stopWhen: stepCountIs(10),
+});
+```
+
+## Wire Up the Server
+
+Connect your agent to aixyz's request handler:
+
+```ts
+// src/index.ts
+import { AixyzRequestHandler, initExpressApp, getAixyzConfig } from "aixyz";
+import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
+import { InMemoryTaskStore } from "@a2a-js/sdk/server";
+import { agent } from "./agent";
+
+const config = getAixyzConfig();
+const handler = new AixyzRequestHandler(new InMemoryTaskStore(), new ToolLoopAgentExecutor(agent));
+
+const x402Routes = {
+  "POST /agent": {
+    accepts: { scheme: "exact", price: "$0.01", network: config.x402.network, payTo: config.x402.payTo },
+    mimeType: "application/json",
+    description: "Payment for agent API access",
+  },
+};
+
+export default await initExpressApp(handler, x402Routes);
+```
+
+## Run Locally
+
+Start your development server:
+
+```bash
+bun run dev
+```
+
+Your agent is now running at `http://localhost:3000` with:
+
+- Agent discovery at `/.well-known/agent-card.json`
+- A2A endpoint at `/agent`
+- MCP endpoint at `/mcp`
+
+## Next Steps
+
+- Learn about [Configuration](/configuration) options
+- Explore [Adapters](/adapters) for different frameworks
+- Deploy with [CLI Commands](/cli)
+- Understand [Protocols](/protocols) (A2A, MCP, x402, ERC-8004)

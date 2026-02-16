@@ -1,0 +1,45 @@
+# 🐁 ai-xyz.dev
+
+Bundle AI agents from any framework into deployable services. A2A, MCP, x402 payments, and ERC-8004 identity get wired up for you.
+
+[![npm](https://img.shields.io/npm/v/aixyz)](https://www.npmjs.com/package/aixyz)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/AgentlyHQ/aixyz/blob/main/LICENSE)
+
+## Features
+
+- **Framework Agnostic** - Works with Vercel AI SDK, LangChain, Mastra, and more
+- **Protocol Support** - A2A, MCP, x402 payments, and ERC-8004 identity
+- **Vercel Deployment** - Built-in support for serverless deployment
+- **Type-Safe** - Full TypeScript support
+
+## Get Started
+
+Jump right in with the [Quickstart Guide](/quickstart) or explore specific topics:
+
+- [Installation](/installation)
+- [Configuration](/configuration)
+- [CLI Commands](/cli)
+- [Adapters](/adapters)
+- [Protocols](/protocols)
+
+## Quick Example
+
+```bash
+pnpm create aixyz-app my-agent
+cd my-agent
+pnpm install
+bun run dev
+```
+
+This gives you:
+
+| Endpoint                       | Protocol | Description                    |
+| ------------------------------ | -------- | ------------------------------ |
+| `/.well-known/agent-card.json` | A2A      | Agent discovery metadata       |
+| `/agent`                       | A2A      | JSON-RPC endpoint (x402-gated) |
+| `/mcp`                         | MCP      | Tool sharing                   |
+
+## Community
+
+- [GitHub](https://github.com/AgentlyHQ/aixyz)
+- [npm](https://www.npmjs.com/package/aixyz)

@@ -1,0 +1,190 @@
+# Protocols
+
+ai-xyz.dev supports multiple protocols to enable agent discovery, communication, tool sharing, and payments.
+
+## A2A (Agent-to-Agent)
+
+**A2A** generates your agent card and JSON-RPC endpoint so other agents can discover and talk to yours.
+
+### Agent Card
+
+Your agent automatically exposes an agent card at `/.well-known/agent-card.json`:
+
+```json
+{
+  "name": "My Agent",
+  "description": "What your agent does",
+  "version": "1.0.0",
+  "url": "https://my-agent.example.com",
+  "skills": [
+    {
+      "id": "my-skill",
+      "name": "My Skill",
+      "description": "Describe what this skill does",
+      "tags": ["example"]
+    }
+  ]
+}
+```
+
+### JSON-RPC Endpoint
+
+Agents communicate via JSON-RPC at `/agent`:
+
+```bash
+curl -X POST https://my-agent.example.com/agent \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "execute",
+    "params": { "prompt": "Hello!" },
+    "id": 1
+  }'
+```
+
+## MCP (Model Context Protocol)
+
+**MCP** exposes your tools to any MCP-compatible client.
+
+Your agent's MCP endpoint is available at `/mcp`:
+
+```bash
+curl https://my-agent.example.com/mcp
+```
+
+This allows AI assistants like Claude Desktop to discover and use your agent's tools.
+
+### Tool Discovery
+
+MCP clients can list available tools:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/list",
+  "id": 1
+}
+```
+
+### Tool Execution
+
+MCP clients can execute tools:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "my-tool",
+    "arguments": { "input": "value" }
+  },
+  "id": 1
+}
+```
+
+## x402 (HTTP Payment Protocol)
+
+**x402** gates requests behind HTTP 402 micropayments. No custodial wallets, no subscriptions.
+
+### Payment Configuration
+
+Configure payment requirements in your x402 routes:
+
+```ts
+const x402Routes = {
+  "POST /agent": {
+    accepts: {
+      scheme: "exact",
+      price: "$0.01",
+      network: "eip155:8453",
+      payTo: config.x402.payTo,
+    },
+    mimeType: "application/json",
+    description: "Payment for agent API access",
+  },
+};
+```
+
+### Payment Flow
+
+1. Client sends request without payment
+2. Server responds with `402 Payment Required` and payment details
+3. Client sends blockchain transaction
+4. Client retries request with payment proof
+5. Server validates payment and processes request
+
+### Supported Networks
+
+- Ethereum (eip155:1)
+- Base (eip155:8453)
+- Optimism (eip155:10)
+- Arbitrum (eip155:42161)
+- Polygon (eip155:137)
+
+## ERC-8004 (On-Chain Identity)
+
+**ERC-8004** gives your agent a verifiable on-chain identity on supported chains.
+
+### Register Your Agent
+
+Use the CLI to register your agent on-chain:
+
+```bash
+aixyz-cli register
+```
+
+This creates an ERC-8004 identity that:
+
+- Links your agent to an on-chain address
+- Enables verification by other agents and contracts
+- Provides reputation and trust signals
+
+### Identity Benefits
+
+1. **Verifiable Identity** - Cryptographically prove your agent's identity
+2. **Cross-Chain** - Works across Ethereum, Base, and other EVM chains
+3. **Reputation** - Build trust over time with on-chain history
+4. **Composability** - Integrate with other on-chain systems
+
+### Supported Chains
+
+ERC-8004 is available on:
+
+- Ethereum (eip155:1)
+- Base (eip155:8453)
+- Other EVM-compatible chains
+
+## Protocol Interactions
+
+All four protocols work together:
+
+```
+┌─────────────────┐
+│  Agent Client   │
+└────────┬────────┘
+         │
+         │ 1. Discover via A2A
+         │    GET /.well-known/agent-card.json
+         │
+         │ 2. Check payment via x402
+         │    POST /agent → 402 Payment Required
+         │
+         │ 3. Pay on-chain via ERC-8004 identity
+         │    Transaction to x402.payTo address
+         │
+         │ 4. Execute request
+         │    POST /agent (with payment proof)
+         │
+         │ 5. Share tools via MCP
+         │    GET /mcp
+         │
+┌────────▼────────┐
+│   Your Agent    │
+└─────────────────┘
+```
+
+## Next Steps
+
+- [Configure protocols](/configuration)
+- [Learn about adapters](/adapters)
+- [Deploy with the CLI](/cli)

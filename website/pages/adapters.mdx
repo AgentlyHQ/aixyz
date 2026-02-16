@@ -1,0 +1,142 @@
+# Adapters
+
+Adapters wrap your framework's agent into the `AgentExecutor` interface that aixyz needs to handle protocol requests.
+
+## Available Adapters
+
+| Adapter                  | Framework     | Import                            |
+| ------------------------ | ------------- | --------------------------------- |
+| `ToolLoopAgentExecutor`  | Vercel AI SDK | `aixyz/server/adapters/ai`        |
+| `LangChainAgentExecutor` | LangChain     | `aixyz/server/adapters/langchain` |
+| `MastraAgentExecutor`    | Mastra        | `aixyz/server/adapters/mastra`    |
+
+## Vercel AI SDK
+
+Use the `ToolLoopAgentExecutor` for agents built with the Vercel AI SDK:
+
+```ts
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import { ToolLoopAgentExecutor } from "aixyz/server/adapters/ai";
+
+const agent = new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful agent that...",
+  tools: { myTool },
+  stopWhen: stepCountIs(10),
+});
+
+const executor = new ToolLoopAgentExecutor(agent);
+```
+
+## LangChain
+
+Use the `LangChainAgentExecutor` for LangChain agents:
+
+```ts
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { LangChainAgentExecutor } from "aixyz/server/adapters/langchain";
+
+const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+const agent = createReactAgent({
+  llm: model,
+  tools: [myTool],
+});
+
+const executor = new LangChainAgentExecutor(agent);
+```
+
+## Mastra
+
+Use the `MastraAgentExecutor` for Mastra agents:
+
+```ts
+import { Agent } from "@mastra/core";
+import { MastraAgentExecutor } from "aixyz/server/adapters/mastra";
+
+const agent = new Agent({
+  name: "my-agent",
+  instructions: "You are a helpful agent that...",
+  model: {
+    provider: "openai",
+    name: "gpt-4o-mini",
+  },
+  tools: { myTool },
+});
+
+const executor = new MastraAgentExecutor(agent);
+```
+
+## Custom Adapter
+
+If your framework isn't supported, implement the `AgentExecutor` interface:
+
+```ts
+import { AgentExecutor, AgentInput, AgentOutput } from "aixyz";
+
+class MyCustomExecutor implements AgentExecutor {
+  constructor(private agent: MyAgent) {}
+
+  async execute(input: AgentInput): Promise<AgentOutput> {
+    // 1. Convert input to your framework's format
+    const result = await this.agent.run(input.prompt);
+
+    // 2. Convert result to AgentOutput format
+    return {
+      message: result.text,
+      metadata: result.metadata,
+    };
+  }
+}
+```
+
+## AgentExecutor Interface
+
+The `AgentExecutor` interface has a single method:
+
+```ts
+interface AgentExecutor {
+  execute(input: AgentInput): Promise<AgentOutput>;
+}
+```
+
+### AgentInput
+
+```ts
+interface AgentInput {
+  prompt: string;
+  context?: Record<string, any>;
+}
+```
+
+### AgentOutput
+
+```ts
+interface AgentOutput {
+  message: string;
+  metadata?: Record<string, any>;
+}
+```
+
+## Using the Adapter
+
+Once you have an executor, wire it into the request handler:
+
+```ts
+import { AixyzRequestHandler, initExpressApp } from "aixyz";
+import { InMemoryTaskStore } from "@a2a-js/sdk/server";
+
+const handler = new AixyzRequestHandler(
+  new InMemoryTaskStore(),
+  executor, // Your adapter
+);
+
+export default await initExpressApp(handler, x402Routes);
+```
+
+## Next Steps
+
+- [Configure your agent](/configuration)
+- [Learn about protocols](/protocols)
+- [Deploy with the CLI](/cli)

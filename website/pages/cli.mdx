@@ -1,0 +1,124 @@
+# CLI Commands
+
+The aixyz CLI provides commands for building, deploying, and managing your agents.
+
+## Installation
+
+The CLI is automatically installed when you create a project with `create-aixyz-app`:
+
+```bash
+pnpm create aixyz-app my-agent
+```
+
+Or install it globally:
+
+```bash
+pnpm add -g aixyz-cli
+```
+
+## Commands
+
+### `aixyz-cli init`
+
+Scaffold a new agent project with boilerplate code:
+
+```bash
+aixyz-cli init
+```
+
+This creates:
+
+- Project structure
+- Configuration file
+- Example agent code
+- TypeScript setup
+
+### `aixyz-cli build`
+
+Bundle your agent for deployment:
+
+```bash
+aixyz-cli build
+```
+
+The build command:
+
+1. Loads your `aixyz.config.ts`
+2. Detects the entrypoint (`src/index.ts` or `src/app.ts`)
+3. Bundles with `Bun.build()` targeting Node.js
+4. Outputs Vercel Build Output API v3 structure in `.vercel/output/`
+
+The output is ready for deployment to Vercel or any compatible platform.
+
+### `aixyz-cli deploy`
+
+Deploy your agent to production:
+
+```bash
+aixyz-cli deploy
+```
+
+This command deploys your bundled agent. Ensure you've run `aixyz-cli build` first.
+
+### `aixyz-cli register`
+
+Create an ERC-8004 on-chain identity for your agent:
+
+```bash
+aixyz-cli register
+```
+
+This gives your agent a verifiable on-chain identity that other agents and contracts can reference.
+
+Required:
+
+- Wallet with funds on the target network
+- Network configured in `aixyz.config.ts`
+
+## Build Output
+
+The `build` command generates a Vercel Build Output API v3 structure:
+
+```
+.vercel/
+  output/
+    config.json          # Build configuration
+    functions/           # Serverless functions
+    static/              # Static assets
+```
+
+This structure is compatible with:
+
+- Vercel
+- Any platform supporting Vercel Build Output API v3
+
+## Development Workflow
+
+1. **Develop locally**
+
+   ```bash
+   bun run dev
+   ```
+
+2. **Build for production**
+
+   ```bash
+   aixyz-cli build
+   ```
+
+3. **Deploy**
+
+   ```bash
+   aixyz-cli deploy
+   ```
+
+4. **Register on-chain (optional)**
+   ```bash
+   aixyz-cli register
+   ```
+
+## Next Steps
+
+- [Learn about deployment](/deployment)
+- [Configure your agent](/configuration)
+- [Explore adapters](/adapters)
