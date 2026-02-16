@@ -10,7 +10,7 @@ import {
 import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
 import { getAixyzConfig } from "../../config";
-import { AixyzServer, X402Accepts } from "../index";
+import { AixyzServer, Accepts } from "../index";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
@@ -83,10 +83,16 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
   app: AixyzServer,
   exports: {
     default: ToolLoopAgent<never, TOOLS>;
-    accepts: X402Accepts;
+    accepts?: Accepts;
   },
   taskStore: TaskStore = new InMemoryTaskStore(),
 ): void {
+  if (!exports.accepts) {
+    // TODO(@fuxingloh): right now we just don't register the agent if accepts is not provided,
+    //  but it might be a better idea to do it in aixyz-cli (aixyz-pack).
+    return;
+  }
+
   const agentExecutor = new ToolLoopAgentExecutor(exports.default);
   const requestHandler = new DefaultRequestHandler(getAgentCard(), taskStore, agentExecutor);
 
@@ -97,7 +103,10 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
     }),
   );
 
-  app.withX402("POST /agent", exports.accepts);
+  if (exports.accepts.scheme === "exact") {
+    app.withX402("POST /agent", exports.accepts);
+  }
+
   app.express.use(
     "/agent",
     jsonRpcHandler({

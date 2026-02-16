@@ -6,11 +6,17 @@ import { getFacilitatorClient } from "../facilitator";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { z } from "zod";
 
-export type X402Accepts = {
+export type Accepts = AcceptsX402 | AcceptsFree;
+
+export type AcceptsX402 = {
+  scheme: "exact";
   price: string;
-  scheme?: "exact";
   network?: string;
   payTo?: string;
+};
+
+export type AcceptsFree = {
+  scheme: "free";
 };
 
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
@@ -25,9 +31,9 @@ export class AixyzServer extends x402ResourceServer {
 
   // TODO(@fuxingloh): add back x402 Bazaar compatibility
 
-  private withAccepts(accepts: X402Accepts) {
+  private withAccepts(accepts: AcceptsX402) {
     const schema = z.object({
-      scheme: z.enum(["exact"]).default("exact"),
+      scheme: z.literal("exact"),
       price: z.string(),
       payTo: z.string().default(this.config.x402.payTo),
       network: z
@@ -40,8 +46,7 @@ export class AixyzServer extends x402ResourceServer {
     return schema.parse(accepts);
   }
 
-  withX402(route: `${"GET" | "POST"} /${string}`, accepts: X402Accepts) {
-    // this part is deleting
+  withX402(route: `${"GET" | "POST"} /${string}`, accepts: AcceptsX402) {
     this.express.use(
       paymentMiddleware(
         {
@@ -59,7 +64,7 @@ export class AixyzServer extends x402ResourceServer {
     );
   }
 
-  async withPaymentRequirements(accepts: X402Accepts): Promise<PaymentRequirements[]> {
+  async withPaymentRequirements(accepts: AcceptsX402): Promise<PaymentRequirements[]> {
     return this.buildPaymentRequirements(this.withAccepts(accepts));
   }
 }
