@@ -1,0 +1,4 @@
+# Build output
+*.js
+*.d.ts
+*.d.ts.map

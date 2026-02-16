@@ -1,14 +1,13 @@
 import express, { type Request, type Response, type NextFunction } from "express";
+import Stripe from "stripe";
 import type { AixyzServer } from "aixyz/server";
 
-let stripe: any = null;
+let stripe: Stripe | null = null;
 
 function initializeStripe(secretKey: string): void {
   if (stripe) return;
 
   try {
-    // Dynamically import Stripe to avoid requiring it as a dependency
-    const Stripe = require("stripe");
     stripe = new Stripe(secretKey, {
       apiVersion: "2026-01-28.clover" as any,
     });
