@@ -1,16 +1,12 @@
 import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
-import { AixyzServerPlugin } from "./AixyzServerPlugin";
+import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
 
 export async function build(): Promise<void> {
   const cwd = process.cwd();
 
-  const entrypoint = resolve(cwd, "app/server.ts");
-
-  if (!existsSync(entrypoint)) {
-    throw new Error(`app/server.ts not found in ${cwd}`);
-  }
+  const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   const outputDir = resolve(cwd, ".vercel/output");
   rmSync(outputDir, { recursive: true, force: true });
@@ -22,6 +18,7 @@ export async function build(): Promise<void> {
   const result = await Bun.build({
     entrypoints: [entrypoint],
     outdir: funcDir,
+    naming: "server.js",
     target: "node",
     format: "esm",
     sourcemap: "linked",

@@ -1,6 +1,7 @@
 import { resolve, relative } from "path";
 import { existsSync, watch } from "fs";
 import { loadEnvConfig } from "@next/env";
+import { getEntrypointMayGenerate } from "../build/AixyzServerPlugin";
 import pkg from "../package.json";
 
 export async function dev(options: { port?: string }): Promise<void> {
@@ -9,13 +10,6 @@ export async function dev(options: { port?: string }): Promise<void> {
   // Load environment config
   const { loadedEnvFiles } = loadEnvConfig(cwd, true);
   const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
-
-  // Find entrypoint
-  const entrypoint = resolve(cwd, "app/server.ts");
-
-  if (!existsSync(entrypoint)) {
-    throw new Error(`No app/server.ts found in ${cwd}`);
-  }
 
   const port = options.port || process.env.PORT || "3000";
   const baseUrl = `http://localhost:${port}`;
@@ -36,7 +30,8 @@ export async function dev(options: { port?: string }): Promise<void> {
   let restarting = false;
 
   function startServer() {
-    child = Bun.spawn(["bun", workerPath, entrypoint, port], {
+    const endpoint = getEntrypointMayGenerate(cwd, "dev");
+    child = Bun.spawn(["bun", workerPath, endpoint, port], {
       cwd,
       stdout: "inherit",
       stderr: "inherit",
