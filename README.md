@@ -179,8 +179,6 @@ Features:
 - VS Code extensions for TypeScript/Bun development
 - Port forwarding for local testing
 
-See [`.devcontainer/README.md`](.devcontainer/README.md) for more details.
-
 ## License
 
 MIT
