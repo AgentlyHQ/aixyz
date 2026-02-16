@@ -58,7 +58,11 @@ function generateServer(appDir: string, entrypointDir: string): string {
   if (existsSync(toolsDir)) {
     for (const file of readdirSync(toolsDir)) {
       if (file.endsWith(".ts")) {
-        tools.push({ name: basename(file, ".ts") });
+        const name = basename(file, ".ts");
+        // Skip tools starting with underscore
+        if (!name.startsWith("_")) {
+          tools.push({ name });
+        }
       }
     }
   }
