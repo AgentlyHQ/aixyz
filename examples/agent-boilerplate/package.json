@@ -1,5 +1,5 @@
 {
-  "name": "@examples/agent-chainlink",
+  "name": "@examples/agent-boilerplate",
   "private": true,
   "scripts": {
     "build": "aixyz build",
@@ -10,7 +10,6 @@
     "@ai-sdk/openai": "3.0.25",
     "ai": "6.0.69",
     "aixyz": "workspace:*",
-    "viem": "2.44.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {

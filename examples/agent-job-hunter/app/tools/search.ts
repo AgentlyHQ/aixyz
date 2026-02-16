@@ -18,13 +18,10 @@ const JobicyResponseSchema = z.object({
   jobs: z.array(JobSchema),
 });
 
-export type Job = z.infer<typeof JobSchema>;
-export type JobicyResponse = z.infer<typeof JobicyResponseSchema>;
-
 /**
  * Execute the job search
  */
-export async function executeJobSearch({ geo }: { geo: string }): Promise<JobicyResponse> {
+async function executeJobSearch({ geo }: { geo: string }) {
   const url = `${JOBICY_BASE_URL}?count=5&geo=${encodeURIComponent(geo.toLowerCase().trim())}`;
   const response = await fetch(url);
 
@@ -33,12 +30,14 @@ export async function executeJobSearch({ geo }: { geo: string }): Promise<Jobicy
   }
 
   const data = await response.json();
-  const parsed = JobicyResponseSchema.parse(data);
-
-  return parsed;
+  return JobicyResponseSchema.parse(data);
 }
 
-export const searchJobs = tool({
+export const accepts = {
+  price: "$0.01",
+};
+
+export default tool({
   title: "Search Remote Jobs",
   description: "Fetch the latest remote jobs from Jobicy for a specific country (geo).",
   inputSchema: z.object({
