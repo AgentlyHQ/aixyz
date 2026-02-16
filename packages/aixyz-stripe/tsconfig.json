@@ -5,6 +5,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "NodeNext",
+    "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
     "declaration": true
