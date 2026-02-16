@@ -1,6 +1,13 @@
 # ai-xyz.dev Website
 
-This is the official documentation website for ai-xyz.dev, built with Next.js and Nextra.
+This is the official documentation website for ai-xyz.dev, built with Next.js 15 and Nextra 4.
+
+## Tech Stack
+
+- **Next.js 15.0.8+** - Patched version (fixes DoS vulnerability CVE)
+- **Nextra 4** - Documentation theme
+- **React 19** - UI library
+- **TypeScript** - Type safety
 
 ## Setup
 

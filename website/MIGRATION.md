@@ -34,7 +34,7 @@ website/
 
 ### Configuration Files
 
-1. **package.json** - Next.js 14 + Nextra 3 + React 18
+1. **package.json** - Next.js 15.0.8+ (patched) + Nextra 4 + React 19
 2. **next.config.mjs** - Nextra integration with standalone output
 3. **theme.config.tsx** - Documentation theme with branding
 4. **tsconfig.json** - TypeScript configuration for Next.js
@@ -115,9 +115,9 @@ Once dependencies are installed successfully:
 
 ## Technical Decisions
 
-- **Next.js 14** - Stable version with great performance
-- **Nextra 3** - Latest stable Nextra with excellent documentation features
-- **React 18** - Matches Next.js 14 compatibility
+- **Next.js 15.0.8+** - Patched version that fixes DoS vulnerability (CVE related to HTTP request deserialization)
+- **Nextra 4** - Latest Nextra compatible with Next.js 15
+- **React 19** - Required for Next.js 15
 - **Standalone Output** - Optimized for serverless deployment
 - **Bun** - Consistent with the rest of the monorepo
 
