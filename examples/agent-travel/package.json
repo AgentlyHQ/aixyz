@@ -2,9 +2,8 @@
   "name": "@examples/agent-travel",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "dev": "bun --watch app/server.ts",
-    "start": "bun app/server.ts",
+    "build": "aixyz build",
+    "dev": "aixyz dev",
     "test": "bun test"
   },
   "dependencies": {

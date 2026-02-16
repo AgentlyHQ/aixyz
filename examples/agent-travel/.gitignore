@@ -14,7 +14,5 @@ pnpm-lock.yaml
 #.env
 .env.local
 
-# compiled output
-*.js
-!*.config.js
-dist
+# vercel
+.vercel
