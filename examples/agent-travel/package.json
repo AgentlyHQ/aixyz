@@ -1,8 +1,6 @@
 {
   "name": "@examples/agent-travel",
   "private": true,
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "bun --watch app/server.ts",
