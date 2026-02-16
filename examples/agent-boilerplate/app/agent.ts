@@ -1,5 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
 
 import weather from "./tools/weather";
 
@@ -16,7 +17,8 @@ You are a helpful weather assistant that provides current weather information fo
 - Keep responses concise but informative.
 `.trim();
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.005",
 };
 

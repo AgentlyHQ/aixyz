@@ -1,4 +1,5 @@
 import { tool } from "ai";
+import type { Accepts } from "aixyz/accepts";
 import { z } from "zod";
 import { normalize } from "viem/ens";
 import { Address, createPublicClient, getContract, http } from "viem";
@@ -75,7 +76,8 @@ async function executeLookup({ symbol }: { symbol: string }) {
   };
 }
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 

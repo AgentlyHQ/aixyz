@@ -1,5 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
 import search from "./tools/search";
 
 // language=Markdown
@@ -14,7 +15,8 @@ Do not assume the country or region, ask the user if they didn't specify one.
 If a search returns no results, provide helpful feedback and suggest trying a different region.
 `.trim();
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 
