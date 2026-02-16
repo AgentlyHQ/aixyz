@@ -35,9 +35,8 @@ bun run dev
 | `PORT`                   | Server port                        | 3000                             |
 | `AGENT_URL`              | Public URL of the agent            | http://localhost:3000/           |
 | **x402 (Crypto)**        |                                    |                                  |
-| `X402_AMOUNT`            | Payment amount per request         | $0.001                           |
+| `X402_PAY_TO`            | Address to receive payments        | Required                         |
 | `X402_NETWORK`           | Blockchain network for payments    | eip155:84532                     |
-| `X402_PAYMENT_ADDRESS`   | Address to receive payments        | -                                |
 | `X402_FACILITATOR_URL`   | x402 facilitator URL               | https://www.x402.org/facilitator |
 | **Stripe (Credit Card)** |                                    |                                  |
 | `STRIPE_SECRET_KEY`      | Stripe secret key (enables Stripe) | -                                |
@@ -49,7 +48,7 @@ bun run dev
 | ------------------------------------ | ------- | ----------------------------------------- |
 | `/.well-known/agent-card.json`       | Public  | A2A agent card metadata                   |
 | `POST /stripe/create-payment-intent` | Public  | Create PaymentIntent for client-side flow |
-| `POST /`                             | Payment | JSON-RPC endpoint for A2A protocol        |
+| `POST /agent`                        | Payment | JSON-RPC endpoint for A2A protocol        |
 | `POST /mcp`                          | Payment | MCP (Model Context Protocol) endpoint     |
 
 ## Payment Methods
@@ -61,7 +60,7 @@ This agent supports two payment methods. Protected endpoints require one of thes
 Pay with USDC on Base network. Include the payment proof in the header:
 
 ```bash
-curl -X POST http://localhost:3000/ \
+curl -X POST http://localhost:3000/agent \
   -H "Content-Type: application/json" \
   -H "X-Payment: <x402-payment-proof>" \
   -d '{"jsonrpc": "2.0", "method": "message/send", ...}'
@@ -115,7 +114,7 @@ curl -X POST http://localhost:3000/stripe/create-payment-intent
 # 2. Use clientSecret with Stripe.js to render PaymentElement and confirm payment
 
 # 3. Use PaymentIntent ID for your API request
-curl -X POST http://localhost:3000/ \
+curl -X POST http://localhost:3000/agent \
   -H "Content-Type: application/json" \
   -H "X-Stripe-Payment-Intent-Id: pi_xxx" \
   -d '{"jsonrpc": "2.0", "method": "message/send", ...}'
@@ -183,7 +182,7 @@ export function PaymentFlow({ onApiResponse }: PaymentFlowProps) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/`, {
+      const res = await fetch(`${API_URL}/agent`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -337,7 +336,7 @@ curl -X POST http://localhost:3000/stripe/create-payment-intent
 # 3. Complete payment in your frontend with Stripe.js
 # 4. Use the PaymentIntent ID:
 
-curl -X POST http://localhost:3000/ \
+curl -X POST http://localhost:3000/agent \
   -H "Content-Type: application/json" \
   -H "X-Stripe-Payment-Intent-Id: pi_xxx" \
   -d '{"jsonrpc":"2.0","method":"message/send","params":{"message":{"role":"user","parts":[{"kind":"text","text":"Find flights from NYC to London"}]}},"id":1}'
@@ -353,7 +352,7 @@ curl -X POST http://localhost:3000/ \
 ### Using the Agent (A2A Protocol)
 
 ```bash
-curl -X POST http://localhost:3000/ \
+curl -X POST http://localhost:3000/agent \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
