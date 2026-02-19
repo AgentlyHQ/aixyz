@@ -178,6 +178,7 @@ function unescapeQuotedValue(value: string, quote: "'" | '"'): string {
   return value.replace(/\\(['\\])/g, (_match, char) => char);
 }
 
+// Bun doesn't automatically load .env files for CLI execution, so we mirror Next.js env precedence here.
 export function loadEnvConfig(cwd: string): LoadEnvConfigResult {
   const nodeEnv = process.env.NODE_ENV ?? "development";
   const envFiles = [
