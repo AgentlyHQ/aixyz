@@ -1,0 +1,66 @@
+# Protocols
+
+## A2A (Agent-to-Agent)
+
+Protocol version: **0.3.0**
+
+Two endpoints:
+
+- `GET /.well-known/agent-card.json` — discovery card generated from `aixyz.config.ts`
+- `POST /agent` — JSON-RPC task handler, x402-gated
+
+Agent card example:
+
+```json
+{
+  "name": "Weather Agent",
+  "description": "Get current weather for any location worldwide.",
+  "protocolVersion": "0.3.0",
+  "version": "0.1.0",
+  "url": "https://my-agent.vercel.app/agent",
+  "capabilities": { "streaming": false, "pushNotifications": false },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": [...]
+}
+```
+
+Other agents fetch the card to discover your agent, then send tasks via JSON-RPC to the `url`.
+
+## MCP (Model Context Protocol)
+
+- `POST /mcp` — stateless `StreamableHTTPServerTransport`
+
+Exposes your tools to MCP clients (Claude Desktop, VS Code, Cursor). Tools with `accepts.scheme === "exact"` require x402 payment via `@x402/mcp`.
+
+## x402
+
+HTTP 402 micropayments. Client includes payment proof in `X-Payment` header. Server verifies via a facilitator.
+
+Facilitators:
+
+- Default: `https://www.x402.org/facilitator`
+- Coinbase CDP: activated when `CDP_API_KEY_ID` is set
+- Custom: set `X402_FACILITATOR_URL`
+
+Prices are USD strings: `"$0.005"`, `"$0.01"`.
+
+## ERC-8004
+
+On-chain agent identity registry.
+
+**Mainnets**: Ethereum, Base, Polygon, Scroll, Monad, BSC, Gnosis
+
+**Testnets**: Sepolia, Base Sepolia, Polygon Amoy, Scroll Sepolia, Monad Testnet, BSC Testnet
+
+Register via CLI:
+
+```bash
+agently-cli register --chain base-sepolia --broadcast
+```
+
+Or programmatically:
+
+```ts
+import { IdentityRegistryAbi, getIdentityRegistryAddress } from "@aixyz/erc-8004";
+```

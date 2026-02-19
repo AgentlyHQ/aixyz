@@ -1,0 +1,35 @@
+# Deployment
+
+## Vercel
+
+```bash
+aixyz build
+vercel deploy
+```
+
+The build outputs a Vercel serverless function (`nodejs24.x`). Agent URL auto-detected from Vercel env vars.
+
+### `vercel.json`
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "bun run build",
+  "bunVersion": "1.x"
+}
+```
+
+Set `OPENAI_API_KEY` and any payment env vars in the Vercel dashboard.
+
+## Docker
+
+```dockerfile
+FROM oven/bun:1.3.9
+WORKDIR /app
+COPY . .
+RUN bun install
+CMD ["bun", "run", "dev"]
+```
+
+Set the `url` field in `aixyz.config.ts` manually since Vercel env vars won't be available.
