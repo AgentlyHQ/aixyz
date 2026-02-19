@@ -12,7 +12,47 @@ const positional = args.filter((a) => !a.startsWith("-"));
 
 const useDefaults = flags.has("--yes") || flags.has("-y");
 
+// Check if Bun is installed
+function checkBunInstalled(): boolean {
+  try {
+    execSync("bun --version", { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Detect which package manager is being used
+function detectPackageManager(): string {
+  const userAgent = process.env.npm_config_user_agent || "";
+  if (userAgent.includes("bun")) return "bun";
+  if (userAgent.includes("npm")) return "npm";
+  if (userAgent.includes("yarn")) return "yarn";
+  if (userAgent.includes("pnpm")) return "pnpm";
+  return "unknown";
+}
+
+// Convert kebab-case to Title Case
+function toTitleCase(str: string): string {
+  return str
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 p.intro("Create AIXYZ App");
+
+// Check if Bun is installed
+const hasBun = checkBunInstalled();
+const packageManager = detectPackageManager();
+
+if (!hasBun) {
+  p.log.error("Bun is not installed on your system.");
+  p.log.info("Please install Bun by visiting: https://bun.sh");
+  p.log.info("Run: curl -fsSL https://bun.sh/install | bash");
+  p.cancel("Cannot continue without Bun.");
+  process.exit(1);
+}
 
 let projectName = positional[0];
 
@@ -37,14 +77,37 @@ if (!projectName) {
   }
 }
 
-const targetDir = resolve(process.cwd(), projectName);
+// Generate project name variations
+const projectNameKebab = projectName; // e.g., "my-agent"
+const projectNameTitle = toTitleCase(projectName); // e.g., "My Agent"
+
+const targetDir = resolve(process.cwd(), projectNameKebab);
 
 if (existsSync(targetDir)) {
   const contents = readdirSync(targetDir);
   if (contents.length > 0) {
-    p.cancel(`Directory "${projectName}" already exists and is not empty.`);
+    p.cancel(`Directory "${projectNameKebab}" already exists and is not empty.`);
     process.exit(1);
   }
+}
+
+// Prompt for OPENAI_API_KEY (optional)
+let openaiApiKey = "";
+if (!useDefaults) {
+  const apiKey = await p.text({
+    message: "OpenAI API Key (optional, can be set later in .env.local):",
+    placeholder: "sk-...",
+    validate(value) {
+      if (value && !value.startsWith("sk-")) {
+        return "OpenAI API keys typically start with 'sk-'";
+      }
+    },
+  });
+  if (p.isCancel(apiKey)) {
+    p.cancel("Operation cancelled.");
+    process.exit(0);
+  }
+  openaiApiKey = apiKey || "";
 }
 
 // Locate the templates directory relative to this script
@@ -68,16 +131,24 @@ if (existsSync(gitignoreSrc)) {
 
 const envLocalSrc = join(targetDir, "env.local");
 if (existsSync(envLocalSrc)) {
-  renameSync(envLocalSrc, join(targetDir, ".env.local"));
+  // Update .env.local with the API key if provided
+  const envContent = openaiApiKey ? `OPENAI_API_KEY=${openaiApiKey}\n` : `OPENAI_API_KEY=\n`;
+  writeFileSync(join(targetDir, ".env.local"), envContent);
+  // Remove the template file after writing the new one
+  if (envLocalSrc !== join(targetDir, ".env.local")) {
+    renameSync(envLocalSrc, join(targetDir, ".env.local"));
+  }
 }
 
-// Replace {{PROJECT_NAME}} placeholders
+// Replace {{PROJECT_NAME}} and {{PROJECT_NAME_TITLE}} placeholders
 const filesToReplace = ["package.json", "aixyz.config.ts"];
 for (const file of filesToReplace) {
   const filePath = join(targetDir, file);
   if (existsSync(filePath)) {
-    const content = readFileSync(filePath, "utf-8");
-    writeFileSync(filePath, content.replaceAll("{{PROJECT_NAME}}", projectName));
+    let content = readFileSync(filePath, "utf-8");
+    content = content.replaceAll("{{PROJECT_NAME}}", projectNameKebab);
+    content = content.replaceAll("{{PROJECT_NAME_TITLE}}", projectNameTitle);
+    writeFileSync(filePath, content);
   }
 }
 
@@ -102,6 +173,19 @@ try {
   s.stop("Failed to initialize git. You can run `git init` manually.");
 }
 
-p.note([`cd ${projectName}`, "Set OPENAI_API_KEY in .env.local", "bun run dev"].join("\n"), "Next steps");
+// Show warning if not using Bun
+if (packageManager !== "bun" && packageManager !== "unknown") {
+  p.log.warn("");
+  p.log.error(`⚠️  You are using ${packageManager}, but this project requires Bun.`);
+  p.log.error("   Please use Bun for this project: https://bun.sh");
+  p.log.warn("");
+}
 
-p.outro(`Success! Created ${projectName} at ./${projectName}`);
+p.note(
+  [`cd ${projectNameKebab}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"]
+    .filter(Boolean)
+    .join("\n"),
+  "Next steps",
+);
+
+p.outro(`Success! Created ${projectNameTitle} at ./${projectNameKebab}`);
