@@ -32,6 +32,16 @@ function detectPackageManager(): string {
   return "unknown";
 }
 
+// Sanitize project name to kebab-case
+function sanitizeProjectName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9-\s]/g, "") // Remove invalid characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+}
+
 // Convert kebab-case to Title Case
 function toTitleCase(str: string): string {
   return str
@@ -66,7 +76,6 @@ if (!projectName) {
       defaultValue: "my-agent",
       validate(value) {
         if (!value) return "Project name is required.";
-        if (!/^[a-z0-9-]+$/.test(value)) return "Project name must be lowercase alphanumeric with hyphens only.";
       },
     });
     if (p.isCancel(name)) {
@@ -78,8 +87,8 @@ if (!projectName) {
 }
 
 // Generate project name variations
-const projectNameKebab = projectName; // e.g., "my-agent"
-const projectNameTitle = toTitleCase(projectName); // e.g., "My Agent"
+const projectNameKebab = sanitizeProjectName(projectName); // e.g., "my-agent"
+const projectNameTitle = toTitleCase(projectNameKebab); // e.g., "My Agent"
 
 const targetDir = resolve(process.cwd(), projectNameKebab);
 
@@ -152,7 +161,7 @@ for (const file of filesToReplace) {
   }
 }
 
-// Install dependencies
+// Install dependencies with Bun (always, regardless of which PM invoked this CLI)
 const s = p.spinner();
 s.start("Installing dependencies...");
 try {

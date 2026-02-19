@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "bun run build",
-  "bunRuntime": "1.x"
+  "bunVersion": "1.x"
 }
