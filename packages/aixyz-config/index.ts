@@ -95,19 +95,86 @@ function parseEnvFile(contents: string): Record<string, string> {
     }
 
     const key = match[1];
-    let value = match[2] ?? "";
+    const rawValue = match[2] ?? "";
+    let value = rawValue.trim();
 
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
-    } else {
-      value = value.replace(/\s+#.*$/, "");
+    if (!value) {
+      values[key] = "";
+      continue;
     }
 
-    value = value.replace(/\\n/g, "\n");
+    const quote = value[0];
+    if (quote === '"' || quote === "'") {
+      let endIndex = -1;
+      let escaped = false;
+      for (let i = 1; i < value.length; i++) {
+        const char = value[i];
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+        if (char === "\\") {
+          escaped = true;
+          continue;
+        }
+        if (char === quote) {
+          endIndex = i;
+          break;
+        }
+      }
+      const quotedValue = endIndex === -1 ? value.slice(1) : value.slice(1, endIndex);
+      value = unescapeQuotedValue(quotedValue, quote);
+    } else {
+      const commentIndex = findInlineCommentIndex(value);
+      if (commentIndex !== -1) {
+        value = value.slice(0, commentIndex).trim();
+      }
+    }
+
     values[key] = value;
   }
 
   return values;
+}
+
+function findInlineCommentIndex(value: string): number {
+  for (let i = 0; i < value.length; i++) {
+    if (value[i] === "#" && (i === 0 || /\s/.test(value[i - 1]))) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function unescapeQuotedValue(value: string, quote: "'" | '"'): string {
+  if (quote === '"') {
+    return value.replace(/\\([nrtvfb\\"'])/g, (_match, char) => {
+      switch (char) {
+        case "n":
+          return "\n";
+        case "r":
+          return "\r";
+        case "t":
+          return "\t";
+        case "v":
+          return "\v";
+        case "f":
+          return "\f";
+        case "b":
+          return "\b";
+        case "'":
+          return "'";
+        case '"':
+          return '"';
+        case "\\":
+          return "\\";
+        default:
+          return char;
+      }
+    });
+  }
+
+  return value.replace(/\\(['\\])/g, (_match, char) => char);
 }
 
 export function loadEnvConfig(cwd: string, _dev?: boolean): LoadEnvConfigResult {
