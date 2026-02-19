@@ -3,6 +3,7 @@ import { program } from "commander";
 import { build } from "./build";
 import { dev } from "./dev";
 import pkg from "./package.json";
+import { t } from "./completions.js";
 
 function handleAction(
   action: (options: Record<string, unknown>) => Promise<void>,
@@ -50,5 +51,19 @@ Examples:
   $ aixyz build`,
   )
   .action(handleAction(build));
+
+// Handle shell completion
+if (process.argv[2] === "complete") {
+  const shell = process.argv[3];
+  if (shell === "--") {
+    // This is a completion request, parse the remaining arguments
+    const args = process.argv.slice(4);
+    t.parse(args);
+  } else {
+    // This is a setup request for a specific shell (zsh, bash, fish, powershell)
+    t.setup("aixyz", "aixyz", shell);
+  }
+  process.exit(0);
+}
 
 program.parse();

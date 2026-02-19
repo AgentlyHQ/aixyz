@@ -27,10 +27,12 @@
   "files": [
     "build",
     "dev",
-    "bin.ts"
+    "bin.ts",
+    "completions.ts"
   ],
   "dependencies": {
     "@aixyz/config": "workspace:*",
+    "@bomb.sh/tab": "^0.0.12",
     "@next/env": "^16.1.6",
     "commander": "^13.0.0"
   },

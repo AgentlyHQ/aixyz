@@ -40,6 +40,54 @@ Build the agent for Vercel deployment using the [Build Output API v3](https://ve
 aixyz-cli build
 ```
 
+## Shell Completion
+
+aixyz-cli supports shell autocompletion for commands and options.
+
+### Setup
+
+**Zsh:**
+
+```bash
+# One-time setup
+source <(aixyz-cli complete zsh)
+
+# Or permanently add to your .zshrc
+aixyz-cli complete zsh > ~/.aixyz-completion.zsh
+echo 'source ~/.aixyz-completion.zsh' >> ~/.zshrc
+```
+
+**Bash:**
+
+```bash
+# One-time setup
+source <(aixyz-cli complete bash)
+
+# Or permanently add to your .bashrc
+aixyz-cli complete bash > ~/.aixyz-completion.bash
+echo 'source ~/.aixyz-completion.bash' >> ~/.bashrc
+```
+
+**Fish:**
+
+```bash
+aixyz-cli complete fish > ~/.config/fish/completions/aixyz-cli.fish
+```
+
+**PowerShell:**
+
+```powershell
+# Add to your PowerShell profile
+aixyz-cli complete powershell | Out-String | Invoke-Expression
+```
+
+Once set up, you can use Tab to autocomplete commands and options:
+
+```bash
+aixyz-cli <TAB>        # Shows: dev, build, complete
+aixyz-cli dev --<TAB>  # Shows: --port
+```
+
 ## License
 
 MIT
