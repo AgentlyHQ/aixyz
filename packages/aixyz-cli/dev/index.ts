@@ -8,7 +8,7 @@ export async function dev(options: { port?: string }): Promise<void> {
   const cwd = process.cwd();
 
   // Load environment config
-  const { loadedEnvFiles } = loadEnvConfig(cwd, true);
+  const { loadedEnvFiles } = loadEnvConfig(cwd);
   const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
 
   const port = options.port || process.env.PORT || "3000";

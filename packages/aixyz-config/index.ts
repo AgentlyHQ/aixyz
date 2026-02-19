@@ -139,7 +139,7 @@ function parseEnvFile(contents: string): Record<string, string> {
 
 function findInlineCommentIndex(value: string): number {
   for (let i = 0; i < value.length; i++) {
-    if (value[i] === "#" && (i === 0 || /\s/.test(value[i - 1]))) {
+    if (value[i] === "#" && i > 0 && /\s/.test(value[i - 1])) {
       return i;
     }
   }
@@ -148,7 +148,7 @@ function findInlineCommentIndex(value: string): number {
 
 function unescapeQuotedValue(value: string, quote: "'" | '"'): string {
   if (quote === '"') {
-    return value.replace(/\\([nrtvfb\\"'])/g, (_match, char) => {
+    return value.replace(/\\([nrtvfb\\\"'])/g, (_match, char) => {
       switch (char) {
         case "n":
           return "\n";
@@ -177,7 +177,7 @@ function unescapeQuotedValue(value: string, quote: "'" | '"'): string {
   return value.replace(/\\(['\\])/g, (_match, char) => char);
 }
 
-export function loadEnvConfig(cwd: string, _dev?: boolean): LoadEnvConfigResult {
+export function loadEnvConfig(cwd: string): LoadEnvConfigResult {
   const nodeEnv = process.env.NODE_ENV ?? "development";
   const envFiles = [
     ".env",
