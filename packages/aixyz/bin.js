@@ -1,2 +1,2 @@
 #!/usr/bin/env bun
-require("aixyz-cli/bin");
+require("@aixyz/cli/bin");
