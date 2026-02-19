@@ -39,8 +39,10 @@ export async function build(): Promise<void> {
     JSON.stringify(
       {
         handler: "server.js",
-        runtime: "bun",
+        runtime: "bun1.x",
         launcherType: "Bun",
+        shouldAddHelpers: true,
+        shouldAddSourcemapSupport: true,
       },
       null,
       2,
