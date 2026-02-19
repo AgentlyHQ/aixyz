@@ -9,10 +9,10 @@ import {
 } from "@a2a-js/sdk/server";
 import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
-import { getAixyzConfig } from "../../config";
-import { AixyzServer } from "../index";
+import { getAixyzConfig } from "../../config.js";
+import { AixyzServer } from "../index.js";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
-import { Accepts } from "../../accepts";
+import { Accepts } from "../../accepts.js";
 
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
   constructor(private agent: ToolLoopAgent<never, TOOLS>) {}

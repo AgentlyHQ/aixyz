@@ -19,7 +19,7 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
   "files": [

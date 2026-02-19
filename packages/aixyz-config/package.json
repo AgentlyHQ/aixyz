@@ -21,12 +21,16 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
+  "type": "module",
   "files": [
     "**/*.d.ts",
     "**/*.d.ts.map",
     "**/*.js"
   ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "tsc --build --clean"
+  },
   "dependencies": {
     "@next/env": "^16.1.6",
     "zod": "^4.3.6"

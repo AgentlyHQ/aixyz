@@ -1,40 +1,10 @@
 import { resolve } from "path";
 import { loadEnvConfig } from "@next/env";
 import { createRequire } from "node:module";
-
 import { z } from "zod";
-
-export type Network = `${string}:${string}`;
-
-export type AixyzConfig = {
-  name: string;
-  description: string;
-  /**
-   * Version of the agent.
-   */
-  version: string;
-  network: Network;
-  url?: string;
-  x402: {
-    /**
-     * The address that will receive the payment from the agent.
-     * Defaults to `process.env.X402_PAY_TO` if not set.
-     * Throws an error if neither is provided.
-     */
-    payTo: string;
-    /**
-     * The x402 network to use for the agent—separate from its identity.
-     * Defaults to `process.env.X402_NETWORK`, followed by `network` config set on the root.
-     */
-    network?: string;
-  };
-  skills: GetAixyzConfig["skills"];
-};
-
-const NetworkSchema = z.custom<Network>((val) => {
+const NetworkSchema = z.custom((val) => {
   return typeof val === "string" && val.includes(":");
 });
-
 const AixyzConfigSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().nonempty(),
@@ -50,11 +20,9 @@ const AixyzConfigSchema = z.object({
       if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
         return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/`;
       }
-
       if (process.env.VERCEL_URL) {
         return `https://${process.env.VERCEL_URL}/`;
       }
-
       return `http://localhost:3000/`;
     })
     .pipe(z.url()),
@@ -75,14 +43,6 @@ const AixyzConfigSchema = z.object({
     }),
   ),
 });
-
-/**
- * This is the materialized config object that is cached for performance.
- * It is the result of parsing and validating the user's `aixyz.config.ts` file,
- * with environment variables loaded and applied.
- */
-export type GetAixyzConfig = z.infer<typeof AixyzConfigSchema>;
-
 /**
  * Environment variables are looked up in the following places, in order, stopping once the variable is found.
  * 1. `process.env`
@@ -97,23 +57,19 @@ export type GetAixyzConfig = z.infer<typeof AixyzConfigSchema>;
  * In production:
  * This is a materialized config object that is cached for performance.
  */
-export function getAixyzConfig(): GetAixyzConfig {
+export function getAixyzConfig() {
   const cwd = process.cwd();
   loadEnvConfig(cwd);
-
   const configPath = resolve(cwd, "aixyz.config.ts");
   const require = createRequire(import.meta.url);
   const mod = require(configPath);
   const config = mod.default;
-
   if (!config || typeof config !== "object") {
     throw new Error(`aixyz.config.ts must have a default export`);
   }
-
   const parsedConfig = AixyzConfigSchema.safeParse(config);
   if (!parsedConfig.success) {
     throw new Error(`aixyz.config.ts: ${parsedConfig.error}`);
   }
-
-  return parsedConfig.data as GetAixyzConfig;
+  return parsedConfig.data;
 }

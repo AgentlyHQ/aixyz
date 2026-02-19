@@ -3,9 +3,9 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import type { Tool } from "ai";
 import express from "express";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { AixyzServer } from "../index";
+import { AixyzServer } from "../index.js";
 import { createPaymentWrapper } from "@x402/mcp";
-import { Accepts, AcceptsX402 } from "../../accepts";
+import { Accepts, AcceptsX402 } from "../../accepts.js";
 
 export class AixyzMCP {
   private registeredTools: Array<{

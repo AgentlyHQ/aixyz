@@ -21,7 +21,33 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./config": {
+      "types": "./config.d.ts",
+      "default": "./config.js"
+    },
+    "./accepts": {
+      "types": "./accepts.d.ts",
+      "default": "./accepts.js"
+    },
+    "./server": {
+      "types": "./server/index.d.ts",
+      "default": "./server/index.js"
+    },
+    "./server/adapters/a2a": {
+      "types": "./server/adapters/a2a.d.ts",
+      "default": "./server/adapters/a2a.js"
+    },
+    "./server/adapters/mcp": {
+      "types": "./server/adapters/mcp.d.ts",
+      "default": "./server/adapters/mcp.js"
+    }
+  },
   "bin": "bin.js",
   "files": [
     "**/*.d.ts",

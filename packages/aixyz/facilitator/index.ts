@@ -1,5 +1,5 @@
 import { HTTPFacilitatorClient } from "@x402/core/server";
-import { facilitator } from "./coinbase";
+import { facilitator } from "./coinbase.js";
 
 export function getFacilitatorClient() {
   if (process.env.CDP_API_KEY_ID) {
