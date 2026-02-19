@@ -2,6 +2,12 @@
   "name": "create-aixyz-app",
   "version": "0.0.0",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentlyHQ/aixyz.git"
+  },
+  "license": "MIT",
+  "author": "AgentlyHQ",
   "bin": "dist/index.js",
   "files": [
     "dist",
