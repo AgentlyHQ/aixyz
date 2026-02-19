@@ -8,6 +8,7 @@ const config: AixyzConfig = {
   // For example, .env, .env.local, .env.production, .env.development are supported
   x402: {
     payTo: "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
   },
   skills: [
     {
