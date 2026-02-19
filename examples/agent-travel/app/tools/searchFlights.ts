@@ -1,5 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
+import { Accepts } from "aixyz/accepts";
 
 const SKYCENTS_API_URL = "https://opinalink-server-312266033746.southamerica-east1.run.app/skycents/search";
 
@@ -134,7 +135,8 @@ const searchFlights = tool({
   execute: executeSearchFlights,
 });
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 
