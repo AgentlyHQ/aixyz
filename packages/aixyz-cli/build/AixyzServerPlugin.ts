@@ -76,6 +76,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
 
   body.push("const server = new AixyzServer();");
   body.push("await server.initialize();");
+  body.push("server.unstable_withIndexPage();");
 
   if (hasAgent) {
     body.push("useA2A(server, agent);");

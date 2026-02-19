@@ -15,12 +15,11 @@ export class AixyzServer extends x402ResourceServer {
   ) {
     super(getFacilitatorClient());
     this.register(config.x402.network as any, new ExactEvmScheme());
-    this.setupDefaultRoutes();
   }
 
-  private setupDefaultRoutes() {
+  public unstable_withIndexPage(path = "/") {
     // Simple human interface at root
-    this.express.get("/", (_req, res) => {
+    this.express.get(path, (_req, res) => {
       const { name, description, version, skills } = this.config;
 
       let text = `${name}\n`;

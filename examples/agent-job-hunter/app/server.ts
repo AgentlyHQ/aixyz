@@ -7,6 +7,7 @@ import * as search from "./tools/search";
 
 const server = new AixyzServer();
 await server.initialize();
+server.unstable_withIndexPage();
 
 useA2A(server, agent);
 
