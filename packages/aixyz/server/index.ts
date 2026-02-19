@@ -28,7 +28,7 @@ export class AixyzServer extends x402ResourceServer {
         .custom<Network>((val) => {
           return typeof val === "string" && val.includes(":");
         })
-        .default(this.config.x402.network ?? this.config.network),
+        .default(this.config.x402.network),
     });
 
     return schema.parse(accepts);

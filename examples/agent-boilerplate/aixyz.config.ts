@@ -4,7 +4,6 @@ const config: AixyzConfig = {
   name: "Weather Agent",
   description: "AI agent that provides current weather information for any location worldwide.",
   version: "0.1.0",
-  network: "eip155:84532",
   // You can use `process.env.YOUR_ENV_KEY` to conditionally set values based on the environment
   // .env, .env.local, .env.production, .env.development are supported
   x402: {
