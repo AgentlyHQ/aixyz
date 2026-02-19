@@ -121,7 +121,6 @@
         "@aixyz/cli": "workspace:*",
         "@aixyz/config": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.26.0",
-        "@next/env": "^16.1.6",
         "@x402/core": "^2.3.1",
         "@x402/evm": "^2.3.1",
         "@x402/express": "^2.3.0",
@@ -150,7 +149,6 @@
       },
       "dependencies": {
         "@aixyz/config": "workspace:*",
-        "@next/env": "^16.1.6",
         "commander": "^13.0.0",
       },
     },
@@ -158,7 +156,6 @@
       "name": "@aixyz/config",
       "version": "0.0.0",
       "dependencies": {
-        "@next/env": "^16.1.6",
         "zod": "^4.3.6",
       },
     },

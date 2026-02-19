@@ -1,5 +1,5 @@
+import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
-import { loadEnvConfig } from "@next/env";
 
 import { z } from "zod";
 
@@ -71,6 +71,75 @@ const AixyzConfigSchema = z.object({
     }),
   ),
 });
+
+type LoadedEnvFile = {
+  path: string;
+};
+
+type LoadEnvConfigResult = {
+  loadedEnvFiles: LoadedEnvFile[];
+};
+
+function parseEnvFile(contents: string): Record<string, string> {
+  const values: Record<string, string> = {};
+
+  for (const line of contents.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    const match = trimmed.match(/^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!match) {
+      continue;
+    }
+
+    const key = match[1];
+    let value = match[2] ?? "";
+
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    } else {
+      value = value.replace(/\s+#.*$/, "");
+    }
+
+    value = value.replace(/\\n/g, "\n");
+    values[key] = value;
+  }
+
+  return values;
+}
+
+export function loadEnvConfig(cwd: string, _dev?: boolean): LoadEnvConfigResult {
+  const nodeEnv = process.env.NODE_ENV ?? "development";
+  const envFiles = [
+    ".env",
+    `.env.${nodeEnv}`,
+    nodeEnv === "test" ? null : ".env.local",
+    `.env.${nodeEnv}.local`,
+  ].filter(Boolean) as string[];
+  const loadedEnvFiles: LoadedEnvFile[] = [];
+  const originalEnvKeys = new Set(Object.keys(process.env));
+
+  for (const envFile of envFiles) {
+    const envPath = resolve(cwd, envFile);
+    if (!existsSync(envPath)) {
+      continue;
+    }
+
+    const contents = readFileSync(envPath, "utf8");
+    const parsed = parseEnvFile(contents);
+    for (const [key, value] of Object.entries(parsed)) {
+      if (originalEnvKeys.has(key)) {
+        continue;
+      }
+      process.env[key] = value;
+    }
+    loadedEnvFiles.push({ path: envPath });
+  }
+
+  return { loadedEnvFiles };
+}
 
 /**
  * This is the materialized config object that is cached for performance.

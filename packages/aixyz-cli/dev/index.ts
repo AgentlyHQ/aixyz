@@ -1,6 +1,6 @@
 import { resolve, relative } from "path";
 import { existsSync, watch } from "fs";
-import { loadEnvConfig } from "@next/env";
+import { loadEnvConfig } from "@aixyz/config";
 import { getEntrypointMayGenerate } from "../build/AixyzServerPlugin";
 import pkg from "../package.json";
 

@@ -31,7 +31,6 @@
   ],
   "dependencies": {
     "@aixyz/config": "workspace:*",
-    "@next/env": "^16.1.6",
     "commander": "^13.0.0"
   },
   "engines": {
