@@ -8,6 +8,7 @@ import * as searchFlights from "./tools/searchFlights";
 
 const server = new AixyzServer();
 await server.initialize();
+server.unstable_withIndexPage();
 
 experimental_useStripePaymentIntent(server);
 useA2A(server, agent);

@@ -17,6 +17,44 @@ export class AixyzServer extends x402ResourceServer {
     this.register(config.x402.network as any, new ExactEvmScheme());
   }
 
+  public unstable_withIndexPage(path = "/") {
+    if (!path || typeof path !== "string" || !path.startsWith("/")) {
+      throw new Error(`Invalid path: ${path}. Path must be a string starting with "/"`);
+    }
+
+    // Simple human interface at root
+    this.express.get(path, (_req, res) => {
+      const { name, description, version, skills } = this.config;
+
+      let text = `${name}\n`;
+      text += `${"=".repeat(name.length)}\n\n`;
+      text += `Description: ${description}\n`;
+      text += `Version: ${version}\n\n`;
+
+      if (skills && skills.length > 0) {
+        text += `Skills:\n`;
+        skills.forEach((skill, index) => {
+          text += `\n${index + 1}. ${skill.name}\n`;
+          text += `   ID: ${skill.id}\n`;
+          text += `   Description: ${skill.description}\n`;
+          if (skill.tags && skill.tags.length > 0) {
+            text += `   Tags: ${skill.tags.join(", ")}\n`;
+          }
+          if (skill.examples && skill.examples.length > 0) {
+            text += `   Examples:\n`;
+            skill.examples.forEach((example) => {
+              text += `   - ${example}\n`;
+            });
+          }
+        });
+      }
+
+      res.type("text/plain").send(text);
+    });
+
+    return this;
+  }
+
   // TODO(@fuxingloh): add back x402 Bazaar compatibility
 
   private withAccepts(accepts: AcceptsX402) {
