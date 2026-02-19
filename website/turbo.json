@@ -1,7 +1,9 @@
 {
+  "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
-  "pipeline": {
+  "tasks": {
     "build": {
+      "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {

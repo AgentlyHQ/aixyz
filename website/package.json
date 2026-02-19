@@ -1,5 +1,5 @@
 {
-  "name": "website",
+  "name": "aixyz-docs",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -8,16 +8,16 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "15.1.6",
-    "nextra": "4.0.11",
-    "nextra-theme-docs": "4.0.11",
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "next": "16.1.6",
+    "nextra": "4.6.1",
+    "nextra-theme-docs": "4.6.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@types/node": "22.10.2",
-    "@types/react": "19.0.1",
-    "@types/react-dom": "19.0.2",
-    "typescript": "5.7.2"
+    "@types/node": "^24",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "^5"
   }
 }
