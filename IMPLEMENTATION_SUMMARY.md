@@ -1,5 +1,18 @@
 # Simple One-Pager Documentation - Implementation Summary
 
+## ⚠️ Note on Unrelated Changes
+
+The following changes in `packages/*/package.json` files are **not part of this PR's scope**:
+
+- Addition of `"type": "commonjs"` in packages/aixyz, aixyz-config, aixyz-stripe
+- Changes to `files` array in aixyz-config
+
+These changes appear because this branch is based on an older commit. They were subsequently removed in PR #125 (`chore: remove "type": "commonjs"`).
+
+**Recommendation**: This PR should be rebased on the latest `main` branch before merging to remove these unrelated changes.
+
+---
+
 ## Overview
 
 This PR creates a **simple, single-page documentation website** for ai-xyz.dev as an alternative to the comprehensive 11-page documentation in PR #113. The focus is on providing all essential information in a scannable, easy-to-navigate format.
