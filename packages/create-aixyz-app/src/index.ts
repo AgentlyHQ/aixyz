@@ -32,8 +32,8 @@ function detectPackageManager(): string {
   return "unknown";
 }
 
-// Sanitize project name to kebab-case
-function sanitizeProjectName(name: string): string {
+// Sanitize agent name to kebab-case for package name
+function sanitizePkgName(name: string): string {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9-\s]/g, "") // Remove invalid characters
@@ -42,7 +42,7 @@ function sanitizeProjectName(name: string): string {
     .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 }
 
-// Convert kebab-case to Title Case
+// Convert kebab-case to Title Case for agent display name
 function toTitleCase(str: string): string {
   return str
     .split("-")
@@ -64,38 +64,38 @@ if (!hasBun) {
   process.exit(1);
 }
 
-let projectName = positional[0];
+let agentName = positional[0];
 
-if (!projectName) {
+if (!agentName) {
   if (useDefaults) {
-    projectName = "my-agent";
+    agentName = "my-agent";
   } else {
     const name = await p.text({
-      message: "What is your project named?",
+      message: "What is your agent named?",
       placeholder: "my-agent",
       defaultValue: "my-agent",
       validate(value) {
-        if (!value) return "Project name is required.";
+        if (!value) return "Agent name is required.";
       },
     });
     if (p.isCancel(name)) {
       p.cancel("Operation cancelled.");
       process.exit(0);
     }
-    projectName = name;
+    agentName = name;
   }
 }
 
-// Generate project name variations
-const projectNameKebab = sanitizeProjectName(projectName); // e.g., "my-agent"
-const projectNameTitle = toTitleCase(projectNameKebab); // e.g., "My Agent"
+// Generate agent name variations
+const pkgName = sanitizePkgName(agentName); // e.g., "my-agent" for package.json
+const agentNameTitle = toTitleCase(pkgName); // e.g., "My Agent" for display
 
-const targetDir = resolve(process.cwd(), projectNameKebab);
+const targetDir = resolve(process.cwd(), pkgName);
 
 if (existsSync(targetDir)) {
   const contents = readdirSync(targetDir);
   if (contents.length > 0) {
-    p.cancel(`Directory "${projectNameKebab}" already exists and is not empty.`);
+    p.cancel(`Directory "${pkgName}" already exists and is not empty.`);
     process.exit(1);
   }
 }
@@ -149,14 +149,14 @@ if (existsSync(envLocalSrc)) {
   }
 }
 
-// Replace {{PROJECT_NAME}} and {{PROJECT_NAME_TITLE}} placeholders
+// Replace {{AGENT_NAME}} and {{PKG_NAME}} placeholders
 const filesToReplace = ["package.json", "aixyz.config.ts"];
 for (const file of filesToReplace) {
   const filePath = join(targetDir, file);
   if (existsSync(filePath)) {
     let content = readFileSync(filePath, "utf-8");
-    content = content.replaceAll("{{PROJECT_NAME}}", projectNameKebab);
-    content = content.replaceAll("{{PROJECT_NAME_TITLE}}", projectNameTitle);
+    content = content.replaceAll("{{PKG_NAME}}", pkgName);
+    content = content.replaceAll("{{AGENT_NAME}}", agentNameTitle);
     writeFileSync(filePath, content);
   }
 }
@@ -191,10 +191,8 @@ if (packageManager !== "bun" && packageManager !== "unknown") {
 }
 
 p.note(
-  [`cd ${projectNameKebab}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"]
-    .filter(Boolean)
-    .join("\n"),
+  [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"].filter(Boolean).join("\n"),
   "Next steps",
 );
 
-p.outro(`Success! Created ${projectNameTitle} at ./${projectNameKebab}`);
+p.outro(`Success! Created ${agentNameTitle} at ./${pkgName}`);

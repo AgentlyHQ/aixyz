@@ -1,5 +1,5 @@
 {
-  "name": "{{PROJECT_NAME}}",
+  "name": "{{PKG_NAME}}",
   "private": true,
   "scripts": {
     "build": "aixyz build",

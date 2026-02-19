@@ -1,7 +1,7 @@
 import type { AixyzConfig } from "aixyz/config";
 
 const config: AixyzConfig = {
-  name: "{{PROJECT_NAME_TITLE}}",
+  name: "{{AGENT_NAME}}",
   description: "AI agent created with create-aixyz-app.",
   version: "0.0.0",
   network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
