@@ -31,7 +31,7 @@ jobs:
         id: info
         run: |
           TAG="${{ github.event.release.tag_name }}"
-          
+
           # Extract version from tag (e.g., "v1.0.0" -> "1.0.0")
           if [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?)$ ]]; then
             VERSION="${BASH_REMATCH[1]}"
@@ -40,16 +40,16 @@ jobs:
             echo "Received: $TAG"
             exit 1
           fi
-          
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
+
           # Determine dist-tag based on prerelease suffix
           if [[ "$VERSION" == *-* ]]; then
             echo "dist_tag=next" >> $GITHUB_OUTPUT
           else
             echo "dist_tag=latest" >> $GITHUB_OUTPUT
           fi
-          
+
           echo "✓ Valid semver tag: v$VERSION (dist-tag: $([ "$VERSION" == *-* ] && echo "next" || echo "latest"))"
 
       - name: Build all packages
