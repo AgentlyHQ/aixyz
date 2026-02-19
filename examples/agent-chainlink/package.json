@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.30",
-    "ai": "6.0.91",
+    "ai": "6.0.92",
     "aixyz": "workspace:*",
     "viem": "2.44.4",
     "zod": "^4.3.6"
