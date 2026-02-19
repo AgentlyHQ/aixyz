@@ -24,14 +24,8 @@
   "type": "commonjs",
   "bin": "bin.js",
   "files": [
-    "**/*.d.ts",
-    "**/*.d.ts.map",
-    "**/*.js"
+    "**/*.ts"
   ],
-  "scripts": {
-    "build": "tsc",
-    "clean": "tsc --build --clean"
-  },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
     "@aixyz/config": "workspace:*",

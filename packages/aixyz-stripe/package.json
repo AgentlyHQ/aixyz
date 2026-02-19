@@ -20,17 +20,9 @@
   "license": "MIT",
   "author": "AgentlyHQ",
   "type": "commonjs",
-  "main": "index.js",
-  "types": "index.d.ts",
   "files": [
-    "**/*.d.ts",
-    "**/*.d.ts.map",
-    "**/*.js"
+    "**/*.ts"
   ],
-  "scripts": {
-    "build": "tsc",
-    "clean": "tsc --build --clean"
-  },
   "dependencies": {
     "express": "^5.2.1"
   },
