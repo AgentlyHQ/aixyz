@@ -3,17 +3,16 @@
   "private": true,
   "scripts": {
     "build": "aixyz build",
-    "dev": "aixyz dev",
-    "test": "bun test"
+    "dev": "aixyz dev"
   },
   "dependencies": {
-    "@ai-sdk/openai": "3.0.25",
-    "ai": "6.0.69",
+    "@ai-sdk/openai": "^3",
+    "ai": "^6",
     "aixyz": "latest",
-    "zod": "^4.3.6"
+    "zod": "^4"
   },
   "devDependencies": {
-    "@types/bun": "1.3.8",
+    "@types/bun": "^1",
     "typescript": "^5"
   }
 }
