@@ -8,7 +8,10 @@ interface BuildOptions {
 }
 
 export async function build(options: BuildOptions = {}): Promise<void> {
-  if (options.vercel) {
+  // Auto-detect Vercel environment
+  const isVercel = options.vercel || process.env.VERCEL === "1";
+
+  if (isVercel) {
     await buildVercel();
   } else {
     await buildBun();
@@ -19,7 +22,7 @@ async function buildBun(): Promise<void> {
   const cwd = process.cwd();
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
-  const outputDir = resolve(cwd, "dist");
+  const outputDir = resolve(cwd, ".aixyz/output");
   rmSync(outputDir, { recursive: true, force: true });
   mkdirSync(outputDir, { recursive: true });
 
@@ -45,7 +48,7 @@ async function buildBun(): Promise<void> {
   // Write package.json for ESM support
   await Bun.write(resolve(outputDir, "package.json"), JSON.stringify({ type: "module" }, null, 2));
 
-  // Copy static assets (public/ → dist/public/)
+  // Copy static assets (public/ → .aixyz/output/public/)
   const publicDir = resolve(cwd, "public");
   if (existsSync(publicDir)) {
     const destPublicDir = resolve(outputDir, "public");
@@ -62,13 +65,13 @@ async function buildBun(): Promise<void> {
   // Log summary
   console.log("");
   console.log("Build complete! Output:");
-  console.log("  dist/server.js");
-  console.log("  dist/package.json");
+  console.log("  .aixyz/output/server.js");
+  console.log("  .aixyz/output/package.json");
   if (existsSync(publicDir) || existsSync(iconFile)) {
-    console.log("  dist/public/ and assets");
+    console.log("  .aixyz/output/public/ and assets");
   }
   console.log("");
-  console.log("To run: bun dist/server.js");
+  console.log("To run: bun .aixyz/output/server.js");
 }
 
 async function buildVercel(): Promise<void> {

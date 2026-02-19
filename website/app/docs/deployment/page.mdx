@@ -3,11 +3,11 @@
 ## Vercel
 
 ```bash
-aixyz build --vercel
+aixyz build
 vercel deploy
 ```
 
-The build outputs a Vercel serverless function using Bun Runtime. Agent URL auto-detected from Vercel env vars.
+The build automatically detects the Vercel environment (via `VERCEL=1`) and outputs a Vercel serverless function using Bun Runtime. Agent URL is auto-detected from Vercel env vars.
 
 ### `vercel.json`
 
@@ -20,15 +20,7 @@ The build outputs a Vercel serverless function using Bun Runtime. Agent URL auto
 }
 ```
 
-**Note:** Update your `package.json` build script to include the `--vercel` flag:
-
-```json
-{
-  "scripts": {
-    "build": "aixyz build --vercel"
-  }
-}
-```
+No need to pass `--vercel` flag as it's automatically detected.
 
 Set `OPENAI_API_KEY` and any payment env vars in the Vercel dashboard.
 
@@ -38,10 +30,10 @@ For direct deployment on Bun Runtime (DigitalOcean, Railway, Fly.io, etc.):
 
 ```bash
 aixyz build
-bun dist/server.js
+bun .aixyz/output/server.js
 ```
 
-The build outputs a single bundled file at `dist/server.js`.
+The build outputs a single bundled file at `.aixyz/output/server.js`.
 
 ### Environment Variables
 
@@ -50,7 +42,7 @@ Set these before running:
 ```bash
 export PORT=3000
 export OPENAI_API_KEY=sk-...
-bun dist/server.js
+bun .aixyz/output/server.js
 ```
 
 ## Docker
@@ -63,7 +55,7 @@ WORKDIR /app
 COPY . .
 RUN bun install
 RUN bun run build
-CMD ["bun", "dist/server.js"]
+CMD ["bun", ".aixyz/output/server.js"]
 ```
 
 Or for development:

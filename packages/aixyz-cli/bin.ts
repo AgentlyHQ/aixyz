@@ -36,10 +36,11 @@ Details:
   Bundles your aixyz agent for deployment.
 
   Default behavior:
-    Bundles into a single executable file for Bun Runtime at ./dist/server.js
+    Bundles into a single executable file for Bun Runtime at ./.aixyz/output/server.js
 
-  With --vercel flag:
+  With --vercel flag or VERCEL=1 env:
     Generates Vercel Build Output API v3 structure at .vercel/output/
+    (Automatically detected when deploying to Vercel)
 
   The build process:
     1. Loads aixyz.config.ts from the current directory
@@ -53,7 +54,8 @@ Prerequisites:
 
 Examples:
   $ aixyz build                # Build for Bun Runtime (default)
-  $ aixyz build --vercel       # Build for Vercel deployment`,
+  $ aixyz build --vercel       # Build for Vercel deployment
+  $ VERCEL=1 aixyz build       # Auto-detected Vercel build`,
   )
   .action(handleAction(build));
 

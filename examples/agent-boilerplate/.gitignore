@@ -7,7 +7,6 @@ pnpm-lock.yaml
 
 # aixyz
 .aixyz
-dist
 
 # local env files
 .env.local

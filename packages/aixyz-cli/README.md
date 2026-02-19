@@ -36,16 +36,18 @@ aixyz-cli dev --port 8080
 
 Build the agent for deployment.
 
-**Default behavior:** Bundles into a single file for Bun Runtime at `./dist/server.js`
+**Default behavior:** Bundles into a single file for Bun Runtime at `./.aixyz/output/server.js`
 
 ```bash
 aixyz-cli build
 ```
 
-**With --vercel flag:** Build for Vercel deployment using the [Build Output API v3](https://vercel.com/docs/build-output-api/v3) at `.vercel/output/`
+**With --vercel flag or VERCEL=1:** Build for Vercel deployment using the [Build Output API v3](https://vercel.com/docs/build-output-api/v3) at `.vercel/output/`
 
 ```bash
 aixyz-cli build --vercel
+# or automatically detected on Vercel
+VERCEL=1 aixyz-cli build
 ```
 
 ## License

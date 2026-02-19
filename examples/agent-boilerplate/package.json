@@ -2,7 +2,7 @@
   "name": "@examples/agent-boilerplate",
   "private": true,
   "scripts": {
-    "build": "aixyz build --vercel",
+    "build": "aixyz build",
     "dev": "aixyz dev",
     "test": "bun test"
   },

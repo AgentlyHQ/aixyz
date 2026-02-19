@@ -15,19 +15,21 @@ Watches `app/` and `aixyz.config.ts`. Auto-generates server from `app/agent.ts` 
 
 Bundle your agent for deployment.
 
-**Default behavior:** Single file bundle for Bun Runtime at `./dist/server.js`
+**Default behavior:** Single file bundle for Bun Runtime at `./.aixyz/output/server.js`
 
 ```bash
 aixyz build
-bun dist/server.js
+bun .aixyz/output/server.js
 ```
 
-**With --vercel flag:** Build Output API v3 for Vercel deployment at `.vercel/output/`
+**With --vercel flag or VERCEL=1:** Build Output API v3 for Vercel deployment at `.vercel/output/`
 
 ```bash
 aixyz build --vercel
 vercel deploy
 ```
+
+The `VERCEL=1` environment variable is automatically set by Vercel during builds, so the correct build mode is automatically selected.
 
 Build steps:
 
@@ -38,7 +40,7 @@ Build steps:
 
 **Output:**
 
-- Default: `dist/server.js` (standalone executable)
+- Default: `.aixyz/output/server.js` (standalone executable)
 - Vercel: `.vercel/output/` ([Build Output API v3](https://vercel.com/docs/build-output-api/v3))
 
 ## `agently-cli register`

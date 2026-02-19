@@ -2,7 +2,7 @@ import type { BunPlugin } from "bun";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
 import { resolve, relative, basename, join } from "path";
 
-export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone" = "vercel"): BunPlugin {
+export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone"): BunPlugin {
   return {
     name: "aixyz-entrypoint",
     setup(build) {
@@ -17,6 +17,7 @@ export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalo
           return { contents: transformed, loader: "ts" };
         } else {
           // For standalone, keep the server export but add startup code
+          // TODO(@fuxingloh): use Bun.serve later.
           const transformed = source.replace(
             /export\s+default\s+(\w+)\s*;/,
             `export default $1;
