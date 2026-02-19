@@ -1,6 +1,7 @@
 {
   "name": "@agentlyhq/agently-cli",
   "version": "0.0.1",
+  "private": true,
   "type": "module",
   "bin": {
     "agently-cli": "dist/index.js"
