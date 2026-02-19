@@ -18,7 +18,7 @@
       "name": "@examples/agent-boilerplate",
       "dependencies": {
         "@ai-sdk/openai": "3.0.30",
-        "ai": "6.0.91",
+        "ai": "6.0.92",
         "aixyz": "workspace:*",
         "zod": "^4.3.6",
       },
@@ -31,7 +31,7 @@
       "name": "@examples/agent-chainlink",
       "dependencies": {
         "@ai-sdk/openai": "3.0.30",
-        "ai": "6.0.91",
+        "ai": "6.0.92",
         "aixyz": "workspace:*",
         "viem": "2.44.4",
         "zod": "^4.3.6",
@@ -45,7 +45,7 @@
       "name": "@examples/agent-job-hunter",
       "dependencies": {
         "@ai-sdk/openai": "3.0.30",
-        "ai": "6.0.91",
+        "ai": "6.0.92",
         "aixyz": "workspace:*",
         "zod": "^4.3.6",
       },
@@ -58,7 +58,7 @@
       "name": "@examples/agent-price-oracle",
       "dependencies": {
         "@ai-sdk/openai": "3.0.30",
-        "ai": "6.0.91",
+        "ai": "6.0.92",
         "aixyz": "workspace:*",
         "viem": "2.44.4",
         "zod": "^4.3.6",
@@ -73,7 +73,7 @@
       "dependencies": {
         "@ai-sdk/openai": "3.0.30",
         "@aixyz/stripe": "workspace:*",
-        "ai": "6.0.91",
+        "ai": "6.0.92",
         "aixyz": "workspace:*",
         "zod": "^4.3.6",
       },
@@ -86,7 +86,7 @@
       "name": "@examples/agent-with-custom-server",
       "dependencies": {
         "@ai-sdk/openai": "3.0.30",
-        "ai": "6.0.91",
+        "ai": "6.0.92",
         "aixyz": "workspace:*",
         "viem": "2.44.4",
         "zod": "^4.3.6",
@@ -206,7 +206,7 @@
 
     "@agentlyhq/agently-cli": ["@agentlyhq/agently-cli@workspace:packages/agently-cli"],
 
-    "@ai-sdk/gateway": ["@ai-sdk/gateway@3.0.50", "", { "dependencies": { "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15", "@vercel/oidc": "3.1.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-Jdd1a8VgbD7l7r+COj0h5SuaYRfPvOJ/AO6l0OrmTPEcI2MUQPr3C4JttfpNkcheEN+gOdy0CtZWuG17bW2fjw=="],
+    "@ai-sdk/gateway": ["@ai-sdk/gateway@3.0.51", "", { "dependencies": { "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15", "@vercel/oidc": "3.1.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-VXYxgDv2U1GJj6xY3aVd9glEmotGmsQllmKDUEghoghlZhEX6F64JsBQx/TukmlJGM98iAYCmofIwGFddv8ZTA=="],
 
     "@ai-sdk/openai": ["@ai-sdk/openai@3.0.30", "", { "dependencies": { "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-YDht3t7TDyWKP+JYZp20VuYqSjyF2brHYh47GGFDUPf2wZiqNQ263ecL+quar2bP3GZ3BeQA8f0m2B7UwLPR+g=="],
 
@@ -438,7 +438,7 @@
 
     "agentkeepalive": ["agentkeepalive@4.6.0", "", { "dependencies": { "humanize-ms": "^1.2.1" } }, "sha512-kja8j7PjmncONqaTsB8fQ+wE2mSU2DJ9D4XKoJ5PFWIdRMa6SLSN1ff4mOr4jCbfRSsxR4keIiySJU0N9T5hIQ=="],
 
-    "ai": ["ai@6.0.91", "", { "dependencies": { "@ai-sdk/gateway": "3.0.50", "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15", "@opentelemetry/api": "1.9.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-k1/8BusZMhYVxxLZt0BUZzm9HVDCCh117nyWfWUx5xjR2+tWisJbXgysL7EBMq2lgyHwgpA1jDR3tVjWSdWZXw=="],
+    "ai": ["ai@6.0.92", "", { "dependencies": { "@ai-sdk/gateway": "3.0.51", "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15", "@opentelemetry/api": "1.9.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-TeXJX2PBv2djoqZN5J5+pL5etJFwxEiv55i6iZF4/qthLx1SjWDk6i3SETd7r9XZfvOlDaOJBQZ6MIHkAaOnhw=="],
 
     "aixyz": ["aixyz@workspace:packages/aixyz"],
 

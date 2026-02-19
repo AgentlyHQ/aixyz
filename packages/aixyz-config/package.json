@@ -21,6 +21,7 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
+  "type": "module",
   "files": [
     "**/*.ts"
   ],
