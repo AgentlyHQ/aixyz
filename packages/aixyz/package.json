@@ -21,7 +21,6 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
   "bin": "bin.js",
   "files": [
     "**/*.ts"

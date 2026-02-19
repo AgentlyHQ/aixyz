@@ -21,11 +21,8 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
   "files": [
-    "**/*.d.ts",
-    "**/*.d.ts.map",
-    "**/*.js"
+    "**/*.ts"
   ],
   "dependencies": {
     "@next/env": "^16.1.6",
