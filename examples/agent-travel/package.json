@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@a2a-js/sdk": "^0.3.10",
-    "@ai-sdk/openai": "3.0.25",
+    "@ai-sdk/openai": "3.0.30",
     "@aixyz/stripe": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.25.3",
     "@next/env": "^16",
@@ -16,7 +16,7 @@
     "@x402/evm": "^2.2.0",
     "@x402/express": "^2.2.0",
     "@x402/extensions": "^2.2.0",
-    "ai": "6.0.69",
+    "ai": "6.0.91",
     "aixyz": "workspace:*",
     "express": "^5.2.1",
     "stripe": "^20.2.0",
