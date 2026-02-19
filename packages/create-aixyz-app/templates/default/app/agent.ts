@@ -4,6 +4,7 @@ import type { Accepts } from "aixyz/accepts";
 
 import weather from "./tools/weather";
 
+// language=Markdown
 const instructions = `
 # Weather Agent
 
