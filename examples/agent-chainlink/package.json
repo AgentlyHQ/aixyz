@@ -2,7 +2,7 @@
   "name": "@examples/agent-chainlink",
   "private": true,
   "scripts": {
-    "build": "aixyz build",
+    "build": "aixyz build --vercel",
     "dev": "aixyz dev",
     "test": "bun test"
   },
