@@ -10,7 +10,7 @@
     "@ai-sdk/openai": "3.0.30",
     "ai": "6.0.92",
     "aixyz": "workspace:*",
-    "viem": "2.44.4",
+    "viem": "2.46.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
