@@ -2,7 +2,7 @@ import type { BunPlugin } from "bun";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
 import { resolve, relative, basename, join } from "path";
 
-export function AixyzServerPlugin(entrypoint: string): BunPlugin {
+export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone" = "vercel"): BunPlugin {
   return {
     name: "aixyz-entrypoint",
     setup(build) {
@@ -10,9 +10,27 @@ export function AixyzServerPlugin(entrypoint: string): BunPlugin {
         if (args.path !== entrypoint) return;
 
         const source = await Bun.file(args.path).text();
-        const transformed = source.replace(/export\s+default\s+(\w+)\s*;/, "export default $1.express;");
 
-        return { contents: transformed, loader: "ts" };
+        if (mode === "vercel") {
+          // For Vercel, export server.express for serverless function
+          const transformed = source.replace(/export\s+default\s+(\w+)\s*;/, "export default $1.express;");
+          return { contents: transformed, loader: "ts" };
+        } else {
+          // For standalone, keep the server export but add startup code
+          const transformed = source.replace(
+            /export\s+default\s+(\w+)\s*;/,
+            `export default $1;
+
+// Auto-start server when run directly
+if (import.meta.main) {
+  const port = parseInt(process.env.PORT || "3000", 10);
+  $1.express.listen(port, () => {
+    console.log(\`Server listening on port \${port}\`);
+  });
+}`,
+          );
+          return { contents: transformed, loader: "ts" };
+        }
       });
     },
   };
