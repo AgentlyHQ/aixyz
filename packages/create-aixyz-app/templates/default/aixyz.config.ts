@@ -4,7 +4,6 @@ const config: AixyzConfig = {
   name: "{{AGENT_NAME}}",
   description: "AI agent created with create-aixyz-app.",
   version: "0.0.0",
-  network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
   // You can use `process.env.YOUR_PAY_TO_ADDRESS` to conditionally set values based on the environment,
   // For example, .env, .env.local, .env.production, .env.development are supported
   x402: {
