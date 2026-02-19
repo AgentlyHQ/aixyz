@@ -18,6 +18,10 @@ export class AixyzServer extends x402ResourceServer {
   }
 
   public unstable_withIndexPage(path = "/") {
+    if (!path || typeof path !== "string" || !path.startsWith("/")) {
+      throw new Error(`Invalid path: ${path}. Path must be a string starting with "/"`);
+    }
+
     // Simple human interface at root
     this.express.get(path, (_req, res) => {
       const { name, description, version, skills } = this.config;
@@ -47,6 +51,8 @@ export class AixyzServer extends x402ResourceServer {
 
       res.type("text/plain").send(text);
     });
+
+    return this;
   }
 
   // TODO(@fuxingloh): add back x402 Bazaar compatibility
