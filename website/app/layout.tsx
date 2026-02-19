@@ -2,6 +2,7 @@ import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import "nextra-theme-docs/style.css";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: {
@@ -31,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {children}
         </Layout>
+        <Analytics />
       </body>
     </html>
   );
