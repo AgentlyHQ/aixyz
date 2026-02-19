@@ -135,16 +135,15 @@ my-agent/
 
 ## Configuration
 
-| Field          | Type               | Required | Description                                                          |
-| -------------- | ------------------ | -------- | -------------------------------------------------------------------- |
-| `name`         | `string`           | Yes      | Display name                                                         |
-| `description`  | `string`           | Yes      | What your agent does                                                 |
-| `version`      | `string`           | Yes      | Semver version                                                       |
-| `network`      | `eip155:${number}` | Yes      | Chain ID for identity (e.g. `eip155:1`)                              |
-| `url`          | `string`           | No       | Base URL. Auto-detected on Vercel, defaults to `localhost:3000`      |
-| `x402.payTo`   | `string`           | Yes      | Payment recipient address. Falls back to `process.env.X402_PAY_TO`   |
-| `x402.network` | `string`           | No       | Payment network (e.g. `eip155:8453` for Base). Defaults to `network` |
-| `skills`       | `AgentSkill[]`     | Yes      | Skills your agent exposes                                            |
+| Field          | Type           | Required | Description                                                        |
+| -------------- | -------------- | -------- | ------------------------------------------------------------------ |
+| `name`         | `string`       | Yes      | Display name                                                       |
+| `description`  | `string`       | Yes      | What your agent does                                               |
+| `version`      | `string`       | Yes      | Semver version                                                     |
+| `url`          | `string`       | No       | Base URL. Auto-detected on Vercel, defaults to `localhost:3000`    |
+| `x402.payTo`   | `string`       | Yes      | Payment recipient address. Falls back to `process.env.X402_PAY_TO` |
+| `x402.network` | `string`       | Yes      | Payment network (e.g. `eip155:8453` for Base)                      |
+| `skills`       | `AgentSkill[]` | Yes      | Skills your agent exposes                                          |
 
 ## Protocols
 

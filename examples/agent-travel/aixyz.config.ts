@@ -5,7 +5,6 @@ const config: AixyzConfig = {
   description:
     "AI agent that finds the cheapest flights between multiple departure airports and destinations worldwide using real-time pricing data",
   version: "1.0.0",
-  network: "eip155:84532",
   x402: {
     payTo: process.env.X402_PAY_TO || "0xYourX402WalletAddress",
     network: process.env.X402_NETWORK || "eip155:84532",

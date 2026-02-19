@@ -5,7 +5,6 @@ const config: AixyzConfig = {
   description:
     "An AI agent that searches for remote job opportunities worldwide using the Jobicy API. Provides the latest remote job listings for specific countries.",
   version: "1.0.0",
-  network: "eip155:1",
   x402: {
     payTo: process.env.X402_PAY_TO!,
     network: process.env.X402_NETWORK!,

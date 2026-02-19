@@ -12,7 +12,6 @@ export type AixyzConfig = {
    * Version of the agent.
    */
   version: string;
-  network: Network;
   url?: string;
   x402: {
     /**
@@ -22,10 +21,9 @@ export type AixyzConfig = {
      */
     payTo: string;
     /**
-     * The x402 network to use for the agent—separate from its identity.
-     * Defaults to `process.env.X402_NETWORK`, followed by `network` config set on the root.
+     * The x402 network to use for the agent.
      */
-    network?: string;
+    network: string;
   };
   skills: GetAixyzConfig["skills"];
 };
@@ -38,7 +36,6 @@ const AixyzConfigSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().nonempty(),
   version: z.string().nonempty(),
-  network: NetworkSchema,
   url: z
     .string()
     .optional()
@@ -59,7 +56,7 @@ const AixyzConfigSchema = z.object({
     .pipe(z.url()),
   x402: z.object({
     payTo: z.string(),
-    network: NetworkSchema.optional(),
+    network: NetworkSchema,
   }),
   skills: z.array(
     z.object({

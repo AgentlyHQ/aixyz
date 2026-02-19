@@ -5,7 +5,6 @@ const config: AixyzConfig = {
   description:
     "An AI agent that provides real-time cryptocurrency market data using CoinGecko Pro. Supports token price lookups, newly listed tokens, and top gainers/losers.",
   version: "1.0.0",
-  network: "eip155:84532",
   x402: {
     payTo: "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
     network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
