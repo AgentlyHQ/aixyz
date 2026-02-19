@@ -12,7 +12,7 @@
       "env": ["*"]
     },
     "build": {
-      "inputs": ["tsconfig.json", "aixyz.config.ts", , "src", "app"],
+      "inputs": ["tsconfig.json", "aixyz.config.ts", "src", "app"],
       "outputs": ["dist", ".vercel/output"],
       "dependsOn": ["^build"],
       "env": ["*"]
