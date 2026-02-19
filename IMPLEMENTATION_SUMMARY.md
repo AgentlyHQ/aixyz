@@ -247,10 +247,20 @@ See `website/TESTING.md` for detailed testing instructions.
 
 ### Why These Versions?
 
-- Next.js 15.1.6: Latest stable
+- Next.js 15.1.12: Latest stable with security patches (fixes DoS, RCE, and cache poisoning vulnerabilities)
 - Nextra 4.0.11: Latest compatible with Next.js 15
 - React 19: Latest stable
 - TypeScript 5.7.2: Latest stable
+
+### Security Updates
+
+**2026-02-19**: Updated Next.js from 15.1.6 to 15.1.12 to patch multiple vulnerabilities:
+
+- HTTP request deserialization DoS with React Server Components
+- Denial of Service with Server Components
+- Cache poisoning DoS
+- RCE in React flight protocol
+- Authorization bypass in middleware
 
 ## Files Changed
 
