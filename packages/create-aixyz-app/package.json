@@ -2,5 +2,21 @@
   "name": "create-aixyz-app",
   "version": "0.0.0",
   "private": false,
-  "files": []
+  "bin": {
+    "create-aixyz-app": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "bun build src/index.ts --outfile dist/index.js --target node"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5"
+  }
 }
