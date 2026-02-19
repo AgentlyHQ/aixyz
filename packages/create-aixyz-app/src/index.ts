@@ -42,14 +42,6 @@ function sanitizePkgName(name: string): string {
     .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 }
 
-// Convert kebab-case to Title Case for agent display name
-function toTitleCase(str: string): string {
-  return str
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
 p.intro("Create AIXYZ App");
 
 // Check if Bun is installed
@@ -87,8 +79,7 @@ if (!agentName) {
 }
 
 // Generate agent name variations
-const pkgName = sanitizePkgName(agentName); // e.g., "my-agent" for package.json
-const agentNameTitle = toTitleCase(pkgName); // e.g., "My Agent" for display
+const pkgName = sanitizePkgName(agentName); // e.g., "weather-bot" for package.json
 
 const targetDir = resolve(process.cwd(), pkgName);
 
@@ -156,7 +147,7 @@ for (const file of filesToReplace) {
   if (existsSync(filePath)) {
     let content = readFileSync(filePath, "utf-8");
     content = content.replaceAll("{{PKG_NAME}}", pkgName);
-    content = content.replaceAll("{{AGENT_NAME}}", agentNameTitle);
+    content = content.replaceAll("{{AGENT_NAME}}", agentName);
     writeFileSync(filePath, content);
   }
 }
@@ -195,4 +186,4 @@ p.note(
   "Next steps",
 );
 
-p.outro(`Success! Created ${agentNameTitle} at ./${pkgName}`);
+p.outro(`Success! Created ${agentName} at ./${pkgName}`);
