@@ -1,0 +1,83 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish [npm]
+    runs-on: ubuntu-latest
+    environment: NPM
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+
+      # Setup nodejs for npm publish with OIDC to create .npmrc
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+
+      - name: Extract and validate version from tag
+        id: info
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+
+          # Extract version from tag (e.g., "v1.0.0" -> "1.0.0")
+          if [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            echo "Error: Tag must be in format v0.0.0 (e.g., v1.0.0, v1.0.0-beta.1)"
+            echo "Received: $TAG"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Determine dist-tag based on prerelease suffix
+          if [[ "$VERSION" == *-* ]]; then
+            echo "dist_tag=next" >> $GITHUB_OUTPUT
+          else
+            echo "dist_tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+          echo "✓ Valid semver tag: v$VERSION (dist-tag: $([ "$VERSION" == *-* ] && echo "next" || echo "latest"))"
+
+      - name: Build all packages
+        run: bun run build
+
+      - name: Lint all packages
+        run: bun run lint
+
+      - name: Set version for all packages
+        run: |
+          for pkg in packages/*/package.json; do
+            if [ -f "$pkg" ]; then
+              dir=$(dirname "$pkg")
+              echo "Setting version ${{ steps.info.outputs.version }} in $dir"
+              cd "$dir"
+              bun pm version ${{ steps.info.outputs.version }} --no-git-tag-version
+              cd - > /dev/null
+            fi
+          done
+
+      - name: Publish all packages
+        run: |
+          for pkg in packages/*/package.json; do
+            if [ -f "$pkg" ]; then
+              dir=$(dirname "$pkg")
+              echo "Publishing from $dir"
+              cd "$dir"
+              bunx npm publish --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
+              cd - > /dev/null
+            fi
+          done
