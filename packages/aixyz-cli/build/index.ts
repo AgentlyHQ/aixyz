@@ -19,7 +19,7 @@ export async function build(): Promise<void> {
     entrypoints: [entrypoint],
     outdir: funcDir,
     naming: "server.js",
-    target: "node",
+    target: "bun",
     format: "esm",
     sourcemap: "linked",
     plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint)],
@@ -39,8 +39,8 @@ export async function build(): Promise<void> {
     JSON.stringify(
       {
         handler: "server.js",
-        runtime: "nodejs24.x",
-        launcherType: "Nodejs",
+        runtime: "bun1.x",
+        launcherType: "Bun",
         shouldAddHelpers: true,
         shouldAddSourcemapSupport: true,
       },
