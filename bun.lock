@@ -118,6 +118,7 @@
       "bin": "bin.js",
       "dependencies": {
         "@a2a-js/sdk": "^0.3.10",
+        "@aixyz/cli": "workspace:*",
         "@aixyz/config": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.26.0",
         "@next/env": "^16.1.6",
@@ -125,7 +126,6 @@
         "@x402/evm": "^2.3.1",
         "@x402/express": "^2.3.0",
         "@x402/mcp": "^2.3.0",
-        "aixyz-cli": "workspace:*",
         "commander": "^13.0.0",
         "express": "^5.2.1",
         "jose": "^5.10.0",
@@ -143,7 +143,7 @@
       ],
     },
     "packages/aixyz-cli": {
-      "name": "aixyz-cli",
+      "name": "@aixyz/cli",
       "version": "0.0.0",
       "bin": {
         "aixyz-cli": "bin.ts",
@@ -230,6 +230,8 @@
     "@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
 
     "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@4.0.15", "", { "dependencies": { "@ai-sdk/provider": "3.0.8", "@standard-schema/spec": "^1.1.0", "eventsource-parser": "^3.0.6" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-8XiKWbemmCbvNN0CLR9u3PQiet4gtEVIrX4zzLxnCj06AwsEDJwJVBbKrEI4t6qE8XRSIvU2irka0dcpziKW6w=="],
+
+    "@aixyz/cli": ["@aixyz/cli@workspace:packages/aixyz-cli"],
 
     "@aixyz/config": ["@aixyz/config@workspace:packages/aixyz-config"],
 
@@ -740,8 +742,6 @@
     "ai": ["ai@6.0.92", "", { "dependencies": { "@ai-sdk/gateway": "3.0.51", "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15", "@opentelemetry/api": "1.9.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-TeXJX2PBv2djoqZN5J5+pL5etJFwxEiv55i6iZF4/qthLx1SjWDk6i3SETd7r9XZfvOlDaOJBQZ6MIHkAaOnhw=="],
 
     "aixyz": ["aixyz@workspace:packages/aixyz"],
-
-    "aixyz-cli": ["aixyz-cli@workspace:packages/aixyz-cli"],
 
     "aixyz-docs": ["aixyz-docs@workspace:website"],
 
