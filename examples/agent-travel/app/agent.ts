@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import * as searchFlights from "./tools/searchFlights";
+import { Accepts } from "aixyz/accepts";
 
 // language=Markdown
 const SystemPrompt = `
@@ -55,7 +56,8 @@ const agent = new ToolLoopAgent({
   stopWhen: stepCountIs(10),
 });
 
-export const accepts = {
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 

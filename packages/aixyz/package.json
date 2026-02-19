@@ -37,7 +37,7 @@
     "@aixyz/config": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@next/env": "^16.1.6",
-    "@x402/core": "^2.3.0",
+    "@x402/core": "^2.3.1",
     "@x402/evm": "^2.3.1",
     "@x402/express": "^2.3.0",
     "@x402/mcp": "^2.3.0",
