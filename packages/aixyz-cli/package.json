@@ -1,5 +1,5 @@
 {
-  "name": "aixyz-cli",
+  "name": "@aixyz/cli",
   "version": "0.0.0",
   "description": "CLI for building and deploying aixyz agents.",
   "keywords": [
