@@ -13,10 +13,19 @@ Watches `app/` and `aixyz.config.ts`. Auto-generates server from `app/agent.ts` 
 
 ## `aixyz build`
 
-Bundle for Vercel deployment. Outputs [Build Output API v3](https://vercel.com/docs/build-output-api/v3) to `.vercel/output/`.
+Bundle your agent for deployment.
+
+**Default behavior:** Single file bundle for Bun Runtime at `./dist/server.js`
 
 ```bash
 aixyz build
+bun dist/server.js
+```
+
+**With --vercel flag:** Build Output API v3 for Vercel deployment at `.vercel/output/`
+
+```bash
+aixyz build --vercel
 vercel deploy
 ```
 
@@ -24,8 +33,13 @@ Build steps:
 
 1. Validates `aixyz.config.ts` (baked into bundle)
 2. Detects entrypoint (`app/server.ts` or auto-generates)
-3. Bundles with `Bun.build()` targeting `nodejs24.x`
+3. Bundles with `Bun.build()` targeting Bun Runtime
 4. Copies `public/` and `app/icon.png` as static assets
+
+**Output:**
+
+- Default: `dist/server.js` (standalone executable)
+- Vercel: `.vercel/output/` ([Build Output API v3](https://vercel.com/docs/build-output-api/v3))
 
 ## `agently-cli register`
 

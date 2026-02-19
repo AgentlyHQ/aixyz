@@ -56,4 +56,8 @@ Tools must have an `execute` function. Payment wrapping applied if `accepts.sche
 
 ## Build Behavior
 
-`aixyz build` transforms `export default server` to `export default server.express` for Vercel compatibility. This is automatic.
+The build process handles server exports differently based on the target:
+
+- **Default build** (`aixyz build`): Exports the server object and auto-starts it when run as main module. The bundled file at `dist/server.js` can be executed directly with `bun dist/server.js`.
+
+- **Vercel build** (`aixyz build --vercel`): Transforms `export default server` to `export default server.express` for Vercel serverless function compatibility. The Express app is exported without auto-start.
