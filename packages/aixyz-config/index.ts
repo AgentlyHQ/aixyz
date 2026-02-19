@@ -139,6 +139,7 @@ function parseEnvFile(contents: string): Record<string, string> {
 
 function findInlineCommentIndex(value: string): number {
   for (let i = 0; i < value.length; i++) {
+    // Treat # as a comment delimiter only when it's preceded by whitespace.
     if (value[i] === "#" && i > 0 && /\s/.test(value[i - 1])) {
       return i;
     }
@@ -197,6 +198,7 @@ export function loadEnvConfig(cwd: string): LoadEnvConfigResult {
     const contents = readFileSync(envPath, "utf8");
     const parsed = parseEnvFile(contents);
     for (const [key, value] of Object.entries(parsed)) {
+      // Preserve existing environment values as higher priority than .env files.
       if (originalEnvKeys.has(key)) {
         continue;
       }
