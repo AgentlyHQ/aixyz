@@ -1,0 +1,103 @@
+# Agent Structure
+
+An aixyz agent is three files. Run `aixyz dev` and the framework auto-generates a server from them.
+
+## Config (`aixyz.config.ts`)
+
+Agent identity, payment settings, and skills. Used to generate the A2A agent card.
+
+```ts
+import type { AixyzConfig } from "aixyz/config";
+
+const config: AixyzConfig = {
+  name: "Weather Agent",
+  description: "Get current weather for any location worldwide.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x...",
+    network: "eip155:8453",
+  },
+  skills: [
+    {
+      id: "get-weather",
+      name: "Get Weather",
+      description: "Get current weather conditions for any city",
+      tags: ["weather"],
+      examples: ["What's the weather in Tokyo?"],
+    },
+  ],
+};
+
+export default config;
+```
+
+## Agent (`app/agent.ts`)
+
+Your agent definition using [Vercel AI SDK](https://ai-sdk.dev) (`ai@^6`). Exports the agent and its payment price.
+
+```ts
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import weather from "./tools/weather";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful weather assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
+});
+```
+
+## Tools (`app/tools/*.ts`)
+
+Each file exports a Vercel AI SDK `tool` and optional `accepts` for MCP payment gating.
+
+```ts
+import { tool } from "ai";
+import { z } from "zod";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.0001",
+};
+
+export default tool({
+  description: "Get current weather conditions for a city.",
+  inputSchema: z.object({
+    location: z.string().describe("City name"),
+  }),
+  execute: async ({ location }) => {
+    // your implementation
+  },
+});
+```
+
+> Files starting with `_` are ignored by auto-generation.
+
+## Payment (`accepts`)
+
+The `accepts` named export controls x402 payment:
+
+```ts
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005", // USD-denominated
+  network: "eip155:8453", // optional, defaults to config
+  payTo: "0x...", // optional, defaults to config
+};
+```
+
+Agents and tools without `accepts` are not registered on their protocol endpoints.
+
+## What Happens
+
+With just these files, `aixyz dev` auto-generates a server that registers A2A at `/agent`, MCP at `/mcp`, and the agent card at `/.well-known/agent-card.json`.
+
+For full control, see [Custom Server](/docs/custom-server).

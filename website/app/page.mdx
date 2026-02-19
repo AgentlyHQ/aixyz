@@ -1,0 +1,35 @@
+# aixyz
+
+**Bundle AI agents into deployable services with built-in protocols and payments.**
+
+Write your agent. aixyz wires up A2A, MCP, x402 payments, and ERC-8004 identity.
+
+---
+
+## Quick Start
+
+```bash
+bunx create-aixyz-app my-agent
+cd my-agent
+bun run dev
+```
+
+Your agent is running at `http://localhost:3000`:
+
+| Endpoint                       | Protocol | Description                          |
+| ------------------------------ | -------- | ------------------------------------ |
+| `/.well-known/agent-card.json` | A2A      | Agent discovery card                 |
+| `/agent`                       | A2A      | JSON-RPC endpoint, x402 payment gate |
+| `/mcp`                         | MCP      | Tool sharing with MCP clients        |
+
+---
+
+## Next Steps
+
+- [Getting Started](/docs/getting-started) — Full setup walkthrough
+- [Agent Structure](/docs/agent-structure) — Config, agent, and tools
+- [Custom Server](/docs/custom-server) — Full control over routing
+- [Configuration](/docs/configuration) — All config options and env vars
+- [CLI](/docs/cli) — `aixyz dev`, `aixyz build`, `agently-cli`
+- [Protocols](/docs/protocols) — A2A, MCP, x402, ERC-8004
+- [Deployment](/docs/deployment) — Vercel, Docker
