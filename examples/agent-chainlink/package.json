@@ -7,14 +7,14 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@ai-sdk/openai": "3.0.30",
-    "ai": "6.0.92",
-    "aixyz": "workspace:*",
-    "viem": "2.46.2",
-    "zod": "^4.3.6"
+    "@ai-sdk/openai": "^3",
+    "ai": "^6",
+    "aixyz": "^0",
+    "viem": "^2",
+    "zod": "^4"
   },
   "devDependencies": {
-    "@types/bun": "1.3.9",
+    "@types/bun": "^1",
     "typescript": "^5"
   }
 }

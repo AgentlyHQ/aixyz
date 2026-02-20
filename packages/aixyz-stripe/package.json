@@ -24,10 +24,10 @@
     "**/*.ts"
   ],
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
+    "@types/express": "^5",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
