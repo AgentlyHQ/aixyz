@@ -77,7 +77,8 @@ jobs:
               dir=$(dirname "$pkg")
               echo "Publishing from $dir"
               cd "$dir"
-              bunx npm publish --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
+              TARBALL=$(bun pm pack --quiet)
+              npm publish "$TARBALL" --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
               cd - > /dev/null
             fi
           done
