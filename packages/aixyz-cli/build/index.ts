@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
 import { loadEnvConfig } from "@next/env";
+import chalk from "chalk";
 
 interface BuildOptions {
   vercel?: boolean;
@@ -17,10 +18,10 @@ export async function build(options: BuildOptions = {}): Promise<void> {
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   if (isVercel) {
-    console.log("Detected Vercel environment. Building for Vercel...");
+    console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Vercel") + "...");
     await buildVercel(entrypoint);
   } else {
-    console.log("Building for Bun Runtime...");
+    console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Bun Runtime") + "...");
     await buildBun(entrypoint);
   }
 }
@@ -65,7 +66,6 @@ async function buildBun(entrypoint: string): Promise<void> {
   const iconFile = resolve(cwd, "app/icon.png");
   if (existsSync(iconFile)) {
     cpSync(iconFile, resolve(outputDir, "icon.png"));
-    console.log("Copied app/icon.png →", resolve(outputDir, "icon.png"));
   }
 
   // Log summary
