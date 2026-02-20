@@ -62,6 +62,11 @@ jobs:
         run: |
           for pkg in packages/*/package.json; do
             if [ -f "$pkg" ]; then
+              # Skip private packages
+              if jq -e '.private == true' "$pkg" > /dev/null 2>&1; then
+                echo "Skipping private package: $pkg"
+                continue
+              fi
               dir=$(dirname "$pkg")
               echo "Setting version ${{ steps.info.outputs.version }} in $dir"
               cd "$dir"
@@ -74,6 +79,11 @@ jobs:
         run: |
           for pkg in packages/*/package.json; do
             if [ -f "$pkg" ]; then
+              # Skip private packages
+              if jq -e '.private == true' "$pkg" > /dev/null 2>&1; then
+                echo "Skipping private package: $pkg"
+                continue
+              fi
               dir=$(dirname "$pkg")
               echo "Publishing from $dir"
               cd "$dir"
