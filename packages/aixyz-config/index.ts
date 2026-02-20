@@ -24,7 +24,7 @@ export type AixyzConfig = {
      */
     network: string;
   };
-  skills: GetAixyzConfig["skills"];
+  skills?: GetAixyzConfig["skills"];
 };
 
 const NetworkSchema = z.custom<Network>((val) => {
@@ -57,18 +57,20 @@ const AixyzConfigSchema = z.object({
     payTo: z.string(),
     network: NetworkSchema,
   }),
-  skills: z.array(
-    z.object({
-      id: z.string().nonempty(),
-      name: z.string().nonempty(),
-      description: z.string().nonempty(),
-      tags: z.array(z.string()),
-      examples: z.array(z.string()).optional(),
-      inputModes: z.array(z.string()).optional(),
-      outputModes: z.array(z.string()).optional(),
-      security: z.array(z.record(z.string(), z.array(z.string()))).optional(),
-    }),
-  ),
+  skills: z
+    .array(
+      z.object({
+        id: z.string().nonempty(),
+        name: z.string().nonempty(),
+        description: z.string().nonempty(),
+        tags: z.array(z.string()),
+        examples: z.array(z.string()).optional(),
+        inputModes: z.array(z.string()).optional(),
+        outputModes: z.array(z.string()).optional(),
+        security: z.array(z.record(z.string(), z.array(z.string()))).optional(),
+      }),
+    )
+    .default([]),
 });
 
 /**

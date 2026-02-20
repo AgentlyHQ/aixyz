@@ -27,6 +27,19 @@
         "typescript": "^5",
       },
     },
+    "examples/agent-byo-facilitator": {
+      "name": "@examples/agent-byo-facilitator",
+      "dependencies": {
+        "@ai-sdk/openai": "^3",
+        "ai": "^6",
+        "aixyz": "^0",
+        "zod": "^4",
+      },
+      "devDependencies": {
+        "@types/bun": "^1",
+        "typescript": "^5",
+      },
+    },
     "examples/agent-chainlink": {
       "name": "@examples/agent-chainlink",
       "dependencies": {
@@ -262,6 +275,8 @@
     "@emnapi/runtime": ["@emnapi/runtime@1.8.1", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-mehfKSMWjjNol8659Z8KxEMrdSJDDot5SXMq00dM8BN4o+CLNXQ0xH2V7EchNHV4RmbZLmmPdEaXZc5H2FXmDg=="],
 
     "@examples/agent-boilerplate": ["@examples/agent-boilerplate@workspace:examples/agent-boilerplate"],
+
+    "@examples/agent-byo-facilitator": ["@examples/agent-byo-facilitator@workspace:examples/agent-byo-facilitator"],
 
     "@examples/agent-chainlink": ["@examples/agent-chainlink@workspace:examples/agent-chainlink"],
 

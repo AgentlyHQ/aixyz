@@ -1,13 +1,10 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "**/*.test.*"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
-    "declaration": true
+    "types": ["bun"]
   }
 }

@@ -66,6 +66,13 @@ function generateServer(appDir: string, entrypointDir: string): string {
 
   imports.push('import { AixyzServer } from "aixyz/server";');
 
+  const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
+  if (hasAccepts) {
+    imports.push(`import { facilitator } from "${importPrefix}/accepts";`);
+  } else {
+    imports.push('import { facilitator } from "aixyz/accepts";');
+  }
+
   const hasAgent = existsSync(resolve(appDir, "agent.ts"));
   if (hasAgent) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
@@ -93,7 +100,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
     }
   }
 
-  body.push("const server = new AixyzServer();");
+  body.push("const server = new AixyzServer(facilitator);");
   body.push("await server.initialize();");
   body.push("server.unstable_withIndexPage();");
 

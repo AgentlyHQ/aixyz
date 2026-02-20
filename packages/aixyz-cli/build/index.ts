@@ -17,8 +17,10 @@ export async function build(options: BuildOptions = {}): Promise<void> {
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   if (isVercel) {
+    console.log("Detected Vercel environment. Building for Vercel...");
     await buildVercel(entrypoint);
   } else {
+    console.log("Building for Bun Runtime...");
     await buildBun(entrypoint);
   }
 }
