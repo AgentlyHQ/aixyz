@@ -21,3 +21,8 @@ export type AcceptsFree = {
 export function getDefaultFacilitator() {
   return getFacilitatorClient();
 }
+
+/**
+ * The default facilitator client provided by aixyz.
+ */
+export const facilitator = getFacilitatorClient();

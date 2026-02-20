@@ -27,6 +27,7 @@ Core packages:
 Working example agents demonstrating different use cases:
 
 - **`agent-boilerplate`** - Minimal starter template
+- **`agent-byo-facilitator`** - Custom x402 facilitator via `app/accepts.ts`
 - **`agent-chainlink`** - Chainlink data feeds integration
 - **`agent-job-hunter`** - Job search agent
 - **`agent-price-oracle`** - Cryptocurrency price oracle using CoinGecko
@@ -95,6 +96,7 @@ Example agents follow this structure:
 examples/agent-*/
   aixyz.config.ts     # Agent metadata and configuration
   app/
+    accepts.ts        # Optional: custom x402 facilitator (export const facilitator)
     agent.ts          # Agent definition (framework-specific)
     server.ts         # Optional: custom server setup
     tools/            # Tool implementations

@@ -2,11 +2,12 @@ import { AixyzMCP } from "aixyz/server/adapters/mcp";
 import { AixyzServer } from "aixyz/server";
 import { useA2A } from "aixyz/server/adapters/a2a";
 import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
+import { facilitator } from "aixyz/accepts";
 
 import * as agent from "./agent";
 import * as searchFlights from "./tools/searchFlights";
 
-const server = new AixyzServer();
+const server = new AixyzServer(facilitator);
 await server.initialize();
 server.unstable_withIndexPage();
 
