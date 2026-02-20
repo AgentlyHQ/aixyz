@@ -5,11 +5,12 @@ import { paymentMiddleware, PaymentRequirements } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { z } from "zod";
 import { AcceptsX402 } from "../accepts";
+import { getFacilitatorClient } from "../facilitator";
 
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
 export class AixyzServer extends x402ResourceServer {
   constructor(
-    facilitator: FacilitatorClient,
+    facilitator: FacilitatorClient = getFacilitatorClient(),
     public config = getAixyzConfig(),
     public express: initExpress.Express = initExpress(),
   ) {
@@ -18,7 +19,7 @@ export class AixyzServer extends x402ResourceServer {
   }
 
   public unstable_withIndexPage(path = "/") {
-    if (!path || typeof path !== "string" || !path.startsWith("/")) {
+    if (!path?.startsWith("/")) {
       throw new Error(`Invalid path: ${path}. Path must be a string starting with "/"`);
     }
 

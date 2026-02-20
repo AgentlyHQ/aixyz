@@ -2,7 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 
-import weather from "./tools/weather";
+import temperature from "./tools/temperature";
 
 export const accepts: Accepts = {
   scheme: "exact",
@@ -11,6 +11,7 @@ export const accepts: Accepts = {
 
 export default new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
-  tools: { weather },
+  instructions: "Temperature Agent",
+  tools: { temperature },
   stopWhen: stepCountIs(10),
 });
