@@ -1,0 +1,19 @@
+{
+  "name": "@examples/agent-byo-facilitator",
+  "private": true,
+  "scripts": {
+    "build": "aixyz build",
+    "dev": "aixyz dev",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3",
+    "ai": "^6",
+    "aixyz": "^0",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1",
+    "typescript": "^5"
+  }
+}

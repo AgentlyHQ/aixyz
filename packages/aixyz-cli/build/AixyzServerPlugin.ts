@@ -69,6 +69,8 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
   if (hasAccepts) {
     imports.push(`import { facilitator } from "${importPrefix}/accepts";`);
+  } else {
+    imports.push('import { getDefaultFacilitator } from "aixyz/accepts";');
   }
 
   const hasAgent = existsSync(resolve(appDir, "agent.ts"));
@@ -100,8 +102,8 @@ function generateServer(appDir: string, entrypointDir: string): string {
 
   body.push(
     hasAccepts
-      ? "const server = new AixyzServer(undefined, undefined, facilitator);"
-      : "const server = new AixyzServer();",
+      ? "const server = new AixyzServer(facilitator);"
+      : "const server = new AixyzServer(getDefaultFacilitator());",
   );
   body.push("await server.initialize();");
   body.push("server.unstable_withIndexPage();");

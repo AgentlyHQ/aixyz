@@ -2,7 +2,7 @@ import { getAixyzConfig, Network } from "../config";
 import initExpress from "express";
 import { x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware, PaymentRequirements } from "@x402/express";
-import { getFacilitatorClient } from "../facilitator";
+import { getDefaultFacilitator } from "../accepts";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { z } from "zod";
 import { AcceptsX402 } from "../accepts";
@@ -10,9 +10,9 @@ import { AcceptsX402 } from "../accepts";
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
 export class AixyzServer extends x402ResourceServer {
   constructor(
+    facilitator = getDefaultFacilitator(),
     public config = getAixyzConfig(),
     public express: initExpress.Express = initExpress(),
-    facilitator = getFacilitatorClient(),
   ) {
     super(facilitator);
     this.register(config.x402.network as any, new ExactEvmScheme());
