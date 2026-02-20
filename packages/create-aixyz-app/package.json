@@ -20,7 +20,7 @@
     "@clack/prompts": "^1.0.1"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/node": "^25",
     "typescript": "^5"
   }
 }
