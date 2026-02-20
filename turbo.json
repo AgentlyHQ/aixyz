@@ -18,7 +18,7 @@
       "env": ["*"]
     },
     "test": {
-      "inputs": ["tsconfig.json", "src"],
+      "inputs": ["tsconfig.json", "src", "app"],
       "dependsOn": ["^test"]
     },
     "lint": {
