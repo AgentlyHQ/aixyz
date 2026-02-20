@@ -1,5 +1,4 @@
 import { resolve } from "path";
-import { loadEnvConfig } from "@next/env";
 
 import { z } from "zod";
 
@@ -95,8 +94,6 @@ export type GetAixyzConfig = z.infer<typeof AixyzConfigSchema>;
  */
 export function getAixyzConfig(): GetAixyzConfig {
   const cwd = process.cwd();
-  loadEnvConfig(cwd);
-
   const configPath = resolve(cwd, "aixyz.config.ts");
   const mod = require(configPath);
   const config = mod.default;

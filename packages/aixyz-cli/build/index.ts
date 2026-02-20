@@ -2,6 +2,7 @@ import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
+import { loadEnvConfig } from "@next/env";
 
 interface BuildOptions {
   vercel?: boolean;
@@ -11,16 +12,19 @@ export async function build(options: BuildOptions = {}): Promise<void> {
   // Auto-detect Vercel environment
   const isVercel = options.vercel || process.env.VERCEL === "1";
 
+  const cwd = process.cwd();
+  loadEnvConfig(cwd, false);
+  const entrypoint = getEntrypointMayGenerate(cwd, "build");
+
   if (isVercel) {
-    await buildVercel();
+    await buildVercel(entrypoint);
   } else {
-    await buildBun();
+    await buildBun(entrypoint);
   }
 }
 
-async function buildBun(): Promise<void> {
+async function buildBun(entrypoint: string): Promise<void> {
   const cwd = process.cwd();
-  const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   const outputDir = resolve(cwd, ".aixyz/output");
   rmSync(outputDir, { recursive: true, force: true });
@@ -74,9 +78,8 @@ async function buildBun(): Promise<void> {
   console.log("To run: bun .aixyz/output/server.js");
 }
 
-async function buildVercel(): Promise<void> {
+async function buildVercel(entrypoint: string): Promise<void> {
   const cwd = process.cwd();
-  const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   const outputDir = resolve(cwd, ".vercel/output");
   rmSync(outputDir, { recursive: true, force: true });
