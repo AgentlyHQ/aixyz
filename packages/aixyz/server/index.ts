@@ -12,8 +12,9 @@ export class AixyzServer extends x402ResourceServer {
   constructor(
     public config = getAixyzConfig(),
     public express: initExpress.Express = initExpress(),
+    facilitator = getFacilitatorClient(),
   ) {
-    super(getFacilitatorClient());
+    super(facilitator);
     this.register(config.x402.network as any, new ExactEvmScheme());
   }
 
