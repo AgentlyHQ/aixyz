@@ -3,9 +3,79 @@ import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
 
-export async function build(): Promise<void> {
-  const cwd = process.cwd();
+interface BuildOptions {
+  vercel?: boolean;
+}
 
+export async function build(options: BuildOptions = {}): Promise<void> {
+  // Auto-detect Vercel environment
+  const isVercel = options.vercel || process.env.VERCEL === "1";
+
+  if (isVercel) {
+    await buildVercel();
+  } else {
+    await buildBun();
+  }
+}
+
+async function buildBun(): Promise<void> {
+  const cwd = process.cwd();
+  const entrypoint = getEntrypointMayGenerate(cwd, "build");
+
+  const outputDir = resolve(cwd, ".aixyz/output");
+  rmSync(outputDir, { recursive: true, force: true });
+  mkdirSync(outputDir, { recursive: true });
+
+  // Build as a single bundled file for Bun Runtime
+  const result = await Bun.build({
+    entrypoints: [entrypoint],
+    outdir: outputDir,
+    naming: "server.js",
+    target: "bun",
+    format: "esm",
+    sourcemap: "linked",
+    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "standalone")],
+  });
+
+  if (!result.success) {
+    console.error("Build failed:");
+    for (const log of result.logs) {
+      console.error(log);
+    }
+    process.exit(1);
+  }
+
+  // Write package.json for ESM support
+  await Bun.write(resolve(outputDir, "package.json"), JSON.stringify({ type: "module" }, null, 2));
+
+  // Copy static assets (public/ → .aixyz/output/public/)
+  const publicDir = resolve(cwd, "public");
+  if (existsSync(publicDir)) {
+    const destPublicDir = resolve(outputDir, "public");
+    cpSync(publicDir, destPublicDir, { recursive: true });
+    console.log("Copied public/ →", destPublicDir);
+  }
+
+  const iconFile = resolve(cwd, "app/icon.png");
+  if (existsSync(iconFile)) {
+    cpSync(iconFile, resolve(outputDir, "icon.png"));
+    console.log("Copied app/icon.png →", resolve(outputDir, "icon.png"));
+  }
+
+  // Log summary
+  console.log("");
+  console.log("Build complete! Output:");
+  console.log("  .aixyz/output/server.js");
+  console.log("  .aixyz/output/package.json");
+  if (existsSync(publicDir) || existsSync(iconFile)) {
+    console.log("  .aixyz/output/public/ and assets");
+  }
+  console.log("");
+  console.log("To run: bun .aixyz/output/server.js");
+}
+
+async function buildVercel(): Promise<void> {
+  const cwd = process.cwd();
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   const outputDir = resolve(cwd, ".vercel/output");
@@ -22,7 +92,7 @@ export async function build(): Promise<void> {
     target: "bun",
     format: "esm",
     sourcemap: "linked",
-    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint)],
+    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "vercel")],
   });
 
   if (!result.success) {
@@ -85,6 +155,6 @@ export async function build(): Promise<void> {
   console.log("");
   console.log("Build complete! Output:");
   console.log("  .vercel/output/config.json");
-  console.log("  .vercel/output/functions/index.func/index.js");
+  console.log("  .vercel/output/functions/index.func/server.js");
   console.log("  .vercel/output/static/");
 }

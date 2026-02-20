@@ -34,10 +34,20 @@ aixyz-cli dev --port 8080
 
 ### `aixyz-cli build`
 
-Build the agent for Vercel deployment using the [Build Output API v3](https://vercel.com/docs/build-output-api/v3).
+Build the agent for deployment.
+
+**Default behavior:** Bundles into a single file for Bun Runtime at `./.aixyz/output/server.js`
 
 ```bash
 aixyz-cli build
+```
+
+**With --vercel flag or VERCEL=1:** Build for Vercel deployment using the [Build Output API v3](https://vercel.com/docs/build-output-api/v3) at `.vercel/output/`
+
+```bash
+aixyz-cli build --vercel
+# or automatically detected on Vercel
+VERCEL=1 aixyz-cli build
 ```
 
 ## License
