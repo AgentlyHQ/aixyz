@@ -42,7 +42,7 @@ function sanitizePkgName(name: string): string {
     .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 }
 
-p.intro("Create AIXYZ App");
+p.intro("Create aixyz app");
 
 // Check if Bun is installed
 const hasBun = checkBunInstalled();

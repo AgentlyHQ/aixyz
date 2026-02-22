@@ -192,13 +192,12 @@
     "packages/create-aixyz-app": {
       "name": "create-aixyz-app",
       "version": "0.0.0",
-      "bin": {
-        "create-aixyz-app": "dist/index.js",
-      },
+      "bin": "dist/index.js",
       "dependencies": {
         "@clack/prompts": "^1.0.1",
       },
       "devDependencies": {
+        "@types/bun": "^1.3.9",
         "@types/node": "^22",
         "typescript": "^5",
       },
