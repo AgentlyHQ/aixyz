@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { FacilitatorClient, HTTPFacilitatorClient } from "@x402/core/server";
-import { getFacilitatorClient } from "./facilitator";
 
 export type Accepts = AcceptsX402 | AcceptsFree;
 
@@ -34,4 +33,6 @@ export { HTTPFacilitatorClient };
 /**
  * The default facilitator client provided by aixyz.
  */
-export const facilitator: FacilitatorClient = getFacilitatorClient();
+export const facilitator: FacilitatorClient = new HTTPFacilitatorClient({
+  url: "https://x402.agently.to/facilitator",
+});
