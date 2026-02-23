@@ -5,12 +5,23 @@ import { z } from "zod";
 export type Network = `${string}:${string}`;
 
 export type AixyzConfig = {
+  /**
+   * The name of the agent will be used in the agent card.
+   */
   name: string;
+  /**
+   * A short description of the agent.
+   * This will be used in the agent card.
+   */
   description: string;
   /**
    * Version of the agent.
    */
   version: string;
+  /**
+   * The URL of the agent, required for canonical urls.
+   * Defaults to `process.env.VERCEL_URL` for Vercel deployments.
+   */
   url?: string;
   x402: {
     /**
@@ -33,7 +44,7 @@ export type AixyzConfig = {
      */
     output?: "standalone" | "vercel";
   };
-  skills?: GetAixyzConfig["skills"];
+  skills?: InferredAixyzConfig["skills"];
 };
 
 const NetworkSchema = z.custom<Network>((val) => {
@@ -87,12 +98,22 @@ const AixyzConfigSchema = z.object({
     .default([]),
 });
 
+type InferredAixyzConfig = z.infer<typeof AixyzConfigSchema>;
+
 /**
+ * Subset of `AixyzConfig` that is expose and materialized at runtime.
+ *
  * This is the materialized config object that is cached for performance.
  * It is the result of parsing and validating the user's `aixyz.config.ts` file,
  * with environment variables loaded and applied.
  */
-export type GetAixyzConfig = z.infer<typeof AixyzConfigSchema>;
+export type AixyzConfigRuntime = {
+  name: AixyzConfig["name"];
+  description: AixyzConfig["description"];
+  version: AixyzConfig["version"];
+  url: AixyzConfig["url"];
+  skills: NonNullable<AixyzConfig["skills"]>;
+};
 
 /**
  * Environment variables are looked up in the following places, in order, stopping once the variable is found.
@@ -107,8 +128,11 @@ export type GetAixyzConfig = z.infer<typeof AixyzConfigSchema>;
  *
  * In production:
  * This is a materialized config object that is cached for performance.
+ *
+ * @deprecated Use `getAixyzConfigRuntime()` instead, which is designed for runtime use.
+ * This will be deprecated in the next major version—when we materialize the config for downstream.
  */
-export function getAixyzConfig(): GetAixyzConfig {
+export function getAixyzConfig(): InferredAixyzConfig {
   const cwd = process.cwd();
   const configPath = resolve(cwd, "aixyz.config.ts");
   const mod = require(configPath);
@@ -123,5 +147,21 @@ export function getAixyzConfig(): GetAixyzConfig {
     throw new Error(`aixyz.config.ts: ${parsedConfig.error}`);
   }
 
-  return parsedConfig.data as GetAixyzConfig;
+  return parsedConfig.data as InferredAixyzConfig;
+}
+
+/**
+ * Returns the subset of `aixyz.config.ts` that is safe to expose at runtime.
+ * Unlike `getAixyzConfig()`, which is intended for the build/CLI phase only,
+ * this function is designed to be available in the deployed runtime bundle.
+ */
+export function getAixyzConfigRuntime(): AixyzConfigRuntime {
+  const config = getAixyzConfig();
+  return {
+    name: config.name,
+    description: config.description,
+    version: config.version,
+    url: config.url,
+    skills: config.skills,
+  };
 }
