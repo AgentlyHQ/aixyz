@@ -5,12 +5,23 @@ import { z } from "zod";
 export type Network = `${string}:${string}`;
 
 export type AixyzConfig = {
+  /**
+   * The name of the agent will be used in the agent card.
+   */
   name: string;
+  /**
+   * A short description of the agent.
+   * This will be used in the agent card.
+   */
   description: string;
   /**
    * Version of the agent.
    */
   version: string;
+  /**
+   * The URL of the agent, required for canonical urls.
+   * Defaults to `process.env.VERCEL_URL` for Vercel deployments.
+   */
   url?: string;
   x402: {
     /**
