@@ -66,4 +66,11 @@ jobs:
           sed -i 's/"workspace:\*"/"'"$VERSION"'"/g' packages/create-aixyz-app/templates/*/package.json
 
       - name: Publish all packages
-        run: npm publish --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance --workspace packages/*
+        run: |
+          for pkg in packages/*/; do
+            if [ "$(node -p "require('./$pkg/package.json').private || false")" = "true" ]; then
+              echo "Skipping private package: $pkg"
+              continue
+            fi
+            npm publish --workspace "$pkg" --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
+          done
