@@ -52,6 +52,7 @@ async function execute() {
 }
 
 export const accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 

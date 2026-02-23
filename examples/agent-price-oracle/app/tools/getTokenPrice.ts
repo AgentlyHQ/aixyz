@@ -34,6 +34,7 @@ async function execute({ id, vsCurrency = "usd" }: z.infer<typeof GetTokenPriceI
 }
 
 export const accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 

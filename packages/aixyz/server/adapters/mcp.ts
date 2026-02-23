@@ -5,7 +5,7 @@ import express from "express";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { AixyzServer } from "../index";
 import { createPaymentWrapper } from "@x402/mcp";
-import { Accepts, AcceptsX402 } from "../../accepts";
+import { Accepts, AcceptsScheme, AcceptsX402 } from "../../accepts";
 
 export class AixyzMCP {
   private registeredTools: Array<{
@@ -60,7 +60,10 @@ export class AixyzMCP {
       accepts?: Accepts;
     },
   ) {
-    if (!exports.accepts) {
+    if (exports.accepts) {
+      // TODO(@fuxingloh): validation should be done at build stage
+      AcceptsScheme.parse(exports.accepts);
+    } else {
       // TODO(@fuxingloh): right now we just don't register the agent if accepts is not provided,
       //  but it might be a better idea to do it in aixyz-cli (aixyz-pack).
       return;
