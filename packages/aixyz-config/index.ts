@@ -95,6 +95,14 @@ const AixyzConfigSchema = z.object({
 export type GetAixyzConfig = z.infer<typeof AixyzConfigSchema>;
 
 /**
+ * Subset of `AixyzConfig` that is safe to expose at runtime.
+ * Only non-sensitive fields are included.
+ */
+export type AixyzConfigRuntime = {
+  name: AixyzConfig["name"];
+};
+
+/**
  * Environment variables are looked up in the following places, in order, stopping once the variable is found.
  * 1. `process.env`
  * 2. `.env.$(NODE_ENV).local`
@@ -124,4 +132,14 @@ export function getAixyzConfig(): GetAixyzConfig {
   }
 
   return parsedConfig.data as GetAixyzConfig;
+}
+
+/**
+ * Returns the subset of `aixyz.config.ts` that is safe to expose at runtime.
+ * Unlike `getAixyzConfig()`, which is intended for the build/CLI phase only,
+ * this function is designed to be available in the deployed runtime bundle.
+ */
+export function getAixyzConfigRuntime(): AixyzConfigRuntime {
+  const { name } = getAixyzConfig();
+  return { name };
 }

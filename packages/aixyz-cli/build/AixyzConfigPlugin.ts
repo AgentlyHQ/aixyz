@@ -43,6 +43,9 @@ export function AixyzConfigPlugin(): BunPlugin {
         export function getAixyzConfig() {
           return config;
         }
+        export function getAixyzConfigRuntime() {
+          return { name: config.name };
+        }
       `,
         loader: "ts",
       }));
