@@ -24,6 +24,15 @@ export type AixyzConfig = {
      */
     network: string;
   };
+  build?: {
+    /**
+     * Output format for `aixyz build`.
+     * - `"standalone"`: Bundles into a single executable file (default).
+     * - `"vercel"`: Generates Vercel Build Output API v3 structure.
+     * Overrides the `VERCEL=1` environment variable, but is overridden by the `--output` CLI flag.
+     */
+    output?: "standalone" | "vercel";
+  };
   skills?: GetAixyzConfig["skills"];
 };
 
@@ -57,6 +66,11 @@ const AixyzConfigSchema = z.object({
     payTo: z.string(),
     network: NetworkSchema,
   }),
+  build: z
+    .object({
+      output: z.enum(["standalone", "vercel"]).optional(),
+    })
+    .optional(),
   skills: z
     .array(
       z.object({
