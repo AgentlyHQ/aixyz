@@ -1,5 +1,5 @@
 ---
-name: build-agent
+name: aixyz
 description: >-
   Build, run, and deploy an AI agent using the aixyz framework.
   Use this skill when creating a new agent, adding tools, wiring up A2A/MCP protocols,
@@ -30,7 +30,6 @@ Use this skill when:
 ```bash
 bunx create-aixyz-app my-agent
 cd my-agent
-bun install
 ```
 
 This creates the standard project layout:
@@ -41,6 +40,7 @@ my-agent/
   app/
     agent.ts          # Agent definition
     tools/            # One file per tool
+    icon.png          # Agent icon (optional)
   package.json
   vercel.json
 ```
@@ -74,21 +74,40 @@ const config: AixyzConfig = {
 export default config;
 ```
 
-### 3. Write a tool (`app/tools/<name>.ts`)
+### 3. Payment: `accepts` export (`aixyz/accepts`)
 
-Each file in `app/tools/` exports a Vercel AI SDK `tool` as its default export, plus an optional
-`accepts` export to gate the tool behind an x402 payment:
+Every agent and tool controls whether it requires payment by exporting `accepts` from `aixyz/accepts`.
+Without this export, the endpoint is not registered for payment gating.
+
+```ts
+import type { Accepts } from "aixyz/accepts";
+
+// Require x402 micropayment
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.001", // USD-denominated
+  network: "eip155:8453", // optional — defaults to config.x402.network
+  payTo: "0x...", // optional — defaults to config.x402.payTo
+};
+
+// Or make the endpoint free
+export const accepts: Accepts = {
+  scheme: "free",
+};
+```
+
+Export `accepts` from `app/agent.ts` to gate the A2A endpoint, or from a tool file to gate that tool via MCP.
+
+### 4. Write a tool (`app/tools/<name>.ts`)
+
+Each file in `app/tools/` exports a Vercel AI SDK `tool` as its default export:
 
 ```ts
 import { tool } from "ai";
 import { z } from "zod";
 import type { Accepts } from "aixyz/accepts";
 
-// Optional: require payment to call this tool via MCP
-export const accepts: Accepts = {
-  scheme: "exact",
-  price: "$0.001",
-};
+export const accepts: Accepts = { scheme: "exact", price: "$0.001" };
 
 export default tool({
   description: "A short description of what this tool does.",
@@ -104,7 +123,7 @@ export default tool({
 
 Files prefixed with `_` (e.g. `_helpers.ts`) are ignored by the auto-generated server.
 
-### 4. Define the agent (`app/agent.ts`)
+### 5. Define the agent (`app/agent.ts`)
 
 ```ts
 import { openai } from "@ai-sdk/openai";
@@ -112,11 +131,7 @@ import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 import myTool from "./tools/my-tool";
 
-// Optional: require payment per A2A request
-export const accepts: Accepts = {
-  scheme: "exact",
-  price: "$0.005",
-};
+export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
 
 export default new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
@@ -126,7 +141,47 @@ export default new ToolLoopAgent({
 });
 ```
 
-### 5. Run the dev server
+### 6. Environment variables (`.env` files)
+
+Environment variables are loaded in the same priority order as Next.js:
+
+1. `.env.<NODE_ENV>.local` (highest priority; not loaded when `NODE_ENV=test`)
+2. `.env.local`
+3. `.env.<NODE_ENV>` (e.g. `.env.production`, `.env.development`)
+4. `.env`
+
+Common variables:
+
+| Variable               | Description                                                             |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `X402_PAY_TO`          | Default EVM address to receive payments                                 |
+| `X402_NETWORK`         | Default payment network (e.g. `eip155:8453`)                            |
+| `X402_FACILITATOR_URL` | Custom facilitator URL (default: `https://x402.agently.to/facilitator`) |
+| `OPENAI_API_KEY`       | OpenAI API key                                                          |
+
+### 7. Agent icon (`app/icon.png`)
+
+Place an icon file at `app/icon.png` (also accepts `.svg`, `.jpeg`, `.jpg`). During `aixyz build` it is:
+
+- Copied to the output as `icon.png`
+- Converted to a `favicon.ico` (32×32) and placed in `public/`
+
+No configuration needed — the build step auto-detects and processes the icon.
+
+### 8. Custom facilitator (`app/accepts.ts`)
+
+By default, aixyz uses `https://x402.agently.to/facilitator` to verify payments. To use a different
+facilitator, create `app/accepts.ts` and export a `facilitator`:
+
+```ts
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```
+
+### 9. Run the dev server
 
 ```bash
 bun run dev      # aixyz dev — starts at http://localhost:3000 with hot reload
@@ -141,9 +196,10 @@ Endpoints served automatically:
 | `/agent`                       | A2A      | JSON-RPC, x402 payment gate   |
 | `/mcp`                         | MCP      | Tool sharing with MCP clients |
 
-### 6. (Optional) Custom server (`app/server.ts`)
+### 10. (Optional) Custom server (`app/server.ts`)
 
-For full control, create `app/server.ts`. It takes precedence over auto-generation:
+For full control, create `app/server.ts`. It takes precedence over auto-generation.
+The `accepts` field in `mcp.register` is optional — omit it to expose the tool without payment gating:
 
 ```ts
 import { AixyzServer } from "aixyz/server";
@@ -161,6 +217,7 @@ useA2A(server, agent);
 const mcp = new AixyzMCP(server);
 await mcp.register("myTool", {
   default: myTool,
+  // accepts is optional — omit to expose without payment
   accepts: { scheme: "exact", price: "$0.001" },
 });
 await mcp.connect();
@@ -168,7 +225,7 @@ await mcp.connect();
 export default server;
 ```
 
-### 7. Build and deploy to Vercel
+### 11. Build and deploy to Vercel
 
 ```bash
 bun run build    # aixyz build — outputs Vercel Build Output API v3 to .vercel/output/
@@ -177,7 +234,7 @@ vercel deploy
 
 ## Examples
 
-Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`.
+Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`, `examples/agent-byo-facilitator`.
 
 ## Common Edge Cases
 
