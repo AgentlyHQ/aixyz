@@ -74,8 +74,6 @@ const config: AixyzConfig = {
 export default config;
 ```
 
-See `references/config.md` for all config fields.
-
 ### 3. Write a tool (`app/tools/<name>.ts`)
 
 Each file in `app/tools/` exports a Vercel AI SDK `tool` as its default export, plus an optional
@@ -179,10 +177,7 @@ vercel deploy
 
 ## Examples
 
-- Minimal auto-server agent: see `assets/agent.ts`
-- Tool with x402 payment: see `assets/tool.ts`
-- Full `aixyz.config.ts`: see `assets/aixyz.config.ts`
-- Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`
+Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`.
 
 ## Common Edge Cases
 
