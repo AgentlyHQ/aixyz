@@ -2,6 +2,7 @@ import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
+import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
 import chalk from "chalk";
 
@@ -14,8 +15,9 @@ export async function build(options: BuildOptions = {}): Promise<void> {
   loadEnvConfig(cwd, false);
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
-  // Determine output target: explicit flag takes precedence, then auto-detect VERCEL env
-  const target = options.output ?? (process.env.VERCEL === "1" ? "vercel" : "standalone");
+  // Determine output target: explicit CLI flag takes precedence, then config file, then auto-detect VERCEL env
+  const config = getAixyzConfig();
+  const target = options.output ?? config.build?.output ?? (process.env.VERCEL === "1" ? "vercel" : "standalone");
 
   if (target === "vercel") {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Vercel") + "...");
