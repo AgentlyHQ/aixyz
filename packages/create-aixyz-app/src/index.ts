@@ -162,17 +162,6 @@ try {
   s.stop("Failed to install dependencies. You can run `bun install` manually.");
 }
 
-// Initialize git
-s.start("Initializing git...");
-try {
-  execSync("git init", { cwd: targetDir, stdio: "ignore" });
-  execSync("git add -A", { cwd: targetDir, stdio: "ignore" });
-  execSync('git commit -m "Initial commit from create-aixyz-app"', { cwd: targetDir, stdio: "ignore" });
-  s.stop("Git initialized.");
-} catch {
-  s.stop("Failed to initialize git. You can run `git init` manually.");
-}
-
 // Show warning if not using Bun
 if (packageManager !== "bun" && packageManager !== "unknown") {
   p.log.warn("");
