@@ -87,8 +87,8 @@ jobs:
               dir=$(dirname "$pkg")
               echo "Publishing from $dir"
               cd "$dir"
-              TARBALL=$(bun pm pack --quiet)
-              npm publish "$TARBALL" --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
+              bun pm pack --quiet --filename packages/$pkg/packed.tgz
+              npm publish packed.tgz --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
               cd - > /dev/null
             fi
           done
