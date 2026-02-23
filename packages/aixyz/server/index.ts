@@ -4,13 +4,12 @@ import { FacilitatorClient, x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware, PaymentRequirements } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { z } from "zod";
-import { AcceptsX402 } from "../accepts";
-import { getFacilitatorClient } from "../facilitator";
+import { type AcceptsX402, facilitator as defaultFacilitator } from "../accepts";
 
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
 export class AixyzServer extends x402ResourceServer {
   constructor(
-    facilitator: FacilitatorClient = getFacilitatorClient(),
+    facilitator: FacilitatorClient = defaultFacilitator,
     public config = getAixyzConfig(),
     public express: initExpress.Express = initExpress(),
   ) {
