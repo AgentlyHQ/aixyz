@@ -61,22 +61,8 @@ jobs:
       - name: Set version and resolve workspace dependencies
         run: |
           VERSION="${{ steps.info.outputs.version }}"
-          for pkg in packages/*/package.json; do
-            if [ -f "$pkg" ]; then
-              # Skip private packages
-              if jq -e '.private == true' "$pkg" > /dev/null 2>&1; then
-                echo "Skipping private package: $pkg"
-                continue
-              fi
-              # Set version and replace workspace:* with the actual version
-              jq --arg v "$VERSION" '
-                .version = $v |
-                (.dependencies // {}) |= with_entries(if .value == "workspace:*" then .value = $v else . end) |
-                (.devDependencies // {}) |= with_entries(if .value == "workspace:*" then .value = $v else . end)
-              ' "$pkg" > tmp.json && mv tmp.json "$pkg"
-              echo "✓ $(jq -r .name "$pkg")@$VERSION"
-            fi
-          done
+          npm version $VERSION --workspaces --no-git-tag-version
+          sed -i 's/"workspace:\*"/"'"$VERSION"'"/g' packages/*/package.json
 
       - name: Publish all packages
         run: npm publish --workspaces --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
