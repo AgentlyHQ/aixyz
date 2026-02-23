@@ -9,7 +9,7 @@ import {
 } from "@a2a-js/sdk/server";
 import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
-import { getAixyzConfig } from "../../config";
+import { getAixyzConfigRuntime, getAixyzConfig } from "../../config";
 import { AixyzServer } from "../index";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import { Accepts } from "../../accepts";
@@ -63,7 +63,7 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
 }
 
 export function getAgentCard(): AgentCard {
-  const config = getAixyzConfig();
+  const config = getAixyzConfigRuntime();
   return {
     name: config.name,
     description: config.description,

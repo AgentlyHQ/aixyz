@@ -33,7 +33,7 @@ export type AixyzConfig = {
      */
     output?: "standalone" | "vercel";
   };
-  skills?: GetAixyzConfig["skills"];
+  skills?: InferredAixyzConfig["skills"];
 };
 
 const NetworkSchema = z.custom<Network>((val) => {
@@ -87,19 +87,21 @@ const AixyzConfigSchema = z.object({
     .default([]),
 });
 
+type InferredAixyzConfig = z.infer<typeof AixyzConfigSchema>;
+
 /**
+ * Subset of `AixyzConfig` that is expose and materialized at runtime.
+ *
  * This is the materialized config object that is cached for performance.
  * It is the result of parsing and validating the user's `aixyz.config.ts` file,
  * with environment variables loaded and applied.
  */
-export type GetAixyzConfig = z.infer<typeof AixyzConfigSchema>;
-
-/**
- * Subset of `AixyzConfig` that is safe to expose at runtime.
- * Only non-sensitive fields are included.
- */
 export type AixyzConfigRuntime = {
   name: AixyzConfig["name"];
+  description: AixyzConfig["description"];
+  version: AixyzConfig["version"];
+  url: AixyzConfig["url"];
+  skills: NonNullable<AixyzConfig["skills"]>;
 };
 
 /**
@@ -115,8 +117,11 @@ export type AixyzConfigRuntime = {
  *
  * In production:
  * This is a materialized config object that is cached for performance.
+ *
+ * @deprecated Use `getAixyzConfigRuntime()` instead, which is designed for runtime use.
+ * This will be deprecated in the next major version—when we materialize the config for downstream.
  */
-export function getAixyzConfig(): GetAixyzConfig {
+export function getAixyzConfig(): InferredAixyzConfig {
   const cwd = process.cwd();
   const configPath = resolve(cwd, "aixyz.config.ts");
   const mod = require(configPath);
@@ -131,7 +136,7 @@ export function getAixyzConfig(): GetAixyzConfig {
     throw new Error(`aixyz.config.ts: ${parsedConfig.error}`);
   }
 
-  return parsedConfig.data as GetAixyzConfig;
+  return parsedConfig.data as InferredAixyzConfig;
 }
 
 /**
@@ -140,6 +145,12 @@ export function getAixyzConfig(): GetAixyzConfig {
  * this function is designed to be available in the deployed runtime bundle.
  */
 export function getAixyzConfigRuntime(): AixyzConfigRuntime {
-  const { name } = getAixyzConfig();
-  return { name };
+  const config = getAixyzConfig();
+  return {
+    name: config.name,
+    description: config.description,
+    version: config.version,
+    url: config.url,
+    skills: config.skills,
+  };
 }
