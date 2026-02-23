@@ -61,8 +61,8 @@ jobs:
       - name: Set version and resolve workspace dependencies
         run: |
           VERSION="${{ steps.info.outputs.version }}"
-          npm version $VERSION --workspaces --no-git-tag-version
           sed -i 's/"workspace:\*"/"'"$VERSION"'"/g' packages/*/package.json
+          npm version $VERSION --workspaces --no-git-tag-version
 
       - name: Publish all packages
         run: npm publish --workspaces --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
