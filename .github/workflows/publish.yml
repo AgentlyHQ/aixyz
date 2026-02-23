@@ -58,8 +58,9 @@ jobs:
       - name: Lint all packages
         run: bun run lint
 
-      - name: Set version for all packages
+      - name: Set version and resolve workspace dependencies
         run: |
+          VERSION="${{ steps.info.outputs.version }}"
           for pkg in packages/*/package.json; do
             if [ -f "$pkg" ]; then
               # Skip private packages
@@ -67,28 +68,15 @@ jobs:
                 echo "Skipping private package: $pkg"
                 continue
               fi
-              dir=$(dirname "$pkg")
-              echo "Setting version ${{ steps.info.outputs.version }} in $dir"
-              cd "$dir"
-              bun pm version ${{ steps.info.outputs.version }} --no-git-tag-version
-              cd - > /dev/null
+              # Set version and replace workspace:* with the actual version
+              jq --arg v "$VERSION" '
+                .version = $v |
+                (.dependencies // {}) |= with_entries(if .value == "workspace:*" then .value = $v else . end) |
+                (.devDependencies // {}) |= with_entries(if .value == "workspace:*" then .value = $v else . end)
+              ' "$pkg" > tmp.json && mv tmp.json "$pkg"
+              echo "✓ $(jq -r .name "$pkg")@$VERSION"
             fi
           done
 
       - name: Publish all packages
-        run: |
-          for pkg in packages/*/package.json; do
-            if [ -f "$pkg" ]; then
-              # Skip private packages
-              if jq -e '.private == true' "$pkg" > /dev/null 2>&1; then
-                echo "Skipping private package: $pkg"
-                continue
-              fi
-              dir=$(dirname "$pkg")
-              echo "Publishing from $dir"
-              cd "$dir"
-              bun pm pack --filename $dir/packed.tgz
-              npm publish packed.tgz --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
-              cd - > /dev/null
-            fi
-          done
+        run: npm publish --workspaces --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance

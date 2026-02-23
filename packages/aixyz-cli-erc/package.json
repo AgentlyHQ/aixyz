@@ -1,6 +1,7 @@
 {
   "name": "@aixyz/cli-erc",
   "version": "0.0.0",
+  "private": true,
   "description": "Payment-native SDK for AI Agent",
   "keywords": [
     "ai",
