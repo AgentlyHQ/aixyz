@@ -1,0 +1,33 @@
+{
+  "name": "@aixyz/cli-erc",
+  "version": "0.0.0",
+  "description": "Payment-native SDK for AI Agent",
+  "keywords": [
+    "ai",
+    "payments",
+    "agent",
+    "aixyz"
+  ],
+  "homepage": "https://ai-xyz.dev",
+  "bugs": "https://github.com/AgentlyHQ/aixyz/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentlyHQ/aixyz.git"
+  },
+  "license": "MIT",
+  "author": "AgentlyHQ",
+  "type": "module",
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@aixyz/erc-8004": "workspace:*",
+    "@inquirer/prompts": "^7.0.0",
+    "boxen": "^8.0.0",
+    "chalk": "^5.0.0",
+    "commander": "^13.0.0",
+    "ethers": "^6.16.0",
+    "viem": "^2.46.2"
+  },
+  "devDependencies": {}
+}
