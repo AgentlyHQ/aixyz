@@ -19,10 +19,12 @@
   "type": "commonjs",
   "exports": {
     ".": {
+      "bun": "./src/index.ts",
       "require": "./dist/src/index.js",
       "default": "./dist/src/index.js"
     },
     "./*": {
+      "bun": "./src/*.ts",
       "require": "./dist/src/*.js",
       "default": "./dist/src/*.js"
     }
