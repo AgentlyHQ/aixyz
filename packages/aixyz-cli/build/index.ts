@@ -6,22 +6,22 @@ import { loadEnvConfig } from "@next/env";
 import chalk from "chalk";
 
 interface BuildOptions {
-  vercel?: boolean;
+  output?: string;
 }
 
 export async function build(options: BuildOptions = {}): Promise<void> {
-  // Auto-detect Vercel environment
-  const isVercel = options.vercel || process.env.VERCEL === "1";
-
   const cwd = process.cwd();
   loadEnvConfig(cwd, false);
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
-  if (isVercel) {
+  // Determine output target: explicit flag takes precedence, then auto-detect VERCEL env
+  const target = options.output ?? (process.env.VERCEL === "1" ? "vercel" : "standalone");
+
+  if (target === "vercel") {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Vercel") + "...");
     await buildVercel(entrypoint);
   } else {
-    console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Bun Runtime") + "...");
+    console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Standalone") + "...");
     await buildBun(entrypoint);
   }
 }

@@ -28,17 +28,17 @@ program
 program
   .command("build")
   .description("Build the aixyz agent")
-  .option("--vercel", "Build for Vercel deployment with serverless function output")
+  .option("--output <type>", "Output format: 'standalone' or 'vercel'")
   .addHelpText(
     "after",
     `
 Details:
   Bundles your aixyz agent for deployment.
 
-  Default behavior:
-    Bundles into a single executable file for Bun Runtime at ./.aixyz/output/server.js
+  Default behavior (auto-detected):
+    Bundles into a single executable file for Standalone at ./.aixyz/output/server.js
 
-  With --vercel flag or VERCEL=1 env:
+  With --output vercel or VERCEL=1 env:
     Generates Vercel Build Output API v3 structure at .vercel/output/
     (Automatically detected when deploying to Vercel)
 
@@ -53,9 +53,10 @@ Prerequisites:
   - An entrypoint at app/server.ts, or app/agent.ts + app/tools/ for auto-generation
 
 Examples:
-  $ aixyz build                # Build for Bun Runtime (default)
-  $ aixyz build --vercel       # Build for Vercel deployment
-  $ VERCEL=1 aixyz build       # Auto-detected Vercel build`,
+  $ aixyz build                         # Build standalone (default)
+  $ aixyz build --output standalone     # Build standalone explicitly
+  $ aixyz build --output vercel         # Build for Vercel deployment
+  $ VERCEL=1 aixyz build                # Auto-detected Vercel build`,
   )
   .action(handleAction(build));
 
