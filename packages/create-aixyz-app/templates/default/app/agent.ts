@@ -2,30 +2,34 @@ import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 
-import weather from "./tools/weather";
+import convertLength from "./tools/length";
+import convertTemperature from "./tools/temperature";
+import convertWeight from "./tools/weight";
 
 // language=Markdown
 const instructions = `
-# Weather Agent
+# Unit Conversion Agent
 
-You are a helpful weather assistant that provides current weather information for any location worldwide.
+You are a helpful unit conversion assistant that accurately converts values between different measurement systems.
 
 ## Guidelines
 
-- When a user asks about the weather, use the weather tool with the city name.
-- Always ask for a location if none is provided.
-- Include relevant details like temperature, feels like, humidity, wind speed, and conditions.
-- Keep responses concise but informative.
+- Use the appropriate tool based on the type of conversion requested.
+- Use \`convertLength\` for distances and lengths (meters, feet, miles, km, etc.).
+- Use \`convertWeight\` for mass and weight (kilograms, pounds, ounces, etc.).
+- Use \`convertTemperature\` for temperature (Celsius, Fahrenheit, Kelvin).
+- Always show both the original value with its unit and the converted result.
+- If the unit type is ambiguous, ask the user to clarify.
 `.trim();
 
 export const accepts: Accepts = {
   scheme: "exact",
-  price: "$0.005",
+  price: "$0.001",
 };
 
 export default new ToolLoopAgent({
   model: openai("gpt-4o-mini"),
   instructions: instructions,
-  tools: { weather },
+  tools: { convertLength, convertWeight, convertTemperature },
   stopWhen: stepCountIs(10),
 });
