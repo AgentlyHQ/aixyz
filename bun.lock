@@ -149,11 +149,12 @@
         "boxen": "^8.0.0",
         "chalk": "^5.0.0",
         "commander": "^14.0.3",
+        "sharp": "^0.34.5",
       },
     },
     "packages/aixyz-cli-erc": {
       "name": "@aixyz/cli-erc",
-      "version": "0.0.1",
+      "version": "0.0.0",
       "bin": {
         "agently-cli": "dist/index.js",
       },

@@ -2,6 +2,7 @@ import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
+import { findIconFile, copyAgentIcon, generateFavicon } from "./icons";
 import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
 import chalk from "chalk";
@@ -65,9 +66,10 @@ async function buildBun(entrypoint: string): Promise<void> {
     console.log("Copied public/ →", destPublicDir);
   }
 
-  const iconFile = resolve(cwd, "app/icon.png");
-  if (existsSync(iconFile)) {
-    cpSync(iconFile, resolve(outputDir, "icon.png"));
+  const iconFile = findIconFile(resolve(cwd, "app"));
+  if (iconFile) {
+    await copyAgentIcon(iconFile, resolve(outputDir, "icon.png"));
+    await generateFavicon(iconFile, resolve(outputDir, "public/favicon.ico"));
   }
 
   // Log summary
@@ -151,11 +153,12 @@ async function buildVercel(entrypoint: string): Promise<void> {
     console.log("Copied public/ →", staticDir);
   }
 
-  const iconFile = resolve(cwd, "app/icon.png");
-  if (existsSync(iconFile)) {
+  const iconFile = findIconFile(resolve(cwd, "app"));
+  if (iconFile) {
     mkdirSync(staticDir, { recursive: true });
-    cpSync(iconFile, resolve(staticDir, "icon.png"));
-    console.log("Copied app/icon.png →", staticDir);
+    await copyAgentIcon(iconFile, resolve(staticDir, "icon.png"));
+    await generateFavicon(iconFile, resolve(staticDir, "favicon.ico"));
+    console.log("Copied app/icon →", staticDir);
   }
 
   // Log summary
