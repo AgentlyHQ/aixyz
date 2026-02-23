@@ -1,4 +1,4 @@
-# aixyz-cli
+# @aixyz/cli
 
 [![npm](https://img.shields.io/npm/v/aixyz-cli)](https://www.npmjs.com/package/aixyz-cli)
 
