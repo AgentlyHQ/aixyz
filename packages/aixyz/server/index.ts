@@ -58,7 +58,7 @@ export class AixyzServer extends x402ResourceServer {
 
   // TODO(@fuxingloh): add back x402 Bazaar compatibility
 
-  private withAccepts(accepts: AcceptsX402) {
+  private withSchemeExact(accepts: AcceptsX402) {
     const schema = z.object({
       scheme: z.literal("exact"),
       price: z.string(),
@@ -73,12 +73,12 @@ export class AixyzServer extends x402ResourceServer {
     return schema.parse(accepts);
   }
 
-  withX402(route: `${"GET" | "POST"} /${string}`, accepts: AcceptsX402) {
+  withX402Exact(route: `${"GET" | "POST"} /${string}`, accepts: AcceptsX402) {
     this.express.use(
       paymentMiddleware(
         {
           [route]: {
-            accepts: this.withAccepts(accepts),
+            accepts: this.withSchemeExact(accepts),
             mimeType: "application/json",
             description: `A2A Payment: ${this.config.description}`,
           },
@@ -92,6 +92,6 @@ export class AixyzServer extends x402ResourceServer {
   }
 
   async withPaymentRequirements(accepts: AcceptsX402): Promise<PaymentRequirements[]> {
-    return this.buildPaymentRequirements(this.withAccepts(accepts));
+    return this.buildPaymentRequirements(this.withSchemeExact(accepts));
   }
 }

@@ -55,6 +55,7 @@ If a user asks for something outside your capabilities, politely explain that yo
 `.trim();
 
 export const accepts = {
+  scheme: "exact",
   price: "$0.01",
 };
 

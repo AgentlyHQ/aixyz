@@ -9,10 +9,10 @@ import {
 } from "@a2a-js/sdk/server";
 import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
-import { getAixyzConfigRuntime, getAixyzConfig } from "../../config";
+import { getAixyzConfigRuntime } from "../../config";
 import { AixyzServer } from "../index";
 import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
-import { Accepts } from "../../accepts";
+import { Accepts, AcceptsScheme } from "../../accepts";
 
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
   constructor(private agent: ToolLoopAgent<never, TOOLS>) {}
@@ -88,7 +88,10 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
   },
   taskStore: TaskStore = new InMemoryTaskStore(),
 ): void {
-  if (!exports.accepts) {
+  if (exports.accepts) {
+    // TODO(@fuxingloh): validation should be done at build stage
+    AcceptsScheme.parse(exports.accepts);
+  } else {
     // TODO(@fuxingloh): right now we just don't register the agent if accepts is not provided,
     //  but it might be a better idea to do it in aixyz-cli (aixyz-pack).
     return;
@@ -105,7 +108,7 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
   );
 
   if (exports.accepts.scheme === "exact") {
-    app.withX402("POST /agent", exports.accepts);
+    app.withX402Exact("POST /agent", exports.accepts);
   }
 
   app.express.use(
