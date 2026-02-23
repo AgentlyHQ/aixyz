@@ -1,153 +1,153 @@
-# AGENTS
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project overview
 
-- Monorepo for aixyz - a framework for bundling AI agents from any framework into deployable services
-- Managed with Bun workspaces and Turbo
-- Runtime: Bun 1.3.9+
-- Supports A2A, MCP, x402 payments, and ERC-8004 identity protocols
-- TypeScript-based with strict type safety
+Monorepo for aixyz — a framework for bundling AI agents from any framework into deployable services with A2A, MCP, x402 payments, and ERC-8004 identity protocols. Managed with Bun workspaces and Turbo. Runtime: Bun 1.3.9+.
+
+## Commands
+
+```bash
+bun install                          # Setup
+bun run build                        # Build all packages (turbo run build)
+bun run test                         # Test all packages (turbo run test)
+bun run lint                         # Lint all packages with --fix
+bun run format                       # Format with Prettier (printWidth: 120)
+bun run clean                        # Clean build artifacts
+```
+
+### Package-specific commands
+
+```bash
+bun run build --filter=aixyz         # Build a specific package
+bun run test --filter=@aixyz/erc-8004  # Test a specific package
+```
+
+Or navigate directly:
+
+```bash
+cd packages/aixyz && bun run build
+cd examples/agent-travel && bun run dev
+```
+
+### Running a single test
+
+Tests use Bun's built-in test runner (`.test.ts` files):
+
+```bash
+bun test packages/aixyz-erc-8004/src/schemas/registration.test.ts
+```
+
+### Example agent dev/build
+
+```bash
+cd examples/agent-travel
+bun run dev    # → aixyz dev (hot reload, watches app/ and aixyz.config.ts)
+bun run build  # → aixyz build (bundles for deployment)
+```
 
 ## Repo layout
 
 ### Packages (`packages/*`)
 
-Core packages:
-
-- **`aixyz`** - Main framework package with server adapters, request handlers, and protocol implementations
-- **`aixyz-cli`** - CLI for building and deploying agents (`dev`, `build` commands)
-- **`aixyz-config`** - Configuration management using Zod schemas
-- **`aixyz-stripe`** - Stripe payment adapter for aixyz agents
-- **`create-aixyz-app`** - Project scaffolding tool (used via `pnpm create aixyz-app`)
-- **`erc-8004`** - ERC-8004 contract ABIs, addresses, and Solidity sources
-- **`agently-cli`** - CLI for ERC-8004 registry operations (`register`, `set-agent-uri`)
+| Package            | npm name           | Description                                                                     |
+| ------------------ | ------------------ | ------------------------------------------------------------------------------- |
+| `aixyz`            | `aixyz`            | Main framework: server, adapters (A2A, MCP), x402 integration, Express-based    |
+| `aixyz-cli`        | `@aixyz/cli`       | CLI commands: `dev` (hot reload server), `build` (bundle for Vercel/standalone) |
+| `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files                |
+| `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                             |
+| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                                   |
+| `aixyz-erc-8004`   | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, addresses, Zod schemas                                  |
+| `aixyz-cli-erc`    | `@aixyz/cli-erc`   | CLI for ERC-8004 registry ops (`register`, `set-agent-uri`)                     |
 
 ### Examples (`examples/*`)
 
-Working example agents demonstrating different use cases:
-
-- **`agent-boilerplate`** - Minimal starter template
-- **`agent-byo-facilitator`** - Custom x402 facilitator via `app/accepts.ts`
-- **`agent-chainlink`** - Chainlink data feeds integration
-- **`agent-job-hunter`** - Job search agent
-- **`agent-price-oracle`** - Cryptocurrency price oracle using CoinGecko
-- **`agent-travel`** - Flight search with Stripe payment integration
-- **`agent-with-custom-server`** - Custom server setup example
-
-### Root config
-
-- `package.json` - Workspace configuration and scripts
-- `turbo.json` - Turborepo build pipeline configuration
-- `.devcontainer/` - GitHub Codespaces configuration with Bun 1.3.9
-
-## Setup
-
-```bash
-bun install
-```
-
-## Common commands (root)
-
-- **Dev**: `bun run dev` - Start all packages in dev mode (Turbo: `turbo run dev`)
-- **Build**: `bun run build` - Build all packages
-- **Test**: `bun run test` - Run tests across all packages
-- **Lint**: `bun run lint` - Auto-fix linting issues
-- **Format**: `bun run format` - Format code with Prettier (printWidth: 120)
-- **Clean**: `bun run clean` - Clean build artifacts
-
-## Working with packages
-
-### For specific packages
-
-Use Turbo filters for package-specific tasks:
-
-```bash
-# Filter specific packages
-bun run dev --filter=aixyz
-bun run build --filter=@examples/agent-travel
-
-# Or navigate to the package directly
-cd packages/aixyz && bun run build
-cd examples/agent-travel && bun run dev
-```
-
-### Building example agents
-
-Example agents use `aixyz` CLI commands:
-
-```bash
-cd examples/agent-travel
-bun run dev    # Run: aixyz dev
-bun run build  # Run: aixyz build
-```
-
-The `aixyz build` command:
-
-- Loads `aixyz.config.ts`
-- Detects entrypoint (`app/agent.ts` or `app/server.ts`)
-- Bundles with `Bun.build()` targeting Node.js
-- Outputs Vercel Build Output API v3 structure
-
-## Agent structure
-
-Example agents follow this structure:
+Working agents demonstrating patterns. All share the same structure:
 
 ```
 examples/agent-*/
-  aixyz.config.ts     # Agent metadata and configuration
+  aixyz.config.ts     # Agent metadata and config (required)
   app/
-    accepts.ts        # Optional: custom x402 facilitator (export const facilitator)
-    agent.ts          # Agent definition (framework-specific)
-    server.ts         # Optional: custom server setup
-    tools/            # Tool implementations
-    icon.png          # Agent icon
-  package.json
-  tsconfig.json
-  vercel.json         # Vercel deployment config
+    agent.ts          # Agent definition (required if no server.ts)
+    server.ts         # Custom server (optional, overrides auto-generation)
+    accepts.ts        # Custom x402 facilitator (optional)
+    tools/*.ts        # Tool implementations (files starting with _ ignored)
+    icon.png          # Agent icon (served as static asset)
+  vercel.json
 ```
 
-## CLI tools
+### Other
 
-### aixyz-cli
+- `website/` — Nextra-based documentation site (Next.js + Nextra)
+- `CLAUDE.md` symlinks to `AGENTS.md`
 
-Development and deployment CLI:
+## Architecture
 
-```bash
-aixyz dev           # Start local dev server with hot reload
-aixyz build         # Bundle for Vercel deployment
+### How the build pipeline works (`@aixyz/cli`)
+
+The `aixyz build` command in `packages/aixyz-cli/build/index.ts`:
+
+1. Loads config from `aixyz.config.ts` via `@aixyz/config`
+2. Uses two Bun build plugins:
+   - **`AixyzConfigPlugin`** — Materializes resolved config into the bundle (replaces `aixyz/config` imports)
+   - **`AixyzServerPlugin`** — Auto-generates `server.ts` from `app/` structure if no `app/server.ts` exists. Scans
+     `app/agent.ts` and `app/tools/*.ts`, wires up A2A + MCP + x402 middleware
+3. Bundles with `Bun.build()` targeting Node.js
+4. Output format:
+   - **Vercel** (when `VERCEL=1` or `--output vercel`): `.vercel/output/` Build Output API v3
+   - **Standalone** (default): `.aixyz/output/server.js`
+
+The `aixyz dev` command spawns a Bun worker process with file watching on `app/` and `aixyz.config.ts` (100ms debounce).
+
+### Server class hierarchy
+
+`AixyzServer` extends `x402ResourceServer` (from `@x402/express`), which wraps Express 5. Key methods:
+
+- `withX402Exact()` — Register payment-gated routes
+- `unstable_withIndexPage()` — Human-readable agent info page
+
+### Protocol adapters (`packages/aixyz/server/adapters/`)
+
+- **`a2a.ts`** — `useA2A(server, agent)`: Generates agent card at `/.well-known/agent-card.json`, JSON-RPC endpoint at
+  `/agent`
+- **`mcp.ts`** — `AixyzMCP`: Exposes tools at `/mcp` via `StreamableHTTPServerTransport`
+
+### Config loading (`@aixyz/config`)
+
+- `getAixyzConfig()` — Full config for build-time use
+- `getAixyzConfigRuntime()` — Subset safe for runtime bundles
+- Environment files loaded in Next.js order: `.env`, `.env.local`, `.env.$(NODE_ENV)`, `.env.$(NODE_ENV).local`
+
+### Agent executor pattern
+
+Agents are wrapped into `AgentExecutor` interface. The primary adapter is
+`ToolLoopAgentExecutor` for Vercel AI SDK agents (imported from `ai`). Agents export a default `ToolLoopAgent` + an
+`accepts` object for payment config.
+
+### Payment model
+
+Each agent and tool declares an `accepts` export controlling x402 payment:
+
+```ts
+export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
 ```
 
-### agently-cli
+Agents/tools without `accepts` are not registered on payment-gated endpoints.
 
-ERC-8004 registry operations:
+## Dependency graph
 
-```bash
-agently-cli register        # Register new agent on-chain
-agently-cli set-agent-uri   # Update agent metadata URI
 ```
-
-## Adapters
-
-Framework adapters wrap agents into the `AgentExecutor` interface:
-
-- **Vercel AI SDK**: `aixyz/server/adapters/ai` (ToolLoopAgentExecutor)
-- **LangChain**: `aixyz/server/adapters/langchain` (LangChainAgentExecutor)
-- **Mastra**: `aixyz/server/adapters/mastra` (MastraAgentExecutor)
-
-Note: Only A2A and MCP adapters are currently in the codebase (`server/adapters/a2a.ts`, `server/adapters/mcp.ts`). Other framework adapters are referenced in documentation but may be in development.
-
-## Protocols
-
-- **A2A**: Agent card generation and JSON-RPC endpoint
-- **MCP**: Tool sharing with MCP-compatible clients
-- **x402**: HTTP 402 micropayments for API access
-- **ERC-8004**: On-chain agent identity verification
+aixyz → @aixyz/cli → @aixyz/config
+     → @a2a-js/sdk, @modelcontextprotocol/sdk, @x402/*, express, zod
+     → ai (optional peer dep, Vercel AI SDK v6)
+```
 
 ## Working conventions
 
-- Use `bun run <script> --filter=<package>` for package-specific tasks (e.g., `bun run build --filter=aixyz`)
-- Keep edits consistent with Prettier formatting (printWidth: 120)
+- Packages ship raw `.ts` files (`"files": ["**/*.ts"]`), not compiled JS (except `erc-8004` which compiles to CJS)
+- Prettier: printWidth 120, plugin `prettier-plugin-packagejson`
+- Pre-commit hook via Husky runs `lint-staged` (Prettier on staged files)
 - Examples use `app/` directory structure (not `src/`)
-- All packages use TypeScript with strict type checking
-- Follow existing patterns for new examples or packages
-- Test changes in example agents to verify framework functionality
+- CI runs: build, lint, test, format check (`.github/workflows/ci.yml`)
+- Publishing: triggered by GitHub releases, uses npm OIDC provenance
