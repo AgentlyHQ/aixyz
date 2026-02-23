@@ -26,6 +26,14 @@ jobs:
 
       - run: bun turbo run lint
 
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+
+      - run: bun turbo run test
+
   format_prettier:
     name: Format [prettier]
     runs-on: ubuntu-latest
