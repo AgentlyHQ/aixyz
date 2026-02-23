@@ -45,8 +45,6 @@ my-agent/
   vercel.json
 ```
 
-To scaffold manually or non-interactively, see `scripts/scaffold.sh`.
-
 ### 2. Configure the agent (`aixyz.config.ts`)
 
 Every agent needs a config file at the project root. Declare identity, payment address, and skills:
@@ -181,7 +179,6 @@ vercel deploy
 
 ## Examples
 
-- Scaffold a minimal agent: run `scripts/scaffold.sh my-agent`
 - Minimal auto-server agent: see `assets/agent.ts`
 - Tool with x402 payment: see `assets/tool.ts`
 - Full `aixyz.config.ts`: see `assets/aixyz.config.ts`
