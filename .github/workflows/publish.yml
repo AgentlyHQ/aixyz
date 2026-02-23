@@ -87,7 +87,7 @@ jobs:
               dir=$(dirname "$pkg")
               echo "Publishing from $dir"
               cd "$dir"
-              bun pm pack --quiet --filename packages/$pkg/packed.tgz
+              bun pm pack --filename $dir/packed.tgz
               npm publish packed.tgz --access public --tag ${{ steps.info.outputs.dist_tag }} --provenance
               cd - > /dev/null
             fi
