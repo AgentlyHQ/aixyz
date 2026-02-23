@@ -1,20 +1,15 @@
 {
   "name": "aixyz",
   "version": "0.0.0",
-  "description": "AI agent framework for building autonomous agents with X402 and ERC-8004 support.",
+  "description": "Payment-native SDK for AI Agent",
   "keywords": [
     "ai",
+    "payments",
     "agent",
-    "a2a",
-    "mcp",
-    "x402",
-    "erc-8004",
-    "framework"
+    "aixyz"
   ],
   "homepage": "https://ai-xyz.dev",
-  "bugs": {
-    "url": "https://github.com/AgentlyHQ/aixyz/issues"
-  },
+  "bugs": "https://github.com/AgentlyHQ/aixyz/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AgentlyHQ/aixyz.git"

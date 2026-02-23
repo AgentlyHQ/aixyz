@@ -1,20 +1,15 @@
 {
   "name": "@aixyz/config",
   "version": "0.0.0",
-  "description": "",
+  "description": "Payment-native SDK for AI Agent",
   "keywords": [
     "ai",
+    "payments",
     "agent",
-    "a2a",
-    "mcp",
-    "x402",
-    "erc-8004",
-    "framework"
+    "aixyz"
   ],
   "homepage": "https://ai-xyz.dev",
-  "bugs": {
-    "url": "https://github.com/AgentlyHQ/aixyz/issues"
-  },
+  "bugs": "https://github.com/AgentlyHQ/aixyz/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AgentlyHQ/aixyz.git"
