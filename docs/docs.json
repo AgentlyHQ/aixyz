@@ -27,6 +27,10 @@
             ]
           },
           {
+            "group": "Packages",
+            "pages": ["packages/aixyz", "packages/create-aixyz-app"]
+          },
+          {
             "group": "Config",
             "pages": ["config/aixyz-config", "config/environment-variables"]
           },
@@ -47,10 +51,6 @@
           {
             "group": "Protocols",
             "pages": ["protocols/a2a", "protocols/mcp", "protocols/x402", "protocols/erc-8004"]
-          },
-          {
-            "group": "Packages",
-            "pages": ["packages/aixyz", "packages/create-aixyz-app"]
           }
         ]
       },
