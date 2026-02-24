@@ -37,8 +37,9 @@ function useA2A<TOOLS extends ToolSet>(
 
 ## Behavior
 
-- If `exports.accepts` is defined with `scheme: "exact"`, the `/agent` endpoint is gated behind x402 payment
 - If `exports.accepts` is not defined, the agent is **not registered** — no endpoints are created
+- If `exports.accepts` has `scheme: "exact"`, the `/agent` endpoint is gated behind x402 payment
+- If `exports.accepts` has `scheme: "free"`, the `/agent` endpoint is registered without payment gating
 
 ## Example
 

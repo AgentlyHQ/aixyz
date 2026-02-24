@@ -3,7 +3,7 @@ title: "loadEnv"
 description: "Load environment variables for tests"
 ---
 
-Loads environment variables from `.env` files for test runs. Follows the same loading order as Next.js, with one exception: `.env.local` is **not loaded** during tests (use `.env.test.local` instead).
+Loads environment variables from `.env` files for test runs. Uses `@next/env` internally, following the same loading order as Next.js, with one exception: `.env.local` is **not loaded** during tests (use `.env.test.local` instead).
 
 ```typescript
 import { loadEnv } from "aixyz/test";

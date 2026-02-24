@@ -12,7 +12,11 @@ import { AixyzServer } from "aixyz/server";
 ## Constructor
 
 ```typescript
-new AixyzServer(facilitator?, config?, express?)
+new AixyzServer(
+  facilitator?: FacilitatorClient,
+  config?: AixyzConfig,
+  express?: Express
+)
 ```
 
 | Parameter     | Type                | Default                       | Description                  |
