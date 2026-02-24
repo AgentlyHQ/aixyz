@@ -1,0 +1,77 @@
+---
+title: "Configuration"
+description: "Configure agent identity, payments, and deployment with aixyz.config.ts"
+---
+
+## Config File
+
+Every aixyz project requires an `aixyz.config.ts` at the project root. This file defines your agent's identity, payment settings, and deployment options. The config is validated at build time using Zod schemas from `@aixyz/config`.
+
+```typescript
+import { defineConfig } from "aixyz/config";
+
+export default defineConfig({
+  name: "my-agent",
+  description: "A helpful AI agent",
+  version: "1.0.0",
+  skills: [
+    {
+      id: "weather",
+      name: "Weather Lookup",
+      description: "Get current weather for any city",
+    },
+  ],
+});
+```
+
+## Zod Validation
+
+The `@aixyz/config` package validates your config against Zod schemas at build time. Invalid configurations produce clear error messages with the exact field and expected type.
+
+## Environment Files
+
+Environment variables are loaded in the following order (later files override earlier ones):
+
+1. `.env` — Base environment variables
+2. `.env.local` — Local overrides (gitignored)
+3. `.env.$(NODE_ENV)` — Environment-specific (e.g., `.env.production`)
+4. `.env.$(NODE_ENV).local` — Environment-specific local overrides
+
+This follows the same loading order as Next.js.
+
+## Build-Time vs Runtime Config
+
+`@aixyz/config` exposes two functions for different contexts:
+
+| Function                  | Usage      | Description                                             |
+| ------------------------- | ---------- | ------------------------------------------------------- |
+| `getAixyzConfig()`        | Build-time | Full config including all fields for the build pipeline |
+| `getAixyzConfigRuntime()` | Runtime    | Subset safe for inclusion in runtime bundles            |
+
+The `AixyzConfigPlugin` build plugin materializes the resolved config into the bundle, replacing `aixyz/config` imports so the runtime bundle does not depend on the config file.
+
+## Payment Configuration
+
+The `accepts` export controls x402 payment gating for agents and tools:
+
+```typescript
+import type { Accepts } from "aixyz";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+```
+
+Agents and tools without an `accepts` export are registered on standard, non-payment-gated endpoints.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Commands" icon="terminal" href="/guides/cli">
+    Dev and build commands that consume this config.
+  </Card>
+  <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">
+    Deep dive into payment gating.
+  </Card>
+</CardGroup>

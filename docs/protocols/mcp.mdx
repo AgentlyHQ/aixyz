@@ -1,0 +1,62 @@
+---
+title: "MCP Protocol"
+description: "Model Context Protocol support for sharing tools with MCP clients"
+---
+
+## Overview
+
+The Model Context Protocol (MCP) allows AI clients to discover and invoke tools exposed by your agent. aixyz implements MCP via the `AixyzMCP` class, serving tools over a streamable HTTP transport.
+
+## Endpoint
+
+| Endpoint | Method | Description                                             |
+| -------- | ------ | ------------------------------------------------------- |
+| `/mcp`   | POST   | MCP tool endpoint using `StreamableHTTPServerTransport` |
+
+## Automatic Tool Registration
+
+When using the standard `app/` directory structure, all tools in `app/tools/*.ts` are automatically registered as MCP tools during the build. No additional configuration is needed.
+
+<Note>Files starting with `_` (e.g., `app/tools/_helpers.ts`) are excluded from tool registration.</Note>
+
+## Manual Setup
+
+If you're using a [custom server](/guides/custom-server), wire up MCP manually with the `AixyzMCP` class:
+
+```typescript
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import weather from "./tools/weather";
+import search from "./tools/search";
+
+const mcp = new AixyzMCP({ weather, search });
+server.use("/mcp", mcp.handler());
+```
+
+The `AixyzMCP` constructor accepts an object mapping tool names to tool definitions. Each tool defined in `app/tools/` becomes available to MCP clients.
+
+## How It Works
+
+Under the hood, `AixyzMCP` uses `StreamableHTTPServerTransport` from the `@modelcontextprotocol/sdk` to handle the MCP protocol. This transport supports:
+
+- Tool listing — clients can discover available tools and their schemas
+- Tool invocation — clients send tool calls and receive structured results
+- Streaming responses — results are streamed back over HTTP
+
+## Testing with MCP Clients
+
+Any MCP-compatible client can connect to your agent's `/mcp` endpoint. Point the client at:
+
+```
+http://localhost:3000/mcp
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    How tools are defined in the app/ directory.
+  </Card>
+  <Card title="A2A Protocol" icon="diagram-project" href="/protocols/a2a">
+    Agent discovery and communication via A2A.
+  </Card>
+</CardGroup>

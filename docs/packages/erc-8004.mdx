@@ -1,0 +1,78 @@
+---
+title: "@aixyz/erc-8004"
+description: "ERC-8004 contract ABIs, addresses, and Zod schemas"
+---
+
+## Overview
+
+The `@aixyz/erc-8004` package provides TypeScript bindings for the ERC-8004 on-chain agent identity standard. It includes contract ABIs, deployed addresses, and Zod validation schemas.
+
+<Note>
+  Unlike other packages in the monorepo, `@aixyz/erc-8004` compiles to CommonJS (CJS) for broader compatibility with
+  tooling that consumes contract ABIs.
+</Note>
+
+## Contents
+
+### Contract ABIs
+
+Typed ABIs for the ERC-8004 registry contract, ready for use with viem, ethers, or wagmi:
+
+```typescript
+import { registryAbi } from "@aixyz/erc-8004";
+```
+
+### Deployed Addresses
+
+Known contract addresses for supported networks:
+
+```typescript
+import { registryAddress } from "@aixyz/erc-8004";
+```
+
+### Zod Schemas
+
+Validation schemas for registration data and agent URIs:
+
+```typescript
+import { registrationSchema } from "@aixyz/erc-8004";
+
+const result = registrationSchema.safeParse(data);
+```
+
+## Companion CLI: `@aixyz/cli-erc`
+
+The `@aixyz/cli-erc` package provides a command-line interface for ERC-8004 registry operations:
+
+### Register an Agent
+
+```bash
+bunx @aixyz/cli-erc register \
+  --name "my-agent" \
+  --description "A helpful AI agent"
+```
+
+### Set Agent URI
+
+```bash
+bunx @aixyz/cli-erc set-agent-uri \
+  --agent-id 0x123... \
+  --uri "https://my-agent.example.com"
+```
+
+## Testing
+
+```bash
+bun run test --filter=@aixyz/erc-8004
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="ERC-8004 Protocol" icon="id-card" href="/protocols/erc-8004">
+    How ERC-8004 identity works in aixyz.
+  </Card>
+  <Card title="Packages Overview" icon="boxes-stacked" href="/packages/overview">
+    All packages in the monorepo.
+  </Card>
+</CardGroup>

@@ -1,0 +1,75 @@
+---
+title: "Examples"
+description: "Working agent examples demonstrating common patterns"
+---
+
+## Overview
+
+The `examples/` directory contains working agent implementations that demonstrate common patterns. Each example follows the standard aixyz `app/` directory structure and can be run locally with `bun run dev`.
+
+## Directory Structure
+
+All examples share the same layout:
+
+```
+examples/agent-*/
+  aixyz.config.ts       # Agent metadata and config
+  app/
+    agent.ts            # Agent definition
+    server.ts           # Custom server (optional)
+    accepts.ts          # Custom x402 facilitator (optional)
+    tools/*.ts          # Tool implementations
+    icon.png            # Agent icon
+  vercel.json
+  package.json
+```
+
+## Available Examples
+
+| Example                    | Description                                                     |
+| -------------------------- | --------------------------------------------------------------- |
+| `agent-travel`             | Travel assistant with tool-based workflows                      |
+| `agent-price-oracle`       | Price oracle agent for financial data                           |
+| `agent-job-hunter`         | Job search agent demonstrating multi-tool patterns              |
+| `agent-chainlink`          | Integration with Chainlink data feeds                           |
+| `agent-boilerplate`        | Minimal starting template                                       |
+| `agent-with-custom-server` | Custom Express server overriding auto-generation                |
+| `agent-byo-facilitator`    | Bring-your-own x402 facilitator for custom payment verification |
+| `agent-with-tests`         | Example with test suite demonstrating testing patterns          |
+
+## Running an Example
+
+```bash
+cd examples/agent-travel
+bun install
+bun run dev
+```
+
+The agent starts at `http://localhost:3000` with all protocol endpoints enabled.
+
+## Building for Deployment
+
+```bash
+cd examples/agent-travel
+bun run build
+```
+
+This produces a standalone bundle at `.aixyz/output/server.js` or Vercel output with `VERCEL=1`.
+
+## Key Patterns
+
+- **`agent-boilerplate`** — Start here for the simplest possible agent
+- **`agent-with-custom-server`** — Shows how `app/server.ts` overrides auto-generation
+- **`agent-byo-facilitator`** — Demonstrates custom x402 payment verification
+- **`agent-with-tests`** — Testing patterns for agent and tool validation
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Getting Started" icon="rocket" href="/guides/getting-started">
+    Set up your own agent from scratch.
+  </Card>
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    Understand the app/ directory convention.
+  </Card>
+</CardGroup>

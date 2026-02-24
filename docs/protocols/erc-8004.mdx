@@ -1,0 +1,70 @@
+---
+title: "ERC-8004 Identity"
+description: "On-chain agent identity using the ERC-8004 standard"
+---
+
+## Overview
+
+ERC-8004 defines an on-chain identity standard for AI agents. It allows agents to register their identity on a blockchain, providing verifiable, decentralized identity for agent-to-agent and agent-to-user interactions.
+
+aixyz supports ERC-8004 through two packages:
+
+| Package          | npm Name          | Description                                        |
+| ---------------- | ----------------- | -------------------------------------------------- |
+| `aixyz-erc-8004` | `@aixyz/erc-8004` | Contract ABIs, deployed addresses, and Zod schemas |
+| `aixyz-cli-erc`  | `@aixyz/cli-erc`  | CLI for registry operations                        |
+
+## `@aixyz/erc-8004` Package
+
+This package provides the building blocks for interacting with ERC-8004 contracts:
+
+- **Contract ABIs** — TypeScript-typed ABIs for the ERC-8004 registry contract
+- **Deployed addresses** — Known contract addresses across supported networks
+- **Zod schemas** — Validation schemas for registration data and agent URIs
+
+```typescript
+import { registryAbi, registryAddress } from "@aixyz/erc-8004";
+```
+
+## `@aixyz/cli-erc` CLI
+
+The `@aixyz/cli-erc` package provides a CLI for common ERC-8004 registry operations:
+
+### Register an Agent
+
+```bash
+bunx @aixyz/cli-erc register \
+  --name "my-agent" \
+  --description "A helpful AI agent"
+```
+
+### Set Agent URI
+
+Point your on-chain identity to your deployed agent:
+
+```bash
+bunx @aixyz/cli-erc set-agent-uri \
+  --agent-id 0x123... \
+  --uri "https://my-agent.example.com"
+```
+
+The agent URI should point to the root of your deployed agent, where the `/.well-known/agent-card.json` A2A discovery endpoint is accessible.
+
+## Integration with aixyz
+
+ERC-8004 identity complements the other protocols in aixyz:
+
+- **A2A** — The agent card can reference an on-chain identity for verification
+- **x402** — Payment gating can be tied to verified on-chain agent identities
+- **MCP** — Tool discovery backed by verifiable identity
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="A2A Protocol" icon="diagram-project" href="/protocols/a2a">
+    Agent discovery with A2A agent cards.
+  </Card>
+  <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">
+    Payment gating for agent endpoints.
+  </Card>
+</CardGroup>

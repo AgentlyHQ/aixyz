@@ -1,0 +1,93 @@
+---
+title: "aixyz"
+description: "The main framework package for building AI agent services"
+---
+
+## Overview
+
+The `aixyz` package is the core framework for building AI agent services. It provides the server, protocol adapters, payment integration, and agent execution runtime.
+
+```bash
+bun add aixyz
+```
+
+## Server
+
+`AixyzServer` extends `x402ResourceServer` from `@x402/express`, which wraps Express 5. It provides a standard Express server with built-in x402 payment gating.
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+
+const server = new AixyzServer();
+server.listen(3000);
+```
+
+## Protocol Adapters
+
+### A2A (`aixyz/server/adapters/a2a`)
+
+The `useA2A` function registers A2A endpoints on your server:
+
+```typescript
+import { useA2A } from "aixyz/server/adapters/a2a";
+
+useA2A(server, agent);
+// /.well-known/agent-card.json — Agent discovery card
+// /agent — JSON-RPC endpoint
+```
+
+### MCP (`aixyz/server/adapters/mcp`)
+
+The `AixyzMCP` class exposes tools to MCP clients:
+
+```typescript
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+
+const mcp = new AixyzMCP(tools);
+server.use("/mcp", mcp.handler());
+```
+
+## Agent Executor
+
+The `ToolLoopAgentExecutor` wraps Vercel AI SDK agents (`ai@^6`) into the `AgentExecutor` interface. It handles multi-step tool execution loops automatically.
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+
+// app/agent.ts — exports a ToolLoopAgent
+export default {
+  model: openai("gpt-4o"),
+  system: "You are a helpful assistant.",
+};
+```
+
+## x402 Integration
+
+Payment gating is built into the server via `withX402Exact()`:
+
+```typescript
+server.withX402Exact({
+  price: "$0.005",
+  route: "/agent",
+});
+```
+
+## Exports
+
+| Import Path                 | Description                     |
+| --------------------------- | ------------------------------- |
+| `aixyz/server`              | `AixyzServer` class             |
+| `aixyz/server/adapters/a2a` | `useA2A` function               |
+| `aixyz/server/adapters/mcp` | `AixyzMCP` class                |
+| `aixyz/config`              | Re-exports from `@aixyz/config` |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    Define agents and tools in the app/ directory.
+  </Card>
+  <Card title="Custom Server" icon="server" href="/guides/custom-server">
+    Build a custom server with full control.
+  </Card>
+</CardGroup>

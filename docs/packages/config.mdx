@@ -1,0 +1,75 @@
+---
+title: "@aixyz/config"
+description: "Zod-validated configuration loading from aixyz.config.ts"
+---
+
+## Overview
+
+The `@aixyz/config` package handles loading and validating your `aixyz.config.ts` configuration file. It uses Zod schemas to ensure type safety and provides clear error messages for invalid configurations.
+
+## API
+
+### `getAixyzConfig()`
+
+Returns the full configuration object for build-time use. This includes all fields needed by the build pipeline, CLI, and plugins.
+
+```typescript
+import { getAixyzConfig } from "@aixyz/config";
+
+const config = await getAixyzConfig();
+```
+
+### `getAixyzConfigRuntime()`
+
+Returns a subset of the configuration that is safe for inclusion in runtime bundles. Sensitive or build-only fields are excluded.
+
+```typescript
+import { getAixyzConfigRuntime } from "@aixyz/config";
+
+const runtimeConfig = await getAixyzConfigRuntime();
+```
+
+<Note>
+  At build time, the `AixyzConfigPlugin` replaces imports from `aixyz/config` with the resolved runtime config, so the
+  config file is not required at runtime.
+</Note>
+
+## Environment File Loading
+
+Environment variables are loaded in the following order (later files take precedence):
+
+1. `.env`
+2. `.env.local`
+3. `.env.$(NODE_ENV)` — e.g., `.env.production`
+4. `.env.$(NODE_ENV).local` — e.g., `.env.production.local`
+
+This matches the loading order used by Next.js, making it familiar for teams already using that convention.
+
+## Zod Validation
+
+All configuration fields are validated against Zod schemas at load time. If your config is invalid, you get a descriptive error:
+
+```
+Config validation error:
+  - name: Required
+  - skills[0].id: Expected string, received number
+```
+
+## Usage in Build Plugins
+
+The `AixyzConfigPlugin` (part of `@aixyz/cli`) calls `getAixyzConfig()` during the build to resolve the full config, then materializes the runtime-safe subset into the bundle. This means:
+
+- `import config from "aixyz/config"` works at runtime without the config file
+- Environment variables are baked in at build time
+- The config file itself is not included in the output bundle
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration Guide" icon="gear" href="/guides/configuration">
+    How to write your aixyz.config.ts file.
+  </Card>
+  <Card title="CLI Package" icon="terminal" href="/packages/cli">
+    Build pipeline that consumes this config.
+  </Card>
+</CardGroup>

@@ -1,0 +1,52 @@
+---
+title: "@aixyz/stripe"
+description: "Experimental Stripe payment adapter"
+---
+
+## Overview
+
+The `@aixyz/stripe` package provides an experimental Stripe payment adapter for aixyz agents. It offers an alternative payment method alongside the default x402 protocol.
+
+<Warning>
+  This package is **experimental** and its API may change significantly in future releases. Use in production at your
+  own risk.
+</Warning>
+
+## Status
+
+The Stripe adapter is in early development. It aims to provide:
+
+- Stripe Checkout integration for agent endpoints
+- Per-request and subscription-based billing models
+- Webhook handling for payment verification
+
+## Installation
+
+```bash
+bun add @aixyz/stripe
+```
+
+## Usage
+
+```typescript
+import { StripeAdapter } from "@aixyz/stripe";
+
+const stripe = new StripeAdapter({
+  secretKey: process.env.STRIPE_SECRET_KEY!,
+});
+```
+
+## Relationship to x402
+
+The x402 protocol is the primary payment mechanism in aixyz, built into the server at the framework level. The Stripe adapter is a supplementary option for teams that prefer traditional payment processing over crypto-native x402 payments.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">
+    The primary payment protocol in aixyz.
+  </Card>
+  <Card title="Packages Overview" icon="boxes-stacked" href="/packages/overview">
+    All packages in the monorepo.
+  </Card>
+</CardGroup>

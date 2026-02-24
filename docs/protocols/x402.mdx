@@ -1,0 +1,82 @@
+---
+title: "x402 Payments"
+description: "Payment gating for agent endpoints using the x402 protocol"
+---
+
+## Overview
+
+x402 is a payment protocol that gates access to HTTP resources. In aixyz, `AixyzServer` extends `x402ResourceServer` from `@x402/express`, providing built-in payment gating for agent endpoints.
+
+## How It Works
+
+When an agent or tool exports an `accepts` configuration, the corresponding endpoint requires payment via the x402 protocol. Clients must include a valid payment header in their requests. Agents and tools **without** an `accepts` export are served without payment requirements.
+
+## The `accepts` Export
+
+Define payment requirements by exporting `accepts` from your agent or tool:
+
+```typescript
+import type { Accepts } from "aixyz";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+```
+
+This gates the endpoint behind a $0.005 exact payment. The `scheme` field specifies the payment verification strategy.
+
+## Server Integration
+
+`AixyzServer` inherits x402 capabilities from `x402ResourceServer`:
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+
+const server = new AixyzServer();
+
+// Register a payment-gated route
+server.withX402Exact({
+  price: "$0.005",
+  route: "/agent",
+});
+```
+
+### `withX402Exact()`
+
+The `withX402Exact()` method registers a route that requires an exact payment amount before granting access. This is the primary method for payment-gating agent endpoints.
+
+## Per-Tool Payment
+
+Individual tools can also declare their own `accepts` export, enabling per-tool pricing:
+
+```typescript
+// app/tools/premium-search.ts
+import { tool } from "ai";
+import { z } from "zod";
+
+export const accepts = { scheme: "exact", price: "$0.01" };
+
+export default tool({
+  description: "Premium search with advanced results",
+  parameters: z.object({ query: z.string() }),
+  execute: async ({ query }) => {
+    // premium search logic
+  },
+});
+```
+
+## Custom Facilitator
+
+For custom payment verification logic, add an `app/accepts.ts` file to your project. This overrides the default x402 facilitator used for payment verification.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    Where to define accepts exports.
+  </Card>
+  <Card title="ERC-8004 Identity" icon="id-card" href="/protocols/erc-8004">
+    On-chain agent identity for verified payments.
+  </Card>
+</CardGroup>

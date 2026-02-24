@@ -1,0 +1,76 @@
+---
+title: "CLI"
+description: "Use the aixyz CLI for development and building"
+---
+
+## Overview
+
+The `@aixyz/cli` package provides two main commands: `aixyz dev` for development and `aixyz build` for production bundles.
+
+## `aixyz dev`
+
+Start a development server with hot reload:
+
+```bash
+bun run dev   # Runs: aixyz dev
+```
+
+The dev command:
+
+- Spawns a Bun worker process serving your agent
+- Watches `app/` and `aixyz.config.ts` for file changes
+- Restarts the server automatically with a **100ms debounce**
+- Serves on `http://localhost:3000` by default
+
+<Tip>Changes to files in `app/tools/` are picked up automatically — no need to restart manually.</Tip>
+
+## `aixyz build`
+
+Bundle your agent for production deployment:
+
+```bash
+bun run build   # Runs: aixyz build
+```
+
+### Build Pipeline
+
+The build command executes the following steps:
+
+1. **Loads config** from `aixyz.config.ts` via `@aixyz/config`
+2. **Runs Bun build plugins:**
+   - **`AixyzConfigPlugin`** — Materializes resolved config into the bundle, replacing `aixyz/config` imports
+   - **`AixyzServerPlugin`** — Auto-generates `server.ts` from the `app/` directory structure if no `app/server.ts` exists. Scans `app/agent.ts` and `app/tools/*.ts` to wire up A2A, MCP, and x402 middleware
+3. **Bundles** with `Bun.build()` targeting Node.js
+
+### Output Formats
+
+| Format     | Flag                            | Output Path               | Description                                                       |
+| ---------- | ------------------------------- | ------------------------- | ----------------------------------------------------------------- |
+| Standalone | (default)                       | `.aixyz/output/server.js` | Single-file bundle, run with Bun                                  |
+| Vercel     | `VERCEL=1` or `--output vercel` | `.vercel/output/`         | [Build Output API v3](https://vercel.com/docs/build-output-api/3) |
+
+**Standalone example:**
+
+```bash
+aixyz build
+bun .aixyz/output/server.js
+```
+
+**Vercel example:**
+
+```bash
+VERCEL=1 aixyz build
+# Or
+aixyz build --output vercel
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deployment" icon="cloud-arrow-up" href="/guides/deployment">
+    Deploy your built agent to production.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/guides/configuration">
+    Configure build-time and runtime options.
+  </Card>
+</CardGroup>

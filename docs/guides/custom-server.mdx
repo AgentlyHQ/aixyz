@@ -1,0 +1,98 @@
+---
+title: "Custom Server"
+description: "Override the auto-generated server with a custom Express server"
+---
+
+## When to Use a Custom Server
+
+By default, `aixyz build` auto-generates a server that wires up A2A, MCP, and x402 endpoints from your `app/` directory. If you need custom middleware, additional routes, or fine-grained control, create `app/server.ts` to override auto-generation entirely.
+
+## Server Architecture
+
+`AixyzServer` extends `x402ResourceServer` from `@x402/express`, which wraps Express 5. This gives you the full Express API alongside built-in x402 payment gating.
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+
+const server = new AixyzServer();
+```
+
+## Key Methods
+
+### `withX402Exact()`
+
+Register payment-gated routes using the x402 "exact" payment scheme:
+
+```typescript
+server.withX402Exact({
+  price: "$0.005",
+  route: "/agent",
+});
+```
+
+### `unstable_withIndexPage()`
+
+Add a human-readable agent information page at the root URL:
+
+```typescript
+server.unstable_withIndexPage();
+```
+
+<Warning>The `unstable_withIndexPage()` API is experimental and may change in future releases.</Warning>
+
+## Wiring Up Adapters
+
+When using a custom server, you need to manually wire up the protocol adapters.
+
+### A2A Adapter
+
+```typescript
+import { useA2A } from "aixyz/server/adapters/a2a";
+
+useA2A(server, agent);
+// Serves agent card at /.well-known/agent-card.json
+// Serves JSON-RPC endpoint at /agent
+```
+
+### MCP Adapter
+
+```typescript
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+
+const mcp = new AixyzMCP(tools);
+server.use("/mcp", mcp.handler());
+// Exposes tools via StreamableHTTPServerTransport
+```
+
+## Full Example
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+import { useA2A } from "aixyz/server/adapters/a2a";
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import agent from "./agent";
+import weather from "./tools/weather";
+
+const server = new AixyzServer();
+
+server.unstable_withIndexPage();
+useA2A(server, agent);
+
+const mcp = new AixyzMCP({ weather });
+server.use("/mcp", mcp.handler());
+
+server.listen(3000, () => {
+  console.log("Agent running on http://localhost:3000");
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="A2A Protocol" icon="diagram-project" href="/protocols/a2a">
+    Learn about agent cards and JSON-RPC.
+  </Card>
+  <Card title="MCP Protocol" icon="puzzle-piece" href="/protocols/mcp">
+    Expose tools to MCP clients.
+  </Card>
+</CardGroup>
