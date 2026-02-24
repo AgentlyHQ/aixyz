@@ -4,6 +4,14 @@ Framework for bundling AI agents into deployable services with A2A, MCP, x402 pa
 
 Write your agent logic. aixyz wires up the protocols, payments, and deployment.
 
+## Prerequisites
+
+Install [Bun](https://bun.sh) if you don't have it:
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
 ## Quick Start
 
 ```bash
