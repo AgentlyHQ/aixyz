@@ -1,0 +1,58 @@
+# Boilerplate Agent
+
+Minimal agent template — the best starting point for new projects.
+
+**Source:** [`examples/agent-boilerplate`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-boilerplate)
+
+## What It Does
+
+A unit conversion agent that converts values between metric, imperial, and other measurement systems. Demonstrates the standard aixyz agent structure with multiple tools.
+
+## Structure
+
+```
+agent-boilerplate/
+  aixyz.config.ts       # Agent identity, payment, and skills
+  app/
+    agent.ts            # ToolLoopAgent with gpt-4o-mini
+    tools/
+      length.ts         # Length/distance conversion
+      temperature.ts    # Temperature conversion (°C, °F, K)
+      weight.ts         # Weight/mass conversion
+    icon.png            # Agent icon
+  vercel.json           # Vercel deployment config
+```
+
+## Key Features
+
+- **Auto-generated server** — no `server.ts` needed
+- **Three tools** — length, temperature, and weight conversion
+- **x402 payments** — agent priced at `$0.001` per request
+- **Skills declared** in config for A2A agent card discovery
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "Unit Conversion Agent",
+  description: "AI agent that converts values between metric, imperial, and other measurement systems.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x...",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+  },
+  skills: [
+    { id: "convert-length", name: "Convert Length", ... },
+    { id: "convert-weight", name: "Convert Weight", ... },
+    { id: "convert-temperature", name: "Convert Temperature", ... },
+  ],
+};
+```
+
+## Running
+
+```bash
+cd examples/agent-boilerplate
+bun install
+bun run dev
+```

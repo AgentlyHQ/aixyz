@@ -1,0 +1,107 @@
+# Travel Agent
+
+Flight search agent with dual payment support — x402 crypto payments and Stripe credit cards.
+
+**Source:** [`examples/agent-travel`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-travel)
+
+## What It Does
+
+An AI agent that finds the cheapest flights between multiple departure airports and destinations worldwide. Uses the Skycents API for real-time flight pricing and supports both x402 cryptocurrency payments and traditional Stripe credit card payments.
+
+## Structure
+
+```
+agent-travel/
+  aixyz.config.ts       # Agent identity and payment config
+  app/
+    agent.ts            # ToolLoopAgent with detailed flight search instructions
+    server.ts           # Custom server with Stripe + A2A + MCP
+    tools/
+      searchFlights.ts  # Skycents API flight search
+    icon.png            # Agent icon
+  erc-8004.json         # ERC-8004 registration metadata
+```
+
+## Key Features
+
+- **Custom server** — `app/server.ts` with manual endpoint wiring
+- **Dual payments** — x402 crypto payments + Stripe credit cards via `@aixyz/stripe`
+- **Skycents API** — real-time flight pricing with 34 popular airport codes
+- **Rich search** — roundtrip/oneway, multiple currencies, trip length filtering
+- **ERC-8004 metadata** — includes registration JSON for on-chain identity
+
+## Custom Server
+
+This template uses `app/server.ts` for full control, demonstrating Stripe integration alongside standard protocols:
+
+```ts
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import { AixyzServer } from "aixyz/server";
+import { useA2A } from "aixyz/server/adapters/a2a";
+import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
+
+import * as agent from "./agent";
+import * as searchFlights from "./tools/searchFlights";
+
+const server = new AixyzServer();
+await server.initialize();
+server.unstable_withIndexPage();
+
+experimental_useStripePaymentIntent(server);
+useA2A(server, agent);
+
+const mcp = new AixyzMCP(server);
+await mcp.register("searchFlights", searchFlights);
+await mcp.connect();
+
+export default server;
+```
+
+## Endpoints
+
+| Endpoint                        | Protocol | Description                          |
+| ------------------------------- | -------- | ------------------------------------ |
+| `/.well-known/agent-card.json`  | A2A      | Agent discovery card                 |
+| `/agent`                        | A2A      | JSON-RPC endpoint, x402 payment gate |
+| `/mcp`                          | MCP      | Tool sharing with MCP clients        |
+| `/stripe/create-payment-intent` | Stripe   | Credit card payment                  |
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "Travel Agent - Flight Search",
+  description: "AI agent that finds the cheapest flights between airports worldwide.",
+  version: "1.0.0",
+  x402: {
+    payTo: process.env.X402_PAY_TO || "0x...",
+    network: process.env.X402_NETWORK || "eip155:84532",
+  },
+  skills: [
+    {
+      id: "flight-search",
+      name: "Cheapest Flight Search",
+      description: "Search for the cheapest flights with support for multiple departures and destinations",
+    },
+  ],
+};
+```
+
+## Environment Variables
+
+| Variable             | Description                                  |
+| -------------------- | -------------------------------------------- |
+| `X402_PAY_TO`        | EVM address to receive payments              |
+| `X402_NETWORK`       | CAIP-2 chain ID                              |
+| `STRIPE_SECRET_KEY`  | Stripe secret key (for credit card payments) |
+| `STRIPE_PRICE_CENTS` | Stripe price in cents (default: `100`)       |
+
+## Running
+
+```bash
+cd examples/agent-travel
+cp .env.example .env
+# Add your API keys to .env
+bun install
+bun run dev
+```

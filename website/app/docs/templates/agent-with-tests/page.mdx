@@ -1,0 +1,64 @@
+# Testing Agent
+
+Agent template with Bun test examples demonstrating how to test aixyz agents.
+
+**Source:** [`examples/agent-with-tests`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-with-tests)
+
+## What It Does
+
+A unit conversion agent (temperature only) that includes test files alongside the agent code. Demonstrates how to write and run tests for aixyz agents using Bun's built-in test runner.
+
+## Structure
+
+```
+agent-with-tests/
+  aixyz.config.ts       # Agent identity and payment config
+  app/
+    agent.ts            # ToolLoopAgent with gpt-4o-mini
+    agent.test.ts       # Agent tests
+    tools/
+      temperature.ts    # Temperature conversion tool
+```
+
+## Key Features
+
+- **Bun test runner** — uses Bun's built-in `bun test` command
+- **Co-located tests** — test files live next to source files
+- **Agent testing patterns** — shows how to test agent behavior
+- **Minimal setup** — no additional test framework needed
+
+## Running Tests
+
+```bash
+cd examples/agent-with-tests
+bun install
+bun test
+```
+
+Or from the monorepo root:
+
+```bash
+bun run test --filter=agent-with-tests
+```
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "Unit Conversion Agent",
+  description: "AI agent that converts temperature values between Celsius, Fahrenheit, and Kelvin.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x...",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+  },
+};
+```
+
+## Running
+
+```bash
+cd examples/agent-with-tests
+bun install
+bun run dev
+```

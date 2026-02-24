@@ -1,0 +1,73 @@
+# Job Hunter Agent
+
+Remote job search agent powered by the Jobicy API.
+
+**Source:** [`examples/agent-job-hunter`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-job-hunter)
+
+## What It Does
+
+An AI agent that searches for remote job opportunities worldwide using the Jobicy API. Users can search by country or region and get back job listings with titles, companies, industries, and links.
+
+## Structure
+
+```
+agent-job-hunter/
+  aixyz.config.ts       # Agent identity and payment config
+  app/
+    agent.ts            # ToolLoopAgent with gpt-4o-mini
+    tools/
+      search.ts         # Jobicy API job search
+    icon.png            # Agent icon
+  erc-8004.json         # ERC-8004 registration metadata
+```
+
+## Key Features
+
+- **Jobicy API** — searches remote job listings by geography
+- **No API key required** — Jobicy's public API
+- **ERC-8004 metadata** — includes registration JSON for on-chain identity
+- **x402 payments** — agent and tool priced at `$0.01`
+
+## How the Tool Works
+
+The search tool:
+
+1. Takes a `geo` parameter (country or region)
+2. Queries the Jobicy API for remote jobs in that location
+3. Returns job listings with: title, company, industry, geography, job level, and publication date
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "Job Hunter - Career Scout Agent",
+  description: "An AI agent that searches for remote job opportunities worldwide using the Jobicy API.",
+  version: "1.0.0",
+  x402: {
+    payTo: process.env.X402_PAY_TO!,
+    network: process.env.X402_NETWORK!,
+  },
+  skills: [
+    {
+      id: "job-search",
+      name: "Remote Job Search",
+      description: "Search for the latest remote job opportunities in specific countries",
+    },
+  ],
+};
+```
+
+## Environment Variables
+
+| Variable       | Description                     |
+| -------------- | ------------------------------- |
+| `X402_PAY_TO`  | EVM address to receive payments |
+| `X402_NETWORK` | CAIP-2 chain ID                 |
+
+## Running
+
+```bash
+cd examples/agent-job-hunter
+bun install
+bun run dev
+```

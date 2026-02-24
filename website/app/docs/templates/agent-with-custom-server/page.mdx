@@ -1,0 +1,86 @@
+# Custom Server Agent
+
+Minimal reference for using `app/server.ts` to take full control over endpoint registration and pricing.
+
+**Source:** [`examples/agent-with-custom-server`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-with-custom-server)
+
+## What It Does
+
+Demonstrates the custom server pattern where you manually wire A2A, MCP, and x402 endpoints instead of relying on auto-generation. Uses a Chainlink price feed lookup as the example tool.
+
+## Structure
+
+```
+agent-with-custom-server/
+  aixyz.config.ts       # Agent identity and payment config
+  app/
+    agent.ts            # ToolLoopAgent with gpt-4o-mini
+    server.ts           # Custom server with manual endpoint wiring
+    tools/
+      lookup.ts         # Chainlink price feed lookup
+```
+
+## Key Features
+
+- **Custom server** — full control over how endpoints are registered
+- **Manual pricing** — set `accepts` config in `server.ts` instead of tool files
+- **Reference implementation** — minimal code to understand the server pattern
+
+## Custom Server
+
+```ts
+import { AixyzServer } from "aixyz/server";
+import { useA2A } from "aixyz/server/adapters/a2a";
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+
+import * as agent from "./agent";
+import lookup from "./tools/lookup";
+
+const server = new AixyzServer();
+await server.initialize();
+
+useA2A(server, agent);
+
+const mcp = new AixyzMCP(server);
+await mcp.register("latestData", {
+  default: lookup,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+await mcp.connect();
+
+export default server;
+```
+
+Note how `accepts` is defined in `server.ts` rather than exported from the tool file. This gives you centralized control over pricing.
+
+## When to Use a Custom Server
+
+Use `app/server.ts` when you need to:
+
+- Register additional Express routes or middleware
+- Control pricing from a single location
+- Integrate third-party payment providers (e.g., Stripe)
+- Add custom authentication or rate limiting
+- Serve additional API endpoints alongside your agent
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "Agent with Custom Server",
+  description: "Demonstrates using a custom server.ts for endpoint registration and pricing.",
+  version: "1.0.0",
+  x402: {
+    payTo: "0x...",
+    network: "eip155:8453",
+  },
+};
+```
+
+## Running
+
+```bash
+cd examples/agent-with-custom-server
+bun install
+bun run dev
+```

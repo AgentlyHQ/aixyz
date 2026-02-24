@@ -80,7 +80,42 @@ examples/agent-*/
 ### Other
 
 - `website/` — Nextra-based documentation site (Next.js + Nextra)
+- `docs/` — Legacy Mintlify documentation (being migrated to `website/`)
 - `CLAUDE.md` symlinks to `AGENTS.md`
+
+### Documentation site (`website/`)
+
+The documentation is a Next.js 16 + Nextra 4 site in `website/`. Uses the app router with `_meta.ts` files for sidebar navigation.
+
+```
+website/app/
+  _meta.ts              # Root navigation (home page)
+  page.mdx              # Home page
+  docs/
+    _meta.ts            # Docs sidebar ordering
+    getting-started/    # Setup walkthrough
+    agent-structure/    # Config, agent, tools
+    custom-server/      # Custom server pattern
+    configuration/      # Config options and env vars
+    cli/                # CLI commands
+    protocols/          # A2A, MCP, x402, ERC-8004 (all in one page)
+    packages/           # All framework packages (all in one page)
+    deployment/         # Vercel, Docker, standalone
+    templates/          # One page per example template
+      _meta.ts          # Template sidebar ordering
+      agent-boilerplate/
+      agent-byo-facilitator/
+      agent-chainlink/
+      agent-job-hunter/
+      agent-price-oracle/
+      agent-travel/
+      agent-with-custom-server/
+      agent-with-tests/
+```
+
+Each `templates/<name>/page.mdx` is symlinked from `examples/<name>/TEMPLATE.mdx` for discoverability.
+
+Protocols and Packages are each a single consolidated page within the Docs section (not separate tabs).
 
 ## Architecture
 

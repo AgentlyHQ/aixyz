@@ -1,0 +1,42 @@
+# Templates
+
+Ready-to-use agent templates demonstrating common patterns. Each template is a working agent in the [`examples/`](https://github.com/AgentlyHQ/aixyz/tree/main/examples) directory that you can clone and customize.
+
+## Auto-Generated Server
+
+These templates use `app/agent.ts` + `app/tools/` only — no `server.ts` needed. The framework auto-generates the server.
+
+| Template                                                 | Description                                         |
+| -------------------------------------------------------- | --------------------------------------------------- |
+| [Boilerplate](/docs/templates/agent-boilerplate)         | Minimal unit conversion agent — best starting point |
+| [BYO Facilitator](/docs/templates/agent-byo-facilitator) | Custom x402 facilitator via `app/accepts.ts`        |
+| [Chainlink Oracle](/docs/templates/agent-chainlink)      | On-chain Chainlink price feeds                      |
+| [Job Hunter](/docs/templates/agent-job-hunter)           | Remote job search via Jobicy API                    |
+| [Price Oracle](/docs/templates/agent-price-oracle)       | CoinGecko crypto market data                        |
+| [Testing](/docs/templates/agent-with-tests)              | Agent with Bun test examples                        |
+
+## Custom Server
+
+These templates use `app/server.ts` for full control over endpoint registration and pricing.
+
+| Template                                                  | Description                     |
+| --------------------------------------------------------- | ------------------------------- |
+| [Travel Agent](/docs/templates/agent-travel)              | Flight search + Stripe payments |
+| [Custom Server](/docs/templates/agent-with-custom-server) | Minimal custom server reference |
+
+## Using a Template
+
+```bash
+# Clone the repo and copy a template
+git clone https://github.com/AgentlyHQ/aixyz.git
+cp -r aixyz/examples/agent-boilerplate my-agent
+cd my-agent
+bun install
+bun run dev
+```
+
+Or start fresh with `create-aixyz-app`:
+
+```bash
+bunx create-aixyz-app my-agent
+```

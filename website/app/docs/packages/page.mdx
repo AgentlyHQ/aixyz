@@ -1,0 +1,234 @@
+# Packages
+
+The aixyz monorepo contains the following packages, managed with Bun workspaces and Turbo:
+
+| Package            | npm Name           | Description                                                            |
+| ------------------ | ------------------ | ---------------------------------------------------------------------- |
+| `aixyz`            | `aixyz`            | Main framework: server, protocol adapters (A2A, MCP), x402 integration |
+| `@aixyz/cli`       | `@aixyz/cli`       | CLI commands: `dev` (hot reload) and `build` (bundle for deployment)   |
+| `@aixyz/config`    | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` and `.env` files   |
+| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding CLI (`bunx create-aixyz-app`)                      |
+| `@aixyz/erc-8004`  | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, deployed addresses, and Zod schemas            |
+| `@aixyz/cli-erc`   | `@aixyz/cli-erc`   | CLI for ERC-8004 registry operations (`register`, `set-agent-uri`)     |
+| `@aixyz/stripe`    | `@aixyz/stripe`    | Experimental Stripe payment adapter                                    |
+
+## Dependency Graph
+
+```
+aixyz → @aixyz/cli → @aixyz/config
+     → @a2a-js/sdk, @modelcontextprotocol/sdk, @x402/*, express, zod
+     → ai (optional peer dep, Vercel AI SDK v6)
+```
+
+The main `aixyz` package depends on `@aixyz/cli` for build tooling and `@aixyz/config` for configuration loading. External dependencies include the A2A SDK, MCP SDK, x402 libraries, Express, and Zod.
+
+---
+
+## `aixyz`
+
+The core framework for building AI agent services. Provides the server, protocol adapters (A2A, MCP), x402 payment integration, and the agent execution runtime.
+
+```bash
+bun add aixyz
+```
+
+**Peer dependency:** [Vercel AI SDK](https://ai-sdk.dev) `ai@^6`
+
+### Exports
+
+| Import Path                 | Description                                       |
+| --------------------------- | ------------------------------------------------- |
+| `aixyz/server`              | `AixyzServer` class                               |
+| `aixyz/server/adapters/a2a` | `useA2A`, `getAgentCard`, `ToolLoopAgentExecutor` |
+| `aixyz/server/adapters/mcp` | `AixyzMCP` class                                  |
+| `aixyz/config`              | Re-exports from `@aixyz/config`                   |
+| `aixyz/accepts`             | `Accepts` type, `HTTPFacilitatorClient`           |
+| `aixyz/test`                | Test utilities (`loadEnv`)                        |
+
+### `AixyzServer`
+
+Express 5 server with x402 payment verification. Extends `x402ResourceServer` from `@x402/core/server`.
+
+```ts
+import { AixyzServer } from "aixyz/server";
+
+const server = new AixyzServer();
+await server.initialize();
+```
+
+**Key Properties:**
+
+- `server.express` — the raw Express 5 app
+- `server.config` — parsed `AixyzConfig`
+
+**Key Methods:**
+
+- `server.unstable_withIndexPage(path?)` — add human-readable agent info page
+- `server.withX402Exact(route, accepts)` — register x402 payment-gated route
+- `server.withPaymentRequirements(accepts)` — build payment requirements for a route
+
+### A2A Adapter
+
+```ts
+import { useA2A } from "aixyz/server/adapters/a2a";
+
+useA2A(server, agentExports);
+// GET  /.well-known/agent-card.json — agent discovery card
+// POST /agent — JSON-RPC endpoint (x402-gated if accepts defined)
+```
+
+The `agentExports` parameter is `import * as agent from "./agent"` — it reads both `default` (the `ToolLoopAgent`) and `accepts` (payment config).
+
+### MCP Adapter
+
+```ts
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+
+const mcp = new AixyzMCP(server);
+await mcp.register("toolName", {
+  default: toolInstance,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+await mcp.connect();
+// POST /mcp — tool endpoint via StreamableHTTPServerTransport
+```
+
+### Agent Executor
+
+`ToolLoopAgentExecutor` wraps Vercel AI SDK `ToolLoopAgent` instances into the A2A `AgentExecutor` interface:
+
+```ts
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
+});
+```
+
+---
+
+## `create-aixyz-app`
+
+Project scaffolding CLI that generates a new aixyz agent project.
+
+```bash
+bunx create-aixyz-app my-agent
+```
+
+The CLI prompts for an **agent name** and optional **OpenAI API key**. Skip prompts with `-y`:
+
+```bash
+bunx create-aixyz-app my-agent -y
+```
+
+### Scaffolded Structure
+
+```
+my-agent/
+  aixyz.config.ts       # Agent config (name, description, skills)
+  app/
+    agent.ts            # Agent definition using Vercel AI SDK
+    tools/
+      weather.ts        # Example tool
+    icon.png            # Agent icon
+  package.json          # Dependencies and scripts
+  tsconfig.json         # TypeScript configuration
+  vercel.json           # Vercel deployment config
+  .env.local            # Environment variables
+```
+
+---
+
+## `@aixyz/config`
+
+Zod-validated configuration loading from `aixyz.config.ts`.
+
+### API
+
+- `getAixyzConfig()` — full config for build-time use
+- `getAixyzConfigRuntime()` — subset safe for runtime bundles
+
+```ts
+import { getAixyzConfig } from "@aixyz/config";
+import type { AixyzConfig, Network } from "@aixyz/config";
+```
+
+At build time, the `AixyzConfigPlugin` replaces imports from `aixyz/config` with the resolved runtime config, so the config file is not required at runtime.
+
+### Environment File Loading
+
+Variables are loaded in order (later files take precedence): `.env` → `.env.local` → `.env.$(NODE_ENV)` → `.env.$(NODE_ENV).local`
+
+---
+
+## `@aixyz/erc-8004`
+
+TypeScript bindings for the ERC-8004 on-chain agent identity standard. Includes contract ABIs, deployed addresses, and Zod validation schemas.
+
+> Unlike other packages, `@aixyz/erc-8004` compiles to CommonJS (CJS) for broader compatibility.
+
+```bash
+bun add @aixyz/erc-8004
+```
+
+```ts
+import { IdentityRegistryAbi } from "@aixyz/erc-8004";
+import { getIdentityRegistryAddress } from "@aixyz/erc-8004";
+import { registrationSchema } from "@aixyz/erc-8004";
+```
+
+**Supported Networks:**
+
+- **Mainnets:** Ethereum, Base, Polygon, Scroll, Monad, BSC, Gnosis
+- **Testnets:** Sepolia, Base Sepolia, Polygon Amoy, Scroll Sepolia, Monad Testnet, BSC Testnet
+
+---
+
+## `@aixyz/stripe`
+
+Experimental Stripe payment adapter for aixyz agents.
+
+> **Experimental** — API may change significantly in future releases.
+
+```bash
+bun add @aixyz/stripe
+```
+
+| Variable             | Description                     |
+| -------------------- | ------------------------------- |
+| `STRIPE_SECRET_KEY`  | Your Stripe secret key          |
+| `STRIPE_PRICE_CENTS` | Price in cents (default: `100`) |
+
+```ts
+import { AixyzServer } from "aixyz/server";
+import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
+
+const server = new AixyzServer();
+await server.initialize();
+experimental_useStripePaymentIntent(server);
+export default server;
+```
+
+This registers a `POST /stripe/create-payment-intent` endpoint and middleware for validating Stripe payments.
+
+---
+
+## Package Distribution
+
+Most packages ship **raw `.ts` files** — they are not compiled to JavaScript before publishing. Consumers must use a TypeScript-aware bundler or runtime (like Bun). The exception is `@aixyz/erc-8004`, which compiles to CJS.
+
+## Building and Testing
+
+```bash
+bun run build                        # Build all packages
+bun run test                         # Test all packages
+bun run build --filter=aixyz         # Build a specific package
+bun run test --filter=@aixyz/erc-8004  # Test a specific package
+```

@@ -1,0 +1,77 @@
+# Price Oracle Agent
+
+Real-time cryptocurrency market data using CoinGecko Pro.
+
+**Source:** [`examples/agent-price-oracle`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-price-oracle)
+
+## What It Does
+
+An AI agent that provides real-time cryptocurrency market data via the CoinGecko Pro API. Supports token price lookups, newly listed token discovery, and top gainers/losers tracking.
+
+## Structure
+
+```
+agent-price-oracle/
+  aixyz.config.ts       # Agent identity and payment config
+  app/
+    agent.ts            # ToolLoopAgent with gpt-4o-mini, detailed instructions
+    tools/
+      getTokenPrice.ts          # Single token price lookup
+      getNewListedTokens.ts     # Recently listed tokens
+      getTopGainersLosers.ts    # 24h top gainers and losers
+    utils/
+      coingecko.ts              # Shared CoinGecko API client
+    icon.png            # Agent icon
+  erc-8004.json         # ERC-8004 registration metadata
+```
+
+## Key Features
+
+- **Three tools** — token price, new listings, and gainers/losers
+- **CoinGecko Pro API** — real-time market data
+- **Shared utility** — `utils/coingecko.ts` for API client reuse
+- **Detailed agent instructions** — rate limiting, validation, and scope guidance
+- **x402 payments** — agent priced at `$0.01`
+
+## Tools
+
+| Tool                  | Description                                     |
+| --------------------- | ----------------------------------------------- |
+| `getTokenPrice`       | Get current price for any token by CoinGecko ID |
+| `getNewListedTokens`  | Discover the 5 most recently listed tokens      |
+| `getTopGainersLosers` | Top 5 gainers and losers in the last 24 hours   |
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "Price Gecky - Price Oracle Agent",
+  description: "An AI agent that provides real-time cryptocurrency market data using CoinGecko Pro.",
+  version: "1.0.0",
+  x402: {
+    payTo: "0x...",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+  },
+  skills: [
+    { id: "token-price", name: "Token Price Lookup", ... },
+    { id: "new-tokens", name: "Newly Listed Tokens", ... },
+    { id: "gainers-losers", name: "Top Gainers & Losers", ... },
+  ],
+};
+```
+
+## Environment Variables
+
+| Variable            | Description           |
+| ------------------- | --------------------- |
+| `COINGECKO_API_KEY` | CoinGecko Pro API key |
+
+## Running
+
+```bash
+cd examples/agent-price-oracle
+cp .env.example .env
+# Add your CoinGecko API key to .env
+bun install
+bun run dev
+```

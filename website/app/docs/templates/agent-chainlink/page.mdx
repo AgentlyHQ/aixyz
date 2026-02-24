@@ -1,0 +1,74 @@
+# Chainlink Oracle Agent
+
+On-chain cryptocurrency price data using Chainlink price feeds on Ethereum mainnet.
+
+**Source:** [`examples/agent-chainlink`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-chainlink)
+
+## What It Does
+
+An AI agent that queries Chainlink price feeds directly on Ethereum mainnet. It resolves price feed ENS names (e.g., `eth-usd.data.eth`) and reads the latest round data from the on-chain aggregator contract.
+
+## Structure
+
+```
+agent-chainlink/
+  aixyz.config.ts       # Agent identity and payment config
+  app/
+    agent.ts            # ToolLoopAgent with gpt-4o-mini
+    tools/
+      lookup.ts         # Chainlink price feed lookup via viem
+    icon.png            # Agent icon
+  erc-8004.json         # ERC-8004 registration metadata
+```
+
+## Key Features
+
+- **On-chain data** — reads directly from Ethereum mainnet via viem
+- **Chainlink price feeds** — resolves ENS names to aggregator contracts
+- **ERC-8004 metadata** — includes registration JSON for on-chain identity
+- **x402 payments** — both agent and tool priced at `$0.01`
+
+## How the Tool Works
+
+The lookup tool:
+
+1. Takes a cryptocurrency symbol (e.g., `eth`, `btc`, `link`)
+2. Resolves `{symbol}-usd.data.eth` via ENS
+3. Calls `latestRoundData()` on the Chainlink aggregator contract
+4. Returns price, roundId, timestamps, and feed metadata
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "Chainlink Price Oracle",
+  description: "AI agent that provides real-time cryptocurrency price data using Chainlink price feeds.",
+  version: "1.0.0",
+  x402: {
+    payTo: process.env.X402_PAY_TO!,
+    network: process.env.X402_NETWORK!,
+  },
+  skills: [
+    {
+      id: "chainlink-price-lookup",
+      name: "Chainlink Price Lookup",
+      description: "Look up real-time cryptocurrency prices in USD using Chainlink price feeds",
+    },
+  ],
+};
+```
+
+## Environment Variables
+
+| Variable       | Description                     |
+| -------------- | ------------------------------- |
+| `X402_PAY_TO`  | EVM address to receive payments |
+| `X402_NETWORK` | CAIP-2 chain ID                 |
+
+## Running
+
+```bash
+cd examples/agent-chainlink
+bun install
+bun run dev
+```

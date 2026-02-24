@@ -1,0 +1,61 @@
+# BYO Facilitator Agent
+
+Demonstrates providing a custom x402 facilitator via `app/accepts.ts`.
+
+**Source:** [`examples/agent-byo-facilitator`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-byo-facilitator)
+
+## What It Does
+
+A simple temperature agent that uses a custom x402 facilitator instead of the default. Shows how to override the payment verification endpoint using `app/accepts.ts`.
+
+## Structure
+
+```
+agent-byo-facilitator/
+  aixyz.config.ts       # Agent identity and payment config
+  app/
+    agent.ts            # ToolLoopAgent with gpt-4o-mini
+    accepts.ts          # Custom facilitator configuration
+    tools/
+      temperature.ts    # City temperature lookup via Open-Meteo API
+```
+
+## Key Features
+
+- **Custom facilitator** — overrides the default x402 facilitator URL
+- **`app/accepts.ts` pattern** — the framework auto-detects this file
+- **Open-Meteo API** — free geocoding and weather data, no API key required
+
+## Custom Facilitator (`app/accepts.ts`)
+
+```ts
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```
+
+When `app/accepts.ts` exists, the auto-generated server uses your facilitator instead of the default one. This is useful for self-hosted facilitators or custom payment verification logic.
+
+## Configuration
+
+```ts
+const config: AixyzConfig = {
+  name: "BYO Facilitator Agent",
+  description: "Demonstrates providing a custom x402 facilitator via app/accepts.ts.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x...",
+    network: "eip155:84532",
+  },
+};
+```
+
+## Running
+
+```bash
+cd examples/agent-byo-facilitator
+bun install
+bun run dev
+```

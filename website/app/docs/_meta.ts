@@ -5,6 +5,7 @@ export default {
   configuration: "Configuration",
   cli: "CLI",
   protocols: "Protocols",
+  packages: "Packages",
   deployment: "Deployment",
-  examples: "Examples",
+  templates: "Templates",
 };
