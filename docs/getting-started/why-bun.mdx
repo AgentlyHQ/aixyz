@@ -3,13 +3,27 @@ title: "Why Bun?"
 description: "Why aixyz uses Bun as its runtime"
 ---
 
-## Why Bun?
+## Software is Being Rewritten — by Agents
 
-aixyz uses [Bun](https://bun.sh) as its runtime and build tool. Here's why:
+We are entering a world where humans won't be writing most software. AI agents will. And agents will be creating other agents. When Claude Code scaffolds a project, installs dependencies, writes tests, and iterates on failures — all in a single session — the bottleneck isn't the model. It's the runtime.
 
-### All-in-One Toolchain
+In December 2025, Anthropic made their first-ever acquisition: [they bought Bun](https://www.anthropic.com/news/anthropic-acquires-bun-as-claude-code-reaches-usd1b-milestone). Not a model company. Not a data company. A JavaScript runtime. That tells you everything about where this is going.
 
-Bun provides a JavaScript runtime, bundler, test runner, and package manager in a single binary. This means no separate tools for building, testing, and running your agent:
+We're making the same bet.
+
+### The Runtime is the Agent's Operating System
+
+Every tool an AI agent calls is a runtime operation — HTTP requests, file I/O, code execution, JSON parsing. An agent making dozens of tool calls per session doesn't experience latency the way a human does. For a human, 500ms is imperceptible. For an agent in a tight loop, [it's the difference between fast iteration and a stall](https://dev.to/inboryn_99399f96579fcd705/anthropic-acquires-bun-why-ai-agents-need-a-lightweight-runtime-228d).
+
+Node.js was designed for a world where humans start a server and it runs for hours. Bun was designed for a world where processes spin up, execute, and terminate in milliseconds. That's the world agents live in — generate code, run it, check the output, fix the errors, repeat. The runtime needs to keep up.
+
+Anthropic understood this before anyone else. Claude Code [ships as a Bun executable](https://betterstack.com/community/guides/scaling-nodejs/anthropic-acquires-bun/). So does [FactoryAI. So does OpenCode](https://betterstack.com/community/guides/scaling-nodejs/anthropic-acquires-bun/). The pattern is clear: [the runtime is becoming the agent's operating system](https://jimmysong.io/blog/bun-anthropic-runtime-shift/).
+
+### One Binary, Zero Configuration
+
+The Node.js ecosystem asks you to choose: which package manager, which bundler, which test runner, which TypeScript compiler. Five tools, five configurations, five places where things break.
+
+Bun is one binary that does all of it:
 
 ```bash
 bun install        # Package manager
@@ -18,21 +32,32 @@ bun run build      # Bundler
 bun test           # Test runner
 ```
 
-### Fast Startup and Execution
+This isn't just developer convenience. [For an AI agent that needs to spin up projects, test, bundle, run, and iterate at speed, that fragmentation is friction](https://dev.to/axrisi/anthropic-just-acquired-bun-and-it-signals-the-beginning-of-ai-native-software-engineering-3cd9). Every tool choice is a decision point. Every configuration file is a place where an automated workflow can break. Bun eliminates the entire category of problem.
 
-Bun starts significantly faster than Node.js, which matters for:
+Jarred Sumner, Bun's creator, said it directly: [Bun's job is to be the best place to build, run, and test AI-driven software](https://bun.com/blog/bun-joins-anthropic).
 
-- **Development** — `aixyz dev` restarts on every file change with minimal delay
-- **Serverless** — Cold starts on Vercel are faster with the Bun runtime
-- **Testing** — `bun test` runs agent tests with near-instant startup
+### TypeScript Without the Ceremony
 
-### Native TypeScript Support
+Bun runs TypeScript natively. No compilation step. No `tsconfig.json`. No build pipeline between writing code and running it.
 
-Bun runs TypeScript directly without a compilation step. aixyz packages ship raw `.ts` files — Bun handles them natively.
+aixyz packages ship raw `.ts` files and Bun handles them directly. When an agent generates TypeScript, it can execute it immediately — the generate-run-verify loop has zero gap. This is the kind of simplicity that [makes agent-driven development practical at scale](https://dev.to/axrisi/anthropic-just-acquired-bun-and-it-signals-the-beginning-of-ai-native-software-engineering-3cd9).
 
-### Built-in Test Runner
+### Compile Once, Run Anywhere
 
-Bun includes a test runner compatible with Jest-like syntax (`describe`, `test`, `expect`). aixyz uses `bun:test` for agent testing:
+Bun compiles projects into [single-file executables](https://bun.com/docs/bundler/executables). No runtime installation required. No dependency management on the target machine. This is how Claude Code distributes to millions of developers — one binary, every platform.
+
+For aixyz agents deploying to serverless platforms like Vercel, Bun's cold starts are fast enough that your agent responds quickly even on first invocation:
+
+```json
+{
+  "buildCommand": "bun run build",
+  "bunVersion": "1.x"
+}
+```
+
+### Built-in Testing
+
+Bun includes a Jest-compatible test runner with near-instant startup. aixyz uses `bun:test` for agent testing:
 
 ```typescript
 import { describe, expect, test } from "bun:test";
@@ -42,27 +67,4 @@ import agent from "./agent";
 test("default export is a ToolLoopAgent", () => {
   expect(agent).toBeInstanceOf(ToolLoopAgent);
 });
-```
-
-### Vercel Bun Runtime
-
-Vercel supports Bun as a [serverless function runtime](https://vercel.com/docs/functions/runtimes/bun). aixyz agents deploy to Vercel with the Bun runtime out of the box — just set `bunVersion` in `vercel.json`:
-
-```json
-{
-  "buildCommand": "bun run build",
-  "bunVersion": "1.x"
-}
-```
-
-## Requirements
-
-- **Bun 1.3.9** or later
-
-```bash
-# Install Bun
-curl -fsSL https://bun.sh/install | bash
-
-# Verify version
-bun --version
 ```
