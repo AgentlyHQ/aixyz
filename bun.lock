@@ -152,12 +152,9 @@
         "sharp": "^0.34.5",
       },
     },
-    "packages/aixyz-cli-erc": {
-      "name": "@aixyz/cli-erc",
+    "packages/aixyz-cli-register": {
+      "name": "@aixyz/cli-register",
       "version": "0.0.0",
-      "bin": {
-        "agently-cli": "dist/index.js",
-      },
       "dependencies": {
         "@aixyz/erc-8004": "workspace:*",
         "@inquirer/prompts": "^7.0.0",
@@ -244,7 +241,7 @@
 
     "@aixyz/cli": ["@aixyz/cli@workspace:packages/aixyz-cli"],
 
-    "@aixyz/cli-erc": ["@aixyz/cli-erc@workspace:packages/aixyz-cli-erc"],
+    "@aixyz/cli-register": ["@aixyz/cli-register@workspace:packages/aixyz-cli-register"],
 
     "@aixyz/config": ["@aixyz/config@workspace:packages/aixyz-config"],
 
@@ -1818,7 +1815,7 @@
 
     "zwitch": ["zwitch@2.0.4", "", {}, "sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A=="],
 
-    "@aixyz/cli-erc/commander": ["commander@13.1.0", "", {}, "sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw=="],
+    "@aixyz/cli-register/commander": ["commander@13.1.0", "", {}, "sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw=="],
 
     "@coinbase/cdp-sdk/@solana/kit": ["@solana/kit@5.5.1", "", { "dependencies": { "@solana/accounts": "5.5.1", "@solana/addresses": "5.5.1", "@solana/codecs": "5.5.1", "@solana/errors": "5.5.1", "@solana/functional": "5.5.1", "@solana/instruction-plans": "5.5.1", "@solana/instructions": "5.5.1", "@solana/keys": "5.5.1", "@solana/offchain-messages": "5.5.1", "@solana/plugin-core": "5.5.1", "@solana/programs": "5.5.1", "@solana/rpc": "5.5.1", "@solana/rpc-api": "5.5.1", "@solana/rpc-parsed-types": "5.5.1", "@solana/rpc-spec-types": "5.5.1", "@solana/rpc-subscriptions": "5.5.1", "@solana/rpc-types": "5.5.1", "@solana/signers": "5.5.1", "@solana/sysvars": "5.5.1", "@solana/transaction-confirmation": "5.5.1", "@solana/transaction-messages": "5.5.1", "@solana/transactions": "5.5.1" }, "peerDependencies": { "typescript": "^5.0.0" }, "optionalPeers": ["typescript"] }, "sha512-irKUGiV2yRoyf+4eGQ/ZeCRxa43yjFEL1DUI5B0DkcfZw3cr0VJtVJnrG8OtVF01vT0OUfYOcUn6zJW5TROHvQ=="],
 
