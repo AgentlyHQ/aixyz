@@ -2,14 +2,14 @@
 // ABIs (versioned) - Pin to specific version for stability
 // =============================================================================
 
-export { IdentityRegistryAbi_V1 } from "../abis/IdentityRegistry_V1";
-export { IdentityRegistryAbi_V2 } from "../abis/IdentityRegistry_V2";
+export { IdentityRegistryAbi_V1 } from "./abis/IdentityRegistry_V1";
+export { IdentityRegistryAbi_V2 } from "./abis/IdentityRegistry_V2";
 
-export { ReputationRegistryAbi_V1 } from "../abis/ReputationRegistry_V1";
-export { ReputationRegistryAbi_V2 } from "../abis/ReputationRegistry_V2";
-export { ReputationRegistryAbi_V3 } from "../abis/ReputationRegistry_V3";
+export { ReputationRegistryAbi_V1 } from "./abis/ReputationRegistry_V1";
+export { ReputationRegistryAbi_V2 } from "./abis/ReputationRegistry_V2";
+export { ReputationRegistryAbi_V3 } from "./abis/ReputationRegistry_V3";
 
-export { ValidationRegistryAbi_V1 } from "../abis/ValidationRegistry_V1";
+export { ValidationRegistryAbi_V1 } from "./abis/ValidationRegistry_V1";
 
 // =============================================================================
 // ABIs (latest) - Convenience exports
@@ -17,13 +17,13 @@ export { ValidationRegistryAbi_V1 } from "../abis/ValidationRegistry_V1";
 // =============================================================================
 
 /** Use IdentityRegistryAbi_V2 to pin the current version. This export may change. */
-export { IdentityRegistryAbi_V2 as IdentityRegistryAbi } from "../abis/IdentityRegistry_V2";
+export { IdentityRegistryAbi_V2 as IdentityRegistryAbi } from "./abis/IdentityRegistry_V2";
 
 /** Use ReputationRegistryAbi_V3 to pin the current version. This export may change. */
-export { ReputationRegistryAbi_V3 as ReputationRegistryAbi } from "../abis/ReputationRegistry_V3";
+export { ReputationRegistryAbi_V3 as ReputationRegistryAbi } from "./abis/ReputationRegistry_V3";
 
 /** Use ValidationRegistryAbi_V1 to pin the current version. This export may change. */
-export { ValidationRegistryAbi_V1 as ValidationRegistryAbi } from "../abis/ValidationRegistry_V1";
+export { ValidationRegistryAbi_V1 as ValidationRegistryAbi } from "./abis/ValidationRegistry_V1";
 
 // Chain ID constants
 export const CHAIN_ID = {
