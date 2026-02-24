@@ -47,9 +47,9 @@
             "pages": [
               "packages/overview",
               "packages/aixyz",
+              "packages/create-aixyz-app",
               "packages/cli",
               "packages/config",
-              "packages/create-aixyz-app",
               "packages/erc-8004",
               "packages/stripe"
             ]
