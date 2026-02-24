@@ -79,7 +79,7 @@ examples/agent-*/
 
 ### Other
 
-- `website/` — Nextra-based documentation site (Next.js + Nextra)
+- `docs/` — Mintlify documentation site (`mint dev` to preview locally)
 - `CLAUDE.md` symlinks to `AGENTS.md`
 
 ## Architecture

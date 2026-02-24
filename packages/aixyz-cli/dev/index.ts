@@ -15,7 +15,7 @@ export async function dev(options: { port?: string }): Promise<void> {
   const baseUrl = `http://localhost:${port}`;
 
   console.log("");
-  console.log(`⟡ ai-xyz.dev v${pkg.version}`);
+  console.log(`⟡ aixyz.sh v${pkg.version}`);
   console.log("");
   console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
   console.log(`- MCP:          ${baseUrl}/mcp`);

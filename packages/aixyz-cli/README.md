@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/aixyz-cli)](https://www.npmjs.com/package/aixyz-cli)
 
-CLI for building and deploying [aixyz](https://ai-xyz.dev) agents.
+CLI for building and deploying [aixyz](https://aixyz.sh) agents.
 
 ## Quick Start
 
