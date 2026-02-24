@@ -28,6 +28,7 @@ beforeAll(() => {
   const configTarball = packPackage("packages/aixyz-config", packDir);
   const cliTarball = packPackage("packages/aixyz-cli", packDir);
   const aixyzTarball = packPackage("packages/aixyz", packDir);
+  const erc8004Tarball = packPackage("packages/aixyz-erc-8004", packDir);
 
   // Run the create-aixyz-app CLI to scaffold a project
   Bun.spawnSync(["bun", CLI_PATH, "--yes", "test-agent"], {
@@ -45,6 +46,7 @@ beforeAll(() => {
   pkg.dependencies["aixyz"] = aixyzTarball;
   pkg.dependencies["@aixyz/cli"] = cliTarball;
   pkg.dependencies["@aixyz/config"] = configTarball;
+  pkg.dependencies["@aixyz/erc-8004"] = erc8004Tarball;
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
   // Re-install with local packages
