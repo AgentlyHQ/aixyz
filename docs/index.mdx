@@ -1,56 +1,47 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Bundle AI agents from any framework into deployable services with built-in protocols and payments"
 ---
 
-## Setting up
+**aixyz** is a framework for bundling AI agents into deployable services with built-in support for [A2A](/protocols/a2a), [MCP](/protocols/mcp), [x402 payments](/protocols/x402), and [ERC-8004 identity](/protocols/erc-8004).
 
-Get your documentation site up and running in minutes.
+Write your agent logic. aixyz handles protocol wiring, payment gating, and deployment.
 
-<Card title="Start here" icon="rocket" href="/quickstart" horizontal>
-  Follow our three step quickstart guide.
-</Card>
+## How It Works
 
-## Make it yours
+1. **Define your agent** — Use [Vercel AI SDK](https://ai-sdk.dev) (`ai@^6`) to create agents with tools
+2. **Configure identity and payments** — Set up `aixyz.config.ts` with agent metadata and x402 payment settings
+3. **Deploy** — Run `aixyz build` and deploy to Vercel, Docker, or any Bun-compatible host
 
-Design a docs site that looks great and empowers your users.
+aixyz auto-generates a server that exposes:
 
-<Columns cols={2}>
-  <Card title="Edit locally" icon="pen-to-square" href="/development">
-    Edit your docs locally and preview them in real time.
+| Endpoint                       | Protocol | Description                              |
+| ------------------------------ | -------- | ---------------------------------------- |
+| `/.well-known/agent-card.json` | A2A      | Agent discovery card                     |
+| `/agent`                       | A2A      | JSON-RPC endpoint with x402 payment gate |
+| `/mcp`                         | MCP      | Tool sharing with MCP clients            |
+
+## Quick Example
+
+```bash
+bunx create-aixyz-app my-agent
+cd my-agent
+bun run dev
+```
+
+Your agent is running at `http://localhost:3000` with A2A, MCP, and x402 payment support out of the box.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Create and run your first agent in under a minute.
   </Card>
-  <Card title="Customize your site" icon="palette" href="/essentials/settings">
-    Customize the design and colors of your site to match your brand.
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    Understand config, agent, and tool files.
   </Card>
-  <Card title="Set up navigation" icon="map" href="/essentials/navigation">
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Protocols" icon="diagram-project" href="/protocols/a2a">
+    Learn about A2A, MCP, x402, and ERC-8004.
   </Card>
-  <Card title="API documentation" icon="terminal" href="/api-reference/introduction">
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Deployment" icon="cloud-arrow-up" href="/guides/deployment">
+    Deploy to Vercel, Docker, or standalone.
   </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card title="Write with MDX" icon="pen-fancy" href="/essentials/markdown">
-    Use MDX to style your docs pages.
-  </Card>
-  <Card title="Code samples" icon="code" href="/essentials/code">
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card title="Images" icon="image" href="/essentials/images">
-    Display images and other media.
-  </Card>
-  <Card title="Reusable snippets" icon="recycle" href="/essentials/reusable-snippets">
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card title="See complete examples" icon="stars" href="https://mintlify.com/customers">
-  Browse our showcase of exceptional documentation sites.
-</Card>
+</CardGroup>
