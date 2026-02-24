@@ -27,21 +27,11 @@
               "guides/cli",
               "guides/deployment"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Protocols",
-        "groups": [
+          },
           {
             "group": "Protocols",
             "pages": ["protocols/a2a", "protocols/mcp", "protocols/x402", "protocols/erc-8004"]
-          }
-        ]
-      },
-      {
-        "tab": "Packages",
-        "groups": [
+          },
           {
             "group": "Packages",
             "pages": [
@@ -56,11 +46,21 @@
         ]
       },
       {
-        "tab": "Examples",
+        "tab": "Templates",
         "groups": [
           {
-            "group": "Examples",
-            "pages": ["examples/overview"]
+            "group": "Templates",
+            "pages": [
+              "templates/overview",
+              "templates/agent-boilerplate",
+              "templates/agent-travel",
+              "templates/agent-price-oracle",
+              "templates/agent-chainlink",
+              "templates/agent-job-hunter",
+              "templates/agent-with-custom-server",
+              "templates/agent-byo-facilitator",
+              "templates/agent-with-tests"
+            ]
           }
         ]
       }
