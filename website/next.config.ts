@@ -1,13 +1,15 @@
-import nextra from "nextra";
+import { NextConfig } from "next";
 
-const withNextra = nextra({
-  defaultShowCopyCode: true,
-});
-
-export default withNextra({
-  turbopack: {
-    resolveAlias: {
-      "next-mdx-import-source-file": "./mdx-components.tsx",
-    },
+const config: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        destination: "https://aixyz.sh",
+        permanent: true,
+      },
+    ];
   },
-});
+};
+
+export default config;
