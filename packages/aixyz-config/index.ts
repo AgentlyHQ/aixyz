@@ -61,6 +61,14 @@ const NetworkSchema = z.custom<Network>((val) => {
   return typeof val === "string" && val.includes(":");
 });
 
+const defaultConfig = {
+  build: {
+    includes: ["**/*.{js,jsx,ts,tsx}"],
+    excludes: ["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"],
+  },
+  skills: [],
+};
+
 const AixyzConfigSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().nonempty(),
@@ -99,7 +107,7 @@ const AixyzConfigSchema = z.object({
         .default(["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"])
         .transform((v) => (Array.isArray(v) ? v : [v])),
     })
-    .optional(),
+    .default(defaultConfig.build),
   skills: z
     .array(
       z.object({
@@ -113,7 +121,7 @@ const AixyzConfigSchema = z.object({
         security: z.array(z.record(z.string(), z.array(z.string()))).optional(),
       }),
     )
-    .default([]),
+    .default(defaultConfig.skills),
 });
 
 type InferredAixyzConfig = z.infer<typeof AixyzConfigSchema>;

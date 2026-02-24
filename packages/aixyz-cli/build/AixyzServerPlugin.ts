@@ -56,9 +56,9 @@ class AixyzGlob {
   constructor(readonly config = getAixyzConfig()) {}
 
   includes(file: string): boolean {
-    const included = this.config.build?.includes?.some((pattern) => new Bun.Glob(pattern).match(file)) ?? false;
+    const included = this.config.build.includes.some((pattern) => new Bun.Glob(pattern).match(file));
     if (!included) return false;
-    const excluded = this.config.build?.excludes?.some((pattern) => new Bun.Glob(pattern).match(file)) ?? false;
+    const excluded = this.config.build.excludes.some((pattern) => new Bun.Glob(pattern).match(file));
     return !excluded;
   }
 }
