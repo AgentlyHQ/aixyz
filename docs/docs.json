@@ -50,7 +50,7 @@
           },
           {
             "group": "Packages",
-            "pages": ["packages/aixyz", "packages/create-aixyz-app", "packages/stripe"]
+            "pages": ["packages/aixyz", "packages/create-aixyz-app"]
           }
         ]
       },
