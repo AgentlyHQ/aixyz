@@ -48,7 +48,6 @@
               "packages/overview",
               "packages/aixyz",
               "packages/create-aixyz-app",
-              "packages/cli",
               "packages/config",
               "packages/erc-8004",
               "packages/stripe"
