@@ -59,13 +59,21 @@
         "groups": [
           {
             "group": "Templates",
+            "pages": ["templates/overview"]
+          },
+          {
+            "group": "Basic",
             "pages": [
-              "templates/overview",
               "templates/agent-boilerplate",
               "templates/agent-travel",
               "templates/agent-price-oracle",
               "templates/agent-chainlink",
-              "templates/agent-job-hunter",
+              "templates/agent-job-hunter"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
               "templates/agent-with-custom-server",
               "templates/agent-byo-facilitator",
               "templates/agent-with-tests"
