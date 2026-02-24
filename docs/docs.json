@@ -32,7 +32,17 @@
           },
           {
             "group": "API Reference",
-            "pages": ["api-reference/file-system-conventions"]
+            "pages": ["api-reference/agent", "api-reference/agent-test", "api-reference/tools"]
+          },
+          {
+            "group": "Functions",
+            "pages": [
+              "api-reference/aixyz-server",
+              "api-reference/use-a2a",
+              "api-reference/aixyz-mcp",
+              "api-reference/load-env",
+              "api-reference/accepts"
+            ]
           },
           {
             "group": "Protocols",

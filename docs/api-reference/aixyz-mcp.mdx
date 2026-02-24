@@ -1,0 +1,67 @@
+---
+title: "AixyzMCP"
+description: "Expose tools to MCP clients at /mcp"
+---
+
+Exposes tools to MCP-compatible clients (Claude Desktop, VS Code, Cursor) at `POST /mcp` via `StreamableHTTPServerTransport`.
+
+```typescript
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+```
+
+## Constructor
+
+```typescript
+new AixyzMCP(app: AixyzServer)
+```
+
+| Parameter | Type          | Description         |
+| --------- | ------------- | ------------------- |
+| `app`     | `AixyzServer` | The server instance |
+
+## Methods
+
+### `register(name, exports)`
+
+Registers a tool for MCP clients.
+
+```typescript
+await mcp.register("weather", {
+  default: weatherTool,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+```
+
+| Parameter         | Type      | Required | Description                                        |
+| ----------------- | --------- | -------- | -------------------------------------------------- |
+| `name`            | `string`  | Yes      | Tool name exposed to MCP clients                   |
+| `exports.default` | `Tool`    | Yes      | Vercel AI SDK tool instance                        |
+| `exports.accepts` | `Accepts` | No       | Payment config — if absent, tool is not registered |
+
+<Note>Tools without `accepts` are not registered on the MCP endpoint.</Note>
+
+### `connect()`
+
+Mounts the `POST /mcp` endpoint on the server. Call this after registering all tools.
+
+```typescript
+await mcp.connect();
+```
+
+## Example
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import lookup from "./tools/lookup";
+
+const server = new AixyzServer();
+await server.initialize();
+
+const mcp = new AixyzMCP(server);
+await mcp.register("lookup", {
+  default: lookup,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+await mcp.connect();
+```

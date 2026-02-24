@@ -1,0 +1,91 @@
+---
+title: "AixyzServer"
+description: "The core server class that wraps Express 5 with x402 payment support"
+---
+
+`AixyzServer` extends `x402ResourceServer` from `@x402/core/server`, which wraps Express 5. It provides built-in x402 payment verification for agent and tool endpoints.
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+```
+
+## Constructor
+
+```typescript
+new AixyzServer(facilitator?, config?, express?)
+```
+
+| Parameter     | Type                | Default                       | Description                  |
+| ------------- | ------------------- | ----------------------------- | ---------------------------- |
+| `facilitator` | `FacilitatorClient` | Default x402 facilitator      | Payment verification service |
+| `config`      | `AixyzConfig`       | Loaded from `aixyz.config.ts` | Agent configuration          |
+| `express`     | `Express`           | New Express 5 app             | Express instance to use      |
+
+## Properties
+
+| Property  | Type          | Description                    |
+| --------- | ------------- | ------------------------------ |
+| `config`  | `AixyzConfig` | The parsed agent configuration |
+| `express` | `Express`     | The underlying Express 5 app   |
+
+## Methods
+
+### `unstable_withIndexPage(path?)`
+
+Adds a human-readable text page at the specified path showing agent name, description, version, and skills.
+
+```typescript
+server.unstable_withIndexPage("/");
+```
+
+| Parameter | Type     | Default | Description                      |
+| --------- | -------- | ------- | -------------------------------- |
+| `path`    | `string` | `"/"`   | Route path (must start with `/`) |
+
+Returns `this` for chaining.
+
+<Warning>The `unstable_withIndexPage()` API is experimental and may change in future releases.</Warning>
+
+### `withX402Exact(route, accepts)`
+
+Registers x402 payment middleware on a route:
+
+```typescript
+server.withX402Exact("POST /agent", {
+  scheme: "exact",
+  price: "$0.005",
+});
+```
+
+| Parameter | Type                                  | Description           |
+| --------- | ------------------------------------- | --------------------- |
+| `route`   | `` `${"GET" \| "POST"} /${string}` `` | Route pattern         |
+| `accepts` | `AcceptsX402`                         | Payment configuration |
+
+### `withPaymentRequirements(accepts)`
+
+Builds payment requirements for a given accepts configuration. Used internally by MCP adapter.
+
+```typescript
+const requirements = await server.withPaymentRequirements({
+  scheme: "exact",
+  price: "$0.001",
+});
+```
+
+## Example
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+import { useA2A } from "aixyz/server/adapters/a2a";
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import * as agent from "./agent";
+
+const server = new AixyzServer();
+await server.initialize();
+server.unstable_withIndexPage();
+
+useA2A(server, agent);
+
+export default server;
+```

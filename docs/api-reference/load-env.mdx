@@ -1,0 +1,45 @@
+---
+title: "loadEnv"
+description: "Load environment variables for tests"
+---
+
+Loads environment variables from `.env` files for test runs. Follows the same loading order as Next.js, with one exception: `.env.local` is **not loaded** during tests (use `.env.test.local` instead).
+
+```typescript
+import { loadEnv } from "aixyz/test";
+```
+
+## Signature
+
+```typescript
+function loadEnv(cwd?: string, dev?: boolean): void;
+```
+
+| Parameter | Type      | Default         | Description                          |
+| --------- | --------- | --------------- | ------------------------------------ |
+| `cwd`     | `string`  | `process.cwd()` | Starting directory to search from    |
+| `dev`     | `boolean` | `true`          | Whether to load development env vars |
+
+## Behavior
+
+- Searches upward from `cwd` for a directory containing `aixyz.config.ts`
+- Loads `.env`, `.env.test`, `.env.test.local` files
+- **Ignores `.env.local`** so tests produce the same results for everyone
+- Use `.env.test.local` for local test overrides (e.g., `OPENAI_API_KEY`)
+
+## Example
+
+```typescript
+import { describe, expect, test } from "bun:test";
+import { loadEnv } from "aixyz/test";
+import agent from "./agent";
+
+describe("agent tests", () => {
+  loadEnv();
+
+  test.skipIf(!process.env.OPENAI_API_KEY)("agent responds", async () => {
+    const result = await agent.generate({ prompt: "hello" });
+    expect(result.text).toBeTruthy();
+  });
+});
+```
