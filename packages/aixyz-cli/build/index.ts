@@ -77,7 +77,7 @@ async function buildBun(entrypoint: string): Promise<void> {
   console.log("Build complete! Output:");
   console.log("  .aixyz/output/server.js");
   console.log("  .aixyz/output/package.json");
-  if (existsSync(publicDir) || existsSync(iconFile)) {
+  if (existsSync(publicDir) || iconFile) {
     console.log("  .aixyz/output/public/ and assets");
   }
   console.log("");
