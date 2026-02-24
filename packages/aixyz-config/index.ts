@@ -43,6 +43,16 @@ export type AixyzConfig = {
      * Overrides the `VERCEL=1` environment variable, but is overridden by the `--output` CLI flag.
      */
     output?: "standalone" | "vercel";
+    /**
+     * Glob pattern(s) for files to include in the build from the `app/` directory.
+     * @default ["**\/*.{js,jsx,ts,tsx}"]
+     */
+    includes?: string | string[];
+    /**
+     * Glob pattern(s) for files to exclude from the build.
+     * @default ["**\/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"]
+     */
+    excludes?: string | string[];
   };
   skills?: InferredAixyzConfig["skills"];
 };
@@ -80,6 +90,14 @@ const AixyzConfigSchema = z.object({
   build: z
     .object({
       output: z.enum(["standalone", "vercel"]).optional(),
+      includes: z
+        .union([z.string(), z.array(z.string())])
+        .default(["**/*.{js,jsx,ts,tsx}"])
+        .transform((v) => (Array.isArray(v) ? v : [v])),
+      excludes: z
+        .union([z.string(), z.array(z.string())])
+        .default(["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"])
+        .transform((v) => (Array.isArray(v) ? v : [v])),
     })
     .optional(),
   skills: z
