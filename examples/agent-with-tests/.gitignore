@@ -1,0 +1,12 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+.yarn*
+pnpm-lock.yaml
+
+# aixyz
+.aixyz
+
+# local env files
+.env.local
