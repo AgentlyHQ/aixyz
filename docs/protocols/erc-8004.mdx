@@ -12,53 +12,63 @@ aixyz supports ERC-8004 through two packages:
 | Package          | npm Name          | Description                                        |
 | ---------------- | ----------------- | -------------------------------------------------- |
 | `aixyz-erc-8004` | `@aixyz/erc-8004` | Contract ABIs, deployed addresses, and Zod schemas |
-| `aixyz-cli-erc`  | `@aixyz/cli-erc`  | CLI for registry operations                        |
+| `aixyz-cli-erc`  | `@aixyz/cli-erc`  | CLI for registry operations (`agently-cli`)        |
 
-## `@aixyz/erc-8004` Package
+## Supported Networks
 
-This package provides the building blocks for interacting with ERC-8004 contracts:
+**Mainnets:** Ethereum, Base, Polygon, Scroll, Monad, BSC, Gnosis
 
-- **Contract ABIs** — TypeScript-typed ABIs for the ERC-8004 registry contract
+**Testnets:** Sepolia, Base Sepolia, Polygon Amoy, Scroll Sepolia, Monad Testnet, BSC Testnet
+
+## Register an Agent
+
+Use `agently-cli` to register your agent on the IdentityRegistry:
+
+```bash
+agently-cli register --chain base-sepolia --broadcast
+```
+
+| Flag          | Description                                       |
+| ------------- | ------------------------------------------------- |
+| `--uri`       | Metadata URI or local JSON file path              |
+| `--chain`     | `mainnet`, `sepolia`, `base-sepolia`, `localhost` |
+| `--rpc-url`   | Custom RPC endpoint                               |
+| `--keystore`  | Encrypted keystore file                           |
+| `--browser`   | Use browser wallet (EIP-6963)                     |
+| `--broadcast` | Send transaction (default is dry-run)             |
+
+## Set Agent URI
+
+Point your on-chain identity to your deployed agent's discovery endpoint:
+
+```bash
+agently-cli set-agent-uri \
+  --agent-id 1 \
+  --uri "https://my-agent.vercel.app/.well-known/agent-card.json" \
+  --broadcast
+```
+
+## Programmatic Usage
+
+Use the `@aixyz/erc-8004` package to interact with the registry from code:
+
+```typescript
+import { IdentityRegistryAbi, getIdentityRegistryAddress } from "@aixyz/erc-8004";
+```
+
+The package provides:
+
+- **Contract ABIs** — TypeScript-typed ABIs for use with viem, ethers, or wagmi
 - **Deployed addresses** — Known contract addresses across supported networks
 - **Zod schemas** — Validation schemas for registration data and agent URIs
 
-```typescript
-import { registryAbi, registryAddress } from "@aixyz/erc-8004";
-```
-
-## `@aixyz/cli-erc` CLI
-
-The `@aixyz/cli-erc` package provides a CLI for common ERC-8004 registry operations:
-
-### Register an Agent
-
-```bash
-bunx @aixyz/cli-erc register \
-  --name "my-agent" \
-  --description "A helpful AI agent"
-```
-
-### Set Agent URI
-
-Point your on-chain identity to your deployed agent:
-
-```bash
-bunx @aixyz/cli-erc set-agent-uri \
-  --agent-id 0x123... \
-  --uri "https://my-agent.example.com"
-```
-
-The agent URI should point to the root of your deployed agent, where the `/.well-known/agent-card.json` A2A discovery endpoint is accessible.
-
 ## Integration with aixyz
 
-ERC-8004 identity complements the other protocols in aixyz:
+ERC-8004 identity complements the other protocols:
 
 - **A2A** — The agent card can reference an on-chain identity for verification
-- **x402** — Payment gating can be tied to verified on-chain agent identities
+- **x402** — Payment gating tied to verified on-chain agent identities
 - **MCP** — Tool discovery backed by verifiable identity
-
-## Next Steps
 
 <CardGroup cols={2}>
   <Card title="A2A Protocol" icon="diagram-project" href="/protocols/a2a">

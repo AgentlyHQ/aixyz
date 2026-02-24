@@ -5,83 +5,94 @@ description: "The main framework package for building AI agent services"
 
 ## Overview
 
-The `aixyz` package is the core framework for building AI agent services. It provides the server, protocol adapters, payment integration, and agent execution runtime.
+The `aixyz` package is the core framework for building AI agent services. It provides the server, protocol adapters (A2A, MCP), x402 payment integration, and the agent execution runtime.
 
 ```bash
 bun add aixyz
 ```
 
-## Server
+**Peer dependency:** [Vercel AI SDK](https://ai-sdk.dev) `ai@^6`
 
-`AixyzServer` extends `x402ResourceServer` from `@x402/express`, which wraps Express 5. It provides a standard Express server with built-in x402 payment gating.
+## Exports
+
+| Import Path                 | Description                                       |
+| --------------------------- | ------------------------------------------------- |
+| `aixyz/server`              | `AixyzServer` class                               |
+| `aixyz/server/adapters/a2a` | `useA2A`, `getAgentCard`, `ToolLoopAgentExecutor` |
+| `aixyz/server/adapters/mcp` | `AixyzMCP` class                                  |
+| `aixyz/config`              | Re-exports from `@aixyz/config`                   |
+| `aixyz/accepts`             | `Accepts` type, `HTTPFacilitatorClient`           |
+| `aixyz/test`                | Test utilities (`loadEnv`)                        |
+
+## `AixyzServer`
+
+Express 5 server with x402 payment verification. Extends `x402ResourceServer` from `@x402/core/server`.
 
 ```typescript
 import { AixyzServer } from "aixyz/server";
 
 const server = new AixyzServer();
-server.listen(3000);
+await server.initialize();
 ```
 
-## Protocol Adapters
+### Key Properties
 
-### A2A (`aixyz/server/adapters/a2a`)
+- `server.express` — the raw Express 5 app
+- `server.config` — parsed `AixyzConfig`
 
-The `useA2A` function registers A2A endpoints on your server:
+### Key Methods
+
+- `server.unstable_withIndexPage(path?)` — add human-readable agent info page
+- `server.withX402Exact(route, accepts)` — register x402 payment-gated route
+- `server.withPaymentRequirements(accepts)` — build payment requirements for a route
+
+## A2A Adapter
 
 ```typescript
 import { useA2A } from "aixyz/server/adapters/a2a";
 
-useA2A(server, agent);
-// /.well-known/agent-card.json — Agent discovery card
-// /agent — JSON-RPC endpoint
+useA2A(server, agentExports);
+// GET  /.well-known/agent-card.json — agent discovery card
+// POST /agent — JSON-RPC endpoint (x402-gated if accepts defined)
 ```
 
-### MCP (`aixyz/server/adapters/mcp`)
+The `agentExports` parameter is `import * as agent from "./agent"` — it reads both `default` (the `ToolLoopAgent`) and `accepts` (payment config).
 
-The `AixyzMCP` class exposes tools to MCP clients:
+## MCP Adapter
 
 ```typescript
 import { AixyzMCP } from "aixyz/server/adapters/mcp";
 
-const mcp = new AixyzMCP(tools);
-server.use("/mcp", mcp.handler());
+const mcp = new AixyzMCP(server);
+await mcp.register("toolName", {
+  default: toolInstance,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+await mcp.connect();
+// POST /mcp — tool endpoint via StreamableHTTPServerTransport
 ```
 
 ## Agent Executor
 
-The `ToolLoopAgentExecutor` wraps Vercel AI SDK agents (`ai@^6`) into the `AgentExecutor` interface. It handles multi-step tool execution loops automatically.
+`ToolLoopAgentExecutor` wraps Vercel AI SDK `ToolLoopAgent` instances into the A2A `AgentExecutor` interface, handling multi-step tool execution loops automatically.
 
 ```typescript
 import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
 
-// app/agent.ts — exports a ToolLoopAgent
-export default {
-  model: openai("gpt-4o"),
-  system: "You are a helpful assistant.",
-};
-```
-
-## x402 Integration
-
-Payment gating is built into the server via `withX402Exact()`:
-
-```typescript
-server.withX402Exact({
+export const accepts: Accepts = {
+  scheme: "exact",
   price: "$0.005",
-  route: "/agent",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
 });
 ```
-
-## Exports
-
-| Import Path                 | Description                     |
-| --------------------------- | ------------------------------- |
-| `aixyz/server`              | `AixyzServer` class             |
-| `aixyz/server/adapters/a2a` | `useA2A` function               |
-| `aixyz/server/adapters/mcp` | `AixyzMCP` class                |
-| `aixyz/config`              | Re-exports from `@aixyz/config` |
-
-## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">

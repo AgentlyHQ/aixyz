@@ -1,22 +1,27 @@
 ---
 title: "x402 Payments"
-description: "Payment gating for agent endpoints using the x402 protocol"
+description: "HTTP 402 micropayments for agent endpoints"
 ---
 
 ## Overview
 
-x402 is a payment protocol that gates access to HTTP resources. In aixyz, `AixyzServer` extends `x402ResourceServer` from `@x402/express`, providing built-in payment gating for agent endpoints.
+[x402](https://www.x402.org/) is a payment protocol for HTTP resources. When a client requests a payment-gated endpoint, the server responds with HTTP 402 and payment requirements. The client includes a payment proof in the `X-Payment` header, and the server verifies it via a facilitator before granting access.
+
+In aixyz, `AixyzServer` extends `x402ResourceServer`, providing built-in payment gating for agent and tool endpoints.
 
 ## How It Works
 
-When an agent or tool exports an `accepts` configuration, the corresponding endpoint requires payment via the x402 protocol. Clients must include a valid payment header in their requests. Agents and tools **without** an `accepts` export are served without payment requirements.
+1. Client requests a gated endpoint (e.g., `POST /agent`)
+2. Server returns **HTTP 402** with payment requirements (price, network, payTo address)
+3. Client constructs payment proof and retries with `X-Payment` header
+4. Server verifies payment via a facilitator and grants access
 
 ## The `accepts` Export
 
 Define payment requirements by exporting `accepts` from your agent or tool:
 
 ```typescript
-import type { Accepts } from "aixyz";
+import type { Accepts } from "aixyz/accepts";
 
 export const accepts: Accepts = {
   scheme: "exact",
@@ -24,53 +29,75 @@ export const accepts: Accepts = {
 };
 ```
 
-This gates the endpoint behind a $0.005 exact payment. The `scheme` field specifies the payment verification strategy.
+This gates the endpoint behind a $0.005 exact payment.
+
+### With Overrides
+
+```typescript
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+  network: "eip155:8453", // override config network
+  payTo: "0x...", // override config payTo
+};
+```
+
+Prices are USD strings: `"$0.005"`, `"$0.01"`, `"$0.0001"`.
+
+## Per-Agent and Per-Tool Pricing
+
+Agents and tools can each declare their own `accepts` export, enabling granular pricing:
+
+```typescript
+// app/agent.ts — agent-level pricing
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.01",
+};
+
+// app/tools/premium-search.ts — tool-level pricing
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.001",
+};
+```
+
+- Agent `accepts` gates the A2A `/agent` endpoint
+- Tool `accepts` gates the tool on the MCP `/mcp` endpoint
+- Agents and tools **without** `accepts` are not registered on protocol endpoints
+
+## Facilitators
+
+Payment verification is handled by a facilitator service:
+
+| Facilitator  | Activation                   | URL                                |
+| ------------ | ---------------------------- | ---------------------------------- |
+| Default      | Always available             | `https://www.x402.org/facilitator` |
+| Coinbase CDP | When `CDP_API_KEY_ID` is set | Auto-configured                    |
+| Custom       | Set `X402_FACILITATOR_URL`   | Your custom URL                    |
+
+### Custom Facilitator
+
+Create `app/accepts.ts` to provide a custom facilitator:
+
+```typescript
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```
 
 ## Server Integration
 
-`AixyzServer` inherits x402 capabilities from `x402ResourceServer`:
+In a [custom server](/guides/custom-server), use `withX402Exact()` to add payment middleware:
 
 ```typescript
-import { AixyzServer } from "aixyz/server";
-
-const server = new AixyzServer();
-
-// Register a payment-gated route
-server.withX402Exact({
+server.withX402Exact("POST /agent", {
+  scheme: "exact",
   price: "$0.005",
-  route: "/agent",
 });
 ```
-
-### `withX402Exact()`
-
-The `withX402Exact()` method registers a route that requires an exact payment amount before granting access. This is the primary method for payment-gating agent endpoints.
-
-## Per-Tool Payment
-
-Individual tools can also declare their own `accepts` export, enabling per-tool pricing:
-
-```typescript
-// app/tools/premium-search.ts
-import { tool } from "ai";
-import { z } from "zod";
-
-export const accepts = { scheme: "exact", price: "$0.01" };
-
-export default tool({
-  description: "Premium search with advanced results",
-  parameters: z.object({ query: z.string() }),
-  execute: async ({ query }) => {
-    // premium search logic
-  },
-});
-```
-
-## Custom Facilitator
-
-For custom payment verification logic, add an `app/accepts.ts` file to your project. This overrides the default x402 facilitator used for payment verification.
-
-## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">

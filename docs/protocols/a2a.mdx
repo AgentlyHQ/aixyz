@@ -1,40 +1,52 @@
 ---
 title: "A2A Protocol"
-description: "Agent-to-Agent protocol support for agent discovery and communication"
+description: "Agent-to-Agent protocol for agent discovery and communication"
 ---
 
 ## Overview
 
-The A2A (Agent-to-Agent) protocol enables standardized agent discovery and inter-agent communication. aixyz implements A2A with an agent card for discovery and a JSON-RPC endpoint for task execution.
+The [A2A (Agent-to-Agent)](https://google.github.io/A2A/) protocol enables standardized agent discovery and inter-agent communication. aixyz implements A2A protocol version **0.3.0** with an agent card for discovery and a JSON-RPC endpoint for task execution.
 
 ## Endpoints
 
 | Endpoint                       | Method | Description                                                  |
 | ------------------------------ | ------ | ------------------------------------------------------------ |
 | `/.well-known/agent-card.json` | GET    | Agent discovery card with metadata, skills, and capabilities |
-| `/agent`                       | POST   | JSON-RPC endpoint for sending tasks to the agent             |
-
-## Using the A2A Adapter
-
-The `useA2A` function wires up both endpoints on your server:
-
-```typescript
-import { useA2A } from "aixyz/server/adapters/a2a";
-
-useA2A(server, agent);
-```
-
-This registers:
-
-- A **GET** handler at `/.well-known/agent-card.json` that serves the agent card generated from your `aixyz.config.ts`
-- A **POST** handler at `/agent` that accepts JSON-RPC requests and routes them to your agent executor
+| `/agent`                       | POST   | JSON-RPC task handler, x402-gated if `accepts` is defined    |
 
 ## Agent Card
 
-The agent card is automatically generated from your config and includes agent metadata, supported skills, and endpoint URLs. Other agents and clients use this card for discovery.
+The agent card is automatically generated from your `aixyz.config.ts`. Other agents fetch this card to discover your agent's capabilities.
 
 ```bash
 curl http://localhost:3000/.well-known/agent-card.json
+```
+
+Example response:
+
+```json
+{
+  "name": "Weather Agent",
+  "description": "Get current weather for any location worldwide.",
+  "protocolVersion": "0.3.0",
+  "version": "0.1.0",
+  "url": "https://my-agent.vercel.app/agent",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": [
+    {
+      "id": "get-weather",
+      "name": "Get Weather",
+      "description": "Get current weather conditions for any city",
+      "tags": ["weather"],
+      "examples": ["What's the weather in Tokyo?"]
+    }
+  ]
+}
 ```
 
 ## JSON-RPC Endpoint
@@ -58,9 +70,26 @@ curl -X POST http://localhost:3000/agent \
   }'
 ```
 
+## Using the A2A Adapter
+
+The `useA2A` function wires up both endpoints on your server:
+
+```typescript
+import { useA2A } from "aixyz/server/adapters/a2a";
+
+// agentExports is `import * as agent from "./agent"`
+// reads both `default` (the ToolLoopAgent) and `accepts` (payment config)
+useA2A(server, agent);
+```
+
+This registers:
+
+- A **GET** handler at `/.well-known/agent-card.json` serving the agent card
+- A **POST** handler at `/agent` routing JSON-RPC requests to `ToolLoopAgentExecutor`
+
 ## Payment Integration
 
-When an agent has an `accepts` export, the `/agent` endpoint is gated behind x402 payment. Clients must include a valid payment header to access the endpoint. Agents without `accepts` are served without payment requirements.
+When an agent exports an `accepts` configuration with `scheme: "exact"`, the `/agent` endpoint is gated behind [x402 payment](/protocols/x402). Clients must include a valid `X-Payment` header. Agents without `accepts` are served without payment requirements.
 
 <CardGroup cols={2}>
   <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">

@@ -5,7 +5,7 @@ description: "Model Context Protocol support for sharing tools with MCP clients"
 
 ## Overview
 
-The Model Context Protocol (MCP) allows AI clients to discover and invoke tools exposed by your agent. aixyz implements MCP via the `AixyzMCP` class, serving tools over a streamable HTTP transport.
+The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) allows AI clients to discover and invoke tools exposed by your agent. aixyz implements MCP via the `AixyzMCP` class, serving tools at `/mcp` over a stateless `StreamableHTTPServerTransport`.
 
 ## Endpoint
 
@@ -13,7 +13,22 @@ The Model Context Protocol (MCP) allows AI clients to discover and invoke tools 
 | -------- | ------ | ------------------------------------------------------- |
 | `/mcp`   | POST   | MCP tool endpoint using `StreamableHTTPServerTransport` |
 
-## Automatic Tool Registration
+## Compatible Clients
+
+Any MCP-compatible client can connect to your agent's `/mcp` endpoint:
+
+- **Claude Desktop**
+- **VS Code** (GitHub Copilot)
+- **Cursor**
+- Other MCP-enabled tools
+
+Point the client at your agent's MCP URL:
+
+```
+http://localhost:3000/mcp
+```
+
+## Automatic Registration
 
 When using the standard `app/` directory structure, all tools in `app/tools/*.ts` are automatically registered as MCP tools during the build. No additional configuration is needed.
 
@@ -25,32 +40,31 @@ If you're using a [custom server](/guides/custom-server), wire up MCP manually w
 
 ```typescript
 import { AixyzMCP } from "aixyz/server/adapters/mcp";
-import weather from "./tools/weather";
-import search from "./tools/search";
+import * as lookup from "./tools/lookup";
 
-const mcp = new AixyzMCP({ weather, search });
-server.use("/mcp", mcp.handler());
+const mcp = new AixyzMCP(server);
+
+// Register tools — each gets a name and its exports
+await mcp.register("lookup", {
+  default: lookup.default,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+
+// Mount the /mcp endpoint
+await mcp.connect();
 ```
 
-The `AixyzMCP` constructor accepts an object mapping tool names to tool definitions. Each tool defined in `app/tools/` becomes available to MCP clients.
+## Payment-Gated Tools
 
-## How It Works
+Tools with `accepts.scheme === "exact"` require [x402 payment](/protocols/x402) via `@x402/mcp`. The payment wrapper is applied automatically when you provide an `accepts` configuration during registration.
 
-Under the hood, `AixyzMCP` uses `StreamableHTTPServerTransport` from the `@modelcontextprotocol/sdk` to handle the MCP protocol. This transport supports:
-
-- Tool listing — clients can discover available tools and their schemas
-- Tool invocation — clients send tool calls and receive structured results
-- Streaming responses — results are streamed back over HTTP
-
-## Testing with MCP Clients
-
-Any MCP-compatible client can connect to your agent's `/mcp` endpoint. Point the client at:
-
+```typescript
+// This tool requires $0.001 per invocation
+await mcp.register("premiumSearch", {
+  default: searchTool,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
 ```
-http://localhost:3000/mcp
-```
-
-## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">

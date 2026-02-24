@@ -16,23 +16,32 @@ Returns the full configuration object for build-time use. This includes all fiel
 ```typescript
 import { getAixyzConfig } from "@aixyz/config";
 
-const config = await getAixyzConfig();
+const config = getAixyzConfig();
 ```
 
 ### `getAixyzConfigRuntime()`
 
-Returns a subset of the configuration that is safe for inclusion in runtime bundles. Sensitive or build-only fields are excluded.
+Returns a subset of the configuration that is safe for inclusion in runtime bundles.
 
 ```typescript
 import { getAixyzConfigRuntime } from "@aixyz/config";
 
-const runtimeConfig = await getAixyzConfigRuntime();
+const runtimeConfig = getAixyzConfigRuntime();
 ```
 
 <Note>
   At build time, the `AixyzConfigPlugin` replaces imports from `aixyz/config` with the resolved runtime config, so the
   config file is not required at runtime.
 </Note>
+
+### Types
+
+```typescript
+import type { AixyzConfig, Network } from "@aixyz/config";
+```
+
+- `AixyzConfig` — the full config type for `aixyz.config.ts`
+- `Network` — CAIP-2 network identifier type (e.g., `"eip155:8453"`)
 
 ## Environment File Loading
 
@@ -43,17 +52,19 @@ Environment variables are loaded in the following order (later files take preced
 3. `.env.$(NODE_ENV)` — e.g., `.env.production`
 4. `.env.$(NODE_ENV).local` — e.g., `.env.production.local`
 
-This matches the loading order used by Next.js, making it familiar for teams already using that convention.
+This matches the loading order used by Next.js.
+
+## URL Auto-Detection
+
+If `url` is not set in config, it is resolved from environment variables:
+
+1. `https://${VERCEL_PROJECT_PRODUCTION_URL}` (Vercel production)
+2. `https://${VERCEL_URL}` (Vercel preview)
+3. `http://localhost:3000` (fallback)
 
 ## Zod Validation
 
-All configuration fields are validated against Zod schemas at load time. If your config is invalid, you get a descriptive error:
-
-```
-Config validation error:
-  - name: Required
-  - skills[0].id: Expected string, received number
-```
+All configuration fields are validated against Zod schemas at load time. If your config is invalid, you get a descriptive error with the exact field and expected type.
 
 ## Usage in Build Plugins
 
@@ -62,8 +73,6 @@ The `AixyzConfigPlugin` (part of `@aixyz/cli`) calls `getAixyzConfig()` during t
 - `import config from "aixyz/config"` works at runtime without the config file
 - Environment variables are baked in at build time
 - The config file itself is not included in the output bundle
-
-## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Configuration Guide" icon="gear" href="/guides/configuration">

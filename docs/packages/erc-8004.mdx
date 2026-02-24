@@ -1,6 +1,6 @@
 ---
 title: "@aixyz/erc-8004"
-description: "ERC-8004 contract ABIs, addresses, and Zod schemas"
+description: "ERC-8004 contract ABIs, deployed addresses, and Zod schemas"
 ---
 
 ## Overview
@@ -12,6 +12,12 @@ The `@aixyz/erc-8004` package provides TypeScript bindings for the ERC-8004 on-c
   tooling that consumes contract ABIs.
 </Note>
 
+## Installation
+
+```bash
+bun add @aixyz/erc-8004
+```
+
 ## Contents
 
 ### Contract ABIs
@@ -19,15 +25,15 @@ The `@aixyz/erc-8004` package provides TypeScript bindings for the ERC-8004 on-c
 Typed ABIs for the ERC-8004 registry contract, ready for use with viem, ethers, or wagmi:
 
 ```typescript
-import { registryAbi } from "@aixyz/erc-8004";
+import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 ```
 
 ### Deployed Addresses
 
-Known contract addresses for supported networks:
+Known contract addresses for all supported networks:
 
 ```typescript
-import { registryAddress } from "@aixyz/erc-8004";
+import { getIdentityRegistryAddress } from "@aixyz/erc-8004";
 ```
 
 ### Zod Schemas
@@ -42,31 +48,34 @@ const result = registrationSchema.safeParse(data);
 
 ## Companion CLI: `@aixyz/cli-erc`
 
-The `@aixyz/cli-erc` package provides a command-line interface for ERC-8004 registry operations:
+The `@aixyz/cli-erc` package provides `agently-cli` for ERC-8004 registry operations:
 
 ### Register an Agent
 
 ```bash
-bunx @aixyz/cli-erc register \
-  --name "my-agent" \
-  --description "A helpful AI agent"
+agently-cli register --chain base-sepolia --broadcast
 ```
 
 ### Set Agent URI
 
 ```bash
-bunx @aixyz/cli-erc set-agent-uri \
-  --agent-id 0x123... \
-  --uri "https://my-agent.example.com"
+agently-cli set-agent-uri \
+  --agent-id 1 \
+  --uri "https://my-agent.vercel.app/.well-known/agent-card.json" \
+  --broadcast
 ```
+
+## Supported Networks
+
+**Mainnets:** Ethereum, Base, Polygon, Scroll, Monad, BSC, Gnosis
+
+**Testnets:** Sepolia, Base Sepolia, Polygon Amoy, Scroll Sepolia, Monad Testnet, BSC Testnet
 
 ## Testing
 
 ```bash
 bun run test --filter=@aixyz/erc-8004
 ```
-
-## Next Steps
 
 <CardGroup cols={2}>
   <Card title="ERC-8004 Protocol" icon="id-card" href="/protocols/erc-8004">
