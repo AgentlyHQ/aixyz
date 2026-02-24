@@ -1,5 +1,5 @@
 ---
-title: "AixyzServer"
+title: "aixyz/server"
 description: "The core server class that wraps Express 5 with x402 payment support"
 ---
 
@@ -25,6 +25,8 @@ new AixyzServer(
 | `config`      | `AixyzConfig`       | Loaded from `aixyz.config.ts` | Agent configuration          |
 | `express`     | `Express`           | New Express 5 app             | Express instance to use      |
 
+After constructing, call `await server.initialize()` before registering any routes.
+
 ## Properties
 
 | Property  | Type          | Description                    |
@@ -33,22 +35,6 @@ new AixyzServer(
 | `express` | `Express`     | The underlying Express 5 app   |
 
 ## Methods
-
-### `unstable_withIndexPage(path?)`
-
-Adds a human-readable text page at the specified path showing agent name, description, version, and skills.
-
-```typescript
-server.unstable_withIndexPage("/");
-```
-
-| Parameter | Type     | Default | Description                      |
-| --------- | -------- | ------- | -------------------------------- |
-| `path`    | `string` | `"/"`   | Route path (must start with `/`) |
-
-Returns `this` for chaining.
-
-<Warning>The `unstable_withIndexPage()` API is experimental and may change in future releases.</Warning>
 
 ### `withX402Exact(route, accepts)`
 
@@ -66,9 +52,11 @@ server.withX402Exact("POST /agent", {
 | `route`   | `` `${"GET" \| "POST"} /${string}` `` | Route pattern         |
 | `accepts` | `AcceptsX402`                         | Payment configuration |
 
+The `payTo` and `network` fields default to the values from your `aixyz.config.ts` if not specified in the `accepts` object.
+
 ### `withPaymentRequirements(accepts)`
 
-Builds payment requirements for a given accepts configuration. Used internally by MCP adapter.
+Builds payment requirements for a given accepts configuration. Used internally by the MCP adapter.
 
 ```typescript
 const requirements = await server.withPaymentRequirements({

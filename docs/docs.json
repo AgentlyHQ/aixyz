@@ -31,17 +31,17 @@
             "pages": ["config/aixyz-config", "config/environment-variables"]
           },
           {
-            "group": "API Reference",
-            "pages": ["api-reference/agent", "api-reference/agent-test", "api-reference/tools"]
+            "group": "File-system layout",
+            "pages": ["api-reference/agent", "api-reference/tools"]
           },
           {
             "group": "Functions",
             "pages": [
+              "api-reference/accepts",
+              "api-reference/aixyz-config",
               "api-reference/aixyz-server",
-              "api-reference/use-a2a",
-              "api-reference/aixyz-mcp",
-              "api-reference/load-env",
-              "api-reference/accepts"
+              "api-reference/unstable-with-index-page",
+              "api-reference/experimental-use-stripe-payment-intent"
             ]
           },
           {

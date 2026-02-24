@@ -1,0 +1,70 @@
+---
+title: "unstable_withIndexPage"
+description: "Add a human-readable text page to your agent server"
+---
+
+Adds a human-readable plain text page to your `AixyzServer` showing agent name, description, version, and skills.
+
+```typescript
+server.unstable_withIndexPage();
+```
+
+<Warning>This API is unstable and may change in future releases.</Warning>
+
+## Signature
+
+```typescript
+server.unstable_withIndexPage(path?: string): AixyzServer
+```
+
+| Parameter | Type     | Default | Description                      |
+| --------- | -------- | ------- | -------------------------------- |
+| `path`    | `string` | `"/"`   | Route path (must start with `/`) |
+
+Returns `this` for chaining.
+
+## Behavior
+
+Registers a `GET` handler at the given path that responds with `text/plain` content:
+
+```
+My Agent
+========
+
+Description: A helpful travel agent
+Version: 0.1.0
+
+Skills:
+
+1. Search Flights
+   ID: search-flights
+   Description: Search for flights between airports
+   Tags: travel, flights
+   Examples:
+   - Find flights from SFO to LAX
+```
+
+The output includes:
+
+- Agent **name** and a separator line
+- **Description** and **version** from config
+- **Skills** list with IDs, descriptions, tags, and examples (if configured)
+
+## Usage
+
+The auto-generated server calls `unstable_withIndexPage()` automatically at `"/"`. In a custom server, call it explicitly:
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+
+const server = new AixyzServer();
+await server.initialize();
+
+// Mount at root (default)
+server.unstable_withIndexPage();
+
+// Or mount at a custom path
+server.unstable_withIndexPage("/info");
+
+export default server;
+```

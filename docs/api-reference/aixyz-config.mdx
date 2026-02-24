@@ -1,0 +1,105 @@
+---
+title: "aixyz/config"
+description: "Agent configuration types and runtime config access"
+---
+
+Provides the `AixyzConfig` type and functions to access your agent's configuration at runtime.
+
+```typescript
+import type { AixyzConfig, AixyzConfigRuntime } from "aixyz/config";
+import { getAixyzConfig, getAixyzConfigRuntime } from "aixyz/config";
+```
+
+## Types
+
+### `AixyzConfig`
+
+The full configuration object parsed from `aixyz.config.ts`:
+
+```typescript
+type AixyzConfig = {
+  name: string;
+  description: string;
+  version: string;
+  url?: string;
+  x402: {
+    payTo: string;
+    network: string; // CAIP-2 chain ID
+  };
+  build?: {
+    output?: "standalone" | "vercel";
+    includes?: string | string[];
+    excludes?: string | string[];
+  };
+  skills?: Skill[];
+};
+```
+
+### `AixyzConfigRuntime`
+
+The subset of config safe to access at runtime (excludes `x402` and `build`):
+
+```typescript
+type AixyzConfigRuntime = {
+  name: string;
+  description: string;
+  version: string;
+  url: string;
+  skills: Skill[];
+};
+```
+
+## Functions
+
+### `getAixyzConfig()`
+
+Returns the full parsed config. Intended for build-time and CLI use.
+
+```typescript
+const config = getAixyzConfig();
+console.log(config.x402.payTo);
+```
+
+### `getAixyzConfigRuntime()`
+
+Returns the runtime-safe subset of the config. Use this in your server code.
+
+```typescript
+const config = getAixyzConfigRuntime();
+console.log(config.name, config.version);
+```
+
+## Under the hood: materialization
+
+When you run `aixyz build` or `aixyz dev`, the config is **materialized** into the bundle at build time. This means `getAixyzConfig()` and `getAixyzConfigRuntime()` don't read from the filesystem at runtime — they return a pre-computed JSON object that was inlined during the build.
+
+The `AixyzConfigPlugin` in the CLI:
+
+1. Reads and validates your `aixyz.config.ts` at build time
+2. Resolves environment variables (e.g. `VERCEL_URL` for the `url` field)
+3. Replaces the `aixyz/config` module in the bundle with a static JSON literal:
+
+```typescript
+// What your code imports:
+import { getAixyzConfig } from "aixyz/config";
+
+// What ends up in the bundle:
+const config = { name: "my-agent", description: "..." /* ... */ };
+export function getAixyzConfig() {
+  return config;
+}
+export function getAixyzConfigRuntime() {
+  return config;
+}
+```
+
+This means:
+
+- **No filesystem access** at runtime — the config is baked into the bundle
+- **Environment variables are resolved at build time** — changing `VERCEL_URL` after build has no effect on the config
+- The bundle is fully self-contained and portable
+
+<Info>
+  You don't need to call these functions directly in most cases. The auto-generated server, `useA2A`, and `AixyzMCP` all
+  read from the materialized config automatically.
+</Info>

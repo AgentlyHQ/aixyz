@@ -1,6 +1,6 @@
 ---
-title: "Accepts"
-description: "Payment configuration types for x402 gating"
+title: "aixyz/accepts"
+description: "Payment configuration types and facilitator client for x402 gating"
 ---
 
 Types and utilities for configuring x402 payment gating on agent and tool endpoints.
@@ -33,6 +33,13 @@ type AcceptsX402 = {
 };
 ```
 
+| Field     | Type     | Required | Description                                                   |
+| --------- | -------- | -------- | ------------------------------------------------------------- |
+| `scheme`  | `string` | Yes      | Must be `"exact"`                                             |
+| `price`   | `string` | Yes      | USD price string (e.g. `"$0.005"`)                            |
+| `network` | `string` | No       | CAIP-2 chain ID, overrides `x402.network` from config         |
+| `payTo`   | `string` | No       | EVM address to receive payment, overrides `x402.payTo` config |
+
 ### `AcceptsFree`
 
 No payment required:
@@ -47,25 +54,37 @@ type AcceptsFree = {
 
 ### `HTTPFacilitatorClient`
 
-Client for communicating with an x402 facilitator service:
+Client for communicating with an x402 facilitator service. Re-exported from `@x402/core/server`.
 
 ```typescript
 import { HTTPFacilitatorClient } from "aixyz/accepts";
 
 const client = new HTTPFacilitatorClient({
-  url: "https://www.x402.org/facilitator",
+  url: "https://x402.agently.to/facilitator",
 });
 ```
 
 ### `facilitator`
 
-The default facilitator client used by `AixyzServer`:
+The default facilitator client used by `AixyzServer`. Points to the Agently-hosted x402 facilitator.
 
 ```typescript
 import { facilitator } from "aixyz/accepts";
 ```
 
-## Example
+### `AcceptsScheme`
+
+Zod schema for validating `Accepts` objects at runtime:
+
+```typescript
+import { AcceptsScheme } from "aixyz/accepts";
+
+AcceptsScheme.parse({ scheme: "exact", price: "$0.005" });
+```
+
+## Usage
+
+Agents and tools declare an `accepts` export to control x402 payment gating. Endpoints without `accepts` are **not registered**.
 
 ```typescript
 // app/agent.ts
@@ -78,10 +97,23 @@ export const accepts: Accepts = {
 ```
 
 ```typescript
-// app/accepts.ts — custom facilitator
+// app/tools/lookup.ts
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "free",
+};
+```
+
+### Custom facilitator
+
+Create `app/accepts.ts` to override the default facilitator:
+
+```typescript
+// app/accepts.ts
 import { HTTPFacilitatorClient } from "aixyz/accepts";
 
 export const facilitator = new HTTPFacilitatorClient({
-  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+  url: process.env.X402_FACILITATOR_URL ?? "https://x402.agently.to/facilitator",
 });
 ```
