@@ -1,104 +1,63 @@
 ---
 title: "aixyz"
-description: "The main framework package for building AI agent services"
+description: "CLI for building and running aixyz agents"
 ---
 
-## Overview
-
-The `aixyz` package is the core framework for building AI agent services. It provides the server, protocol adapters (A2A, MCP), x402 payment integration, and the agent execution runtime.
+The `aixyz` package includes the CLI for developing and building agents. Install it to get the `aixyz` command.
 
 ```bash
 bun add aixyz
 ```
 
-**Peer dependency:** [Vercel AI SDK](https://ai-sdk.dev) `ai@^6`
+## Commands
 
-## Exports
+### `aixyz dev`
 
-| Import Path                 | Description                                       |
-| --------------------------- | ------------------------------------------------- |
-| `aixyz/server`              | `AixyzServer` class                               |
-| `aixyz/server/adapters/a2a` | `useA2A`, `getAgentCard`, `ToolLoopAgentExecutor` |
-| `aixyz/server/adapters/mcp` | `AixyzMCP` class                                  |
-| `aixyz/config`              | Re-exports from `@aixyz/config`                   |
-| `aixyz/accepts`             | `Accepts` type, `HTTPFacilitatorClient`           |
-| `aixyz/test`                | Test utilities (`loadEnv`)                        |
+Starts a local development server with hot reload. Watches `app/` and `aixyz.config.ts` for changes and restarts automatically (100ms debounce).
 
-## `AixyzServer`
-
-Express 5 server with x402 payment verification. Extends `x402ResourceServer` from `@x402/core/server`.
-
-```typescript
-import { AixyzServer } from "aixyz/server";
-
-const server = new AixyzServer();
-await server.initialize();
+```bash
+aixyz dev
+aixyz dev --port 4000
 ```
 
-### Key Properties
+| Flag         | Default | Description       |
+| ------------ | ------- | ----------------- |
+| `-p, --port` | `3000`  | Port to listen on |
 
-- `server.express` — the raw Express 5 app
-- `server.config` — parsed `AixyzConfig`
+On startup, the dev server prints the A2A and MCP endpoints:
 
-### Key Methods
+```
+⟡ aixyz.sh v0.0.0
 
-- `server.unstable_withIndexPage(path?)` — add human-readable agent info page
-- `server.withX402Exact(route, accepts)` — register x402 payment-gated route
-- `server.withPaymentRequirements(accepts)` — build payment requirements for a route
-
-## A2A Adapter
-
-```typescript
-import { useA2A } from "aixyz/server/adapters/a2a";
-
-useA2A(server, agentExports);
-// GET  /.well-known/agent-card.json — agent discovery card
-// POST /agent — JSON-RPC endpoint (x402-gated if accepts defined)
+- A2A:          http://localhost:3000/.well-known/agent-card.json
+- MCP:          http://localhost:3000/mcp
+- Environments: .env, .env.local
 ```
 
-The `agentExports` parameter is `import * as agent from "./agent"` — it reads both `default` (the `ToolLoopAgent`) and `accepts` (payment config).
+If no `app/server.ts` exists, one is auto-generated from `app/agent.ts` and `app/tools/*.ts`.
 
-## MCP Adapter
+### `aixyz build`
 
-```typescript
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
+Bundles your agent for deployment.
 
-const mcp = new AixyzMCP(server);
-await mcp.register("toolName", {
-  default: toolInstance,
-  accepts: { scheme: "exact", price: "$0.001" },
-});
-await mcp.connect();
-// POST /mcp — tool endpoint via StreamableHTTPServerTransport
+```bash
+aixyz build                       # Standalone (default)
+aixyz build --output standalone   # Explicit standalone
+aixyz build --output vercel       # Vercel Build Output API v3
 ```
 
-## Agent Executor
+| Flag       | Default      | Description                             |
+| ---------- | ------------ | --------------------------------------- |
+| `--output` | `standalone` | Output format: `standalone` or `vercel` |
 
-`ToolLoopAgentExecutor` wraps Vercel AI SDK `ToolLoopAgent` instances into the A2A `AgentExecutor` interface, handling multi-step tool execution loops automatically.
+**Standalone** output goes to `.aixyz/output/server.js` — run it with `bun .aixyz/output/server.js`.
 
-```typescript
-import { openai } from "@ai-sdk/openai";
-import { stepCountIs, ToolLoopAgent } from "ai";
-import type { Accepts } from "aixyz/accepts";
+**Vercel** output goes to `.vercel/output/` using Build Output API v3. Automatically detected when `VERCEL=1` is set or configured in `aixyz.config.ts`.
 
-export const accepts: Accepts = {
-  scheme: "exact",
-  price: "$0.005",
-};
+The build process:
 
-export default new ToolLoopAgent({
-  model: openai("gpt-4o-mini"),
-  instructions: "You are a helpful assistant.",
-  tools: { weather },
-  stopWhen: stepCountIs(10),
-});
-```
-
-<CardGroup cols={2}>
-  <Card title="Agent and Tools" icon="folder-tree" href="/getting-started/agent-and-tools">
-    Define agents and tools in the app/ directory.
-  </Card>
-  <Card title="File-System Conventions" icon="server" href="/api-reference/file-system-conventions">
-    app/ directory structure and conventions.
-  </Card>
-</CardGroup>
+1. Loads environment variables from `.env` files
+2. Reads and validates `aixyz.config.ts`
+3. Detects or auto-generates the server entrypoint
+4. Bundles with `Bun.build()`, [materializing the config](/api-reference/aixyz-config) into the bundle
+5. Copies static assets from `public/` and `app/icon.png`

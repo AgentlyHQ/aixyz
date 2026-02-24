@@ -27,7 +27,7 @@
             ]
           },
           {
-            "group": "Packages",
+            "group": "CLI",
             "pages": ["packages/aixyz", "packages/create-aixyz-app"]
           },
           {
