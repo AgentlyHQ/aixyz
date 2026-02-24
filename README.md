@@ -185,12 +185,14 @@ aixyz dev -p 4000  # custom port
 
 ### `aixyz build`
 
-Bundles your agent for Vercel deployment. Outputs [Vercel Build Output API v3](https://vercel.com/docs/build-output-api/v3) to
-`.vercel/output/`.
+Bundles your agent for deployment. Default output goes to `.aixyz/output/server.js`.
 
 ```bash
-aixyz build
-vercel deploy
+aixyz build                    # standalone (default), outputs to .aixyz/output/server.js
+bun .aixyz/output/server.js    # run the standalone build
+
+aixyz build --output vercel    # Vercel Build Output API v3, outputs to .vercel/output/
+vercel deploy                  # deploy the Vercel build
 ```
 
 ### `agently-cli`
@@ -199,7 +201,7 @@ Register and manage on-chain agent identity (ERC-8004):
 
 ```bash
 agently-cli register --chain base-sepolia --broadcast
-agently-cli set-agent-uri --agent-id 1 --uri "https://my-agent.vercel.app/.well-known/agent-card.json"
+agently-cli set-agent-uri --agent-id 1 --uri "https://my-agent.vercel.app/.well-known/agent-card.json" --chain base-sepolia --broadcast
 ```
 
 ## Protocols
@@ -213,8 +215,7 @@ agently-cli set-agent-uri --agent-id 1 --uri "https://my-agent.vercel.app/.well-
 **x402** — HTTP 402 micropayments. Clients pay per-request with an
 `X-Payment` header containing cryptographic payment proof. No custodial wallets, no subscriptions. Payments are verified on-chain via a facilitator.
 
-**ERC-8004
-** — On-chain agent identity. Register your agent on Ethereum, Base, Polygon, Scroll, Monad, BSC, or Gnosis so other agents and contracts can reference it.
+**ERC-8004** — On-chain agent identity. Register your agent on Ethereum, Base, Polygon, Scroll, Monad, BSC, or Gnosis so other agents and contracts can reference it.
 
 ## Agent File Structure
 
@@ -246,19 +247,22 @@ my-agent/
 
 ## Examples
 
-| Example              | Description                             |
-| -------------------- | --------------------------------------- |
-| `agent-boilerplate`  | Minimal starter (auto-generated server) |
-| `agent-price-oracle` | CoinGecko price feeds                   |
-| `agent-chainlink`    | Chainlink data feeds with custom server |
-| `agent-job-hunter`   | Remote job search                       |
-| `agent-travel`       | Flight search with Stripe payments      |
+| Example                    | Description                             |
+| -------------------------- | --------------------------------------- |
+| `agent-boilerplate`        | Minimal starter (auto-generated server) |
+| `agent-price-oracle`       | CoinGecko price feeds                   |
+| `agent-chainlink`          | Chainlink data feeds with custom server |
+| `agent-job-hunter`         | Remote job search                       |
+| `agent-travel`             | Flight search with Stripe payments      |
+| `agent-byo-facilitator`    | Bring-your-own x402 facilitator         |
+| `agent-with-custom-server` | Custom server setup                     |
+| `agent-with-tests`         | Agent with test examples                |
 
 ## Contributing
 
 ```bash
 bun install
-bun run dev
+bun run build
 bun run format
 ```
 
