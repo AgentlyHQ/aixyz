@@ -2,8 +2,8 @@
 import { program } from "commander";
 import { build } from "./build";
 import { dev } from "./dev";
-import { register } from "./register/commands/register";
-import { setAgentUri } from "./register/commands/set-agent-uri";
+import { register } from "./register/register";
+import { setAgentUri } from "./register/set-agent-uri";
 import { CliError } from "./register/utils";
 import pkg from "./package.json";
 
