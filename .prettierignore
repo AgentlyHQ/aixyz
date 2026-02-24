@@ -1,7 +1,7 @@
 .husky
 .idea
 .vscode
-.next
 node_modules
 dist
+.mintlify
 .github/pull_request_template.md

@@ -38,6 +38,9 @@ dist
 # agently
 .agently
 
+# mintlify
+.mintlify
+
 # aixyz
 .aixyz
 
