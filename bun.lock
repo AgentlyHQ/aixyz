@@ -109,6 +109,19 @@
         "typescript": "^5",
       },
     },
+    "examples/agent-with-tests": {
+      "name": "@examples/agent-with-tests",
+      "dependencies": {
+        "@ai-sdk/openai": "^3",
+        "ai": "^6",
+        "aixyz": "^0",
+        "zod": "^4",
+      },
+      "devDependencies": {
+        "@types/bun": "^1",
+        "typescript": "^5",
+      },
+    },
     "packages/aixyz": {
       "name": "aixyz",
       "version": "0.0.0",
@@ -118,6 +131,7 @@
         "@aixyz/cli": "workspace:*",
         "@aixyz/config": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.26.0",
+        "@next/env": "^16.1.6",
         "@x402/core": "^2.3.1",
         "@x402/evm": "^2.3.1",
         "@x402/express": "^2.3.0",
@@ -289,6 +303,8 @@
     "@examples/agent-travel": ["@examples/agent-travel@workspace:examples/agent-travel"],
 
     "@examples/agent-with-custom-server": ["@examples/agent-with-custom-server@workspace:examples/agent-with-custom-server"],
+
+    "@examples/agent-with-tests": ["@examples/agent-with-tests@workspace:examples/agent-with-tests"],
 
     "@floating-ui/core": ["@floating-ui/core@1.7.4", "", { "dependencies": { "@floating-ui/utils": "^0.2.10" } }, "sha512-C3HlIdsBxszvm5McXlB8PeOEWfBhcGBTZGkGlWc2U0KFY5IwG5OQEuQ8rq52DZmcHDlPLd+YFBK+cZcytwIFWg=="],
 

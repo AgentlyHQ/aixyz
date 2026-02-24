@@ -1,6 +1,7 @@
 import type { BunPlugin } from "bun";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
 import { resolve, relative, basename, join } from "path";
+import { getAixyzConfig } from "@aixyz/config";
 
 export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone"): BunPlugin {
   return {
@@ -51,6 +52,17 @@ export function getEntrypointMayGenerate(cwd: string, mode: "dev" | "build"): st
   return entrypoint;
 }
 
+class AixyzGlob {
+  constructor(readonly config = getAixyzConfig()) {}
+
+  includes(file: string): boolean {
+    const included = this.config.build?.includes?.some((pattern) => new Bun.Glob(pattern).match(file)) ?? false;
+    if (!included) return false;
+    const excluded = this.config.build?.excludes?.some((pattern) => new Bun.Glob(pattern).match(file)) ?? false;
+    return !excluded;
+  }
+}
+
 /**
  * Generate server.ts content by scanning the app directory for agent.ts and tools/.
  *
@@ -58,6 +70,7 @@ export function getEntrypointMayGenerate(cwd: string, mode: "dev" | "build"): st
  * @param entrypointDir - Directory where the generated file will live (for computing relative imports).
  */
 function generateServer(appDir: string, entrypointDir: string): string {
+  const glob = new AixyzGlob();
   const rel = relative(entrypointDir, appDir);
   const importPrefix = rel === "" ? "." : rel.startsWith(".") ? rel : `./${rel}`;
 
@@ -73,7 +86,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { facilitator } from "aixyz/accepts";');
   }
 
-  const hasAgent = existsSync(resolve(appDir, "agent.ts"));
+  const hasAgent = existsSync(resolve(appDir, "agent.ts")) && glob.includes("agent.ts");
   if (hasAgent) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
     imports.push(`import * as agent from "${importPrefix}/agent";`);
@@ -83,12 +96,9 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const tools: { name: string }[] = [];
   if (existsSync(toolsDir)) {
     for (const file of readdirSync(toolsDir)) {
-      if (file.endsWith(".ts")) {
+      if (glob.includes(`tools/${file}`)) {
         const name = basename(file, ".ts");
-        // Skip tools starting with underscore
-        if (!name.startsWith("_")) {
-          tools.push({ name });
-        }
+        tools.push({ name });
       }
     }
   }
