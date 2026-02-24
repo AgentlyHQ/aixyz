@@ -1,0 +1,87 @@
+---
+title: "Accepts"
+description: "Payment configuration types for x402 gating"
+---
+
+Types and utilities for configuring x402 payment gating on agent and tool endpoints.
+
+```typescript
+import type { Accepts, AcceptsX402, AcceptsFree } from "aixyz/accepts";
+import { HTTPFacilitatorClient, facilitator } from "aixyz/accepts";
+```
+
+## Types
+
+### `Accepts`
+
+Union type for payment configuration:
+
+```typescript
+type Accepts = AcceptsX402 | AcceptsFree;
+```
+
+### `AcceptsX402`
+
+Requires x402 exact payment:
+
+```typescript
+type AcceptsX402 = {
+  scheme: "exact";
+  price: string; // USD string, e.g. "$0.005"
+  network?: string; // CAIP-2 chain ID, overrides config
+  payTo?: string; // EVM address, overrides config
+};
+```
+
+### `AcceptsFree`
+
+No payment required:
+
+```typescript
+type AcceptsFree = {
+  scheme: "free";
+};
+```
+
+## Exports
+
+### `HTTPFacilitatorClient`
+
+Client for communicating with an x402 facilitator service:
+
+```typescript
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+const client = new HTTPFacilitatorClient({
+  url: "https://www.x402.org/facilitator",
+});
+```
+
+### `facilitator`
+
+The default facilitator client used by `AixyzServer`:
+
+```typescript
+import { facilitator } from "aixyz/accepts";
+```
+
+## Example
+
+```typescript
+// app/agent.ts
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+```
+
+```typescript
+// app/accepts.ts — custom facilitator
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```

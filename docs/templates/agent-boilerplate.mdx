@@ -1,0 +1,75 @@
+---
+title: "Boilerplate Agent"
+description: "A starter template with unit conversion tools for length, weight, and temperature"
+---
+
+<Info>
+  **Source:** [`examples/agent-boilerplate`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-boilerplate)
+</Info>
+
+## Overview
+
+The boilerplate agent is the simplest starting point for building an aixyz agent. It demonstrates a multi-skill agent with three unit conversion tools — length, weight, and temperature — using the auto-generated server pattern.
+
+## Project Structure
+
+```
+agent-boilerplate/
+  aixyz.config.ts         # Agent metadata and skills
+  app/
+    agent.ts              # Agent definition with tools
+    tools/
+      length.ts           # Length conversion tool
+      weight.ts           # Weight conversion tool
+      temperature.ts      # Temperature conversion tool
+    icon.png              # Agent icon
+  package.json
+  vercel.json
+```
+
+## Skills
+
+| Skill               | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| Convert Length      | Convert length and distance values between metric and imperial     |
+| Convert Weight      | Convert weight and mass values between metric and imperial         |
+| Convert Temperature | Convert temperature values between Celsius, Fahrenheit, and Kelvin |
+
+## Configuration
+
+```typescript
+const config: AixyzConfig = {
+  name: "Unit Conversion Agent",
+  description: "AI agent that converts values between metric, imperial, and other measurement systems.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+  },
+  skills: [
+    { id: "convert-length", name: "Convert Length", ... },
+    { id: "convert-weight", name: "Convert Weight", ... },
+    { id: "convert-temperature", name: "Convert Temperature", ... },
+  ],
+};
+```
+
+## Payment
+
+The agent charges `$0.001` per request via x402 on Base (mainnet in production, Base Sepolia in development).
+
+## Running
+
+```bash
+cd examples/agent-boilerplate
+bun install
+bun run dev
+```
+
+Endpoints available at `http://localhost:3000`:
+
+| Endpoint                       | Protocol | Description           |
+| ------------------------------ | -------- | --------------------- |
+| `/.well-known/agent-card.json` | A2A      | Agent discovery card  |
+| `/agent`                       | A2A      | JSON-RPC task handler |
+| `/mcp`                         | MCP      | Tool endpoint         |

@@ -1,0 +1,68 @@
+---
+title: "Why Bun?"
+description: "Why aixyz uses Bun as its runtime"
+---
+
+## Why Bun?
+
+aixyz uses [Bun](https://bun.sh) as its runtime and build tool. Here's why:
+
+### All-in-One Toolchain
+
+Bun provides a JavaScript runtime, bundler, test runner, and package manager in a single binary. This means no separate tools for building, testing, and running your agent:
+
+```bash
+bun install        # Package manager
+bun run dev        # Runtime
+bun run build      # Bundler
+bun test           # Test runner
+```
+
+### Fast Startup and Execution
+
+Bun starts significantly faster than Node.js, which matters for:
+
+- **Development** — `aixyz dev` restarts on every file change with minimal delay
+- **Serverless** — Cold starts on Vercel are faster with the Bun runtime
+- **Testing** — `bun test` runs agent tests with near-instant startup
+
+### Native TypeScript Support
+
+Bun runs TypeScript directly without a compilation step. aixyz packages ship raw `.ts` files — Bun handles them natively.
+
+### Built-in Test Runner
+
+Bun includes a test runner compatible with Jest-like syntax (`describe`, `test`, `expect`). aixyz uses `bun:test` for agent testing:
+
+```typescript
+import { describe, expect, test } from "bun:test";
+import { ToolLoopAgent } from "ai";
+import agent from "./agent";
+
+test("default export is a ToolLoopAgent", () => {
+  expect(agent).toBeInstanceOf(ToolLoopAgent);
+});
+```
+
+### Vercel Bun Runtime
+
+Vercel supports Bun as a [serverless function runtime](https://vercel.com/docs/functions/runtimes/bun). aixyz agents deploy to Vercel with the Bun runtime out of the box — just set `bunVersion` in `vercel.json`:
+
+```json
+{
+  "buildCommand": "bun run build",
+  "bunVersion": "1.x"
+}
+```
+
+## Requirements
+
+- **Bun 1.3.9** or later
+
+```bash
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Verify version
+bun --version
+```

@@ -1,0 +1,123 @@
+---
+title: "Agent and Tools"
+description: "Define agents with Vercel AI SDK and create tools for A2A and MCP"
+---
+
+## Agent (`app/agent.ts`)
+
+Your agent is defined using [Vercel AI SDK](https://ai-sdk.dev) (`ai@^6`). The file exports a default `ToolLoopAgent` and an optional `accepts` for payment pricing.
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import weather from "./tools/weather";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful weather assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
+});
+```
+
+### `ToolLoopAgent`
+
+The `ToolLoopAgent` from Vercel AI SDK handles multi-step tool execution loops automatically. It:
+
+- Takes a model, instructions, and a set of tools
+- Executes tool calls in a loop until the stop condition is met
+- Returns the final response
+
+### `accepts` Export
+
+The optional `accepts` named export controls [x402 payment](/getting-started/payments) gating on the A2A `/agent` endpoint:
+
+- Agents **with** `accepts` are registered on payment-gated A2A endpoints
+- Agents **without** `accepts` are not registered
+
+## Tools (`app/tools/*.ts`)
+
+Each `.ts` file in `app/tools/` exports a Vercel AI SDK `tool` and an optional `accepts` for MCP payment gating. Tools are automatically discovered and registered on both A2A and MCP endpoints.
+
+```typescript
+import { tool } from "ai";
+import { z } from "zod";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.0001",
+};
+
+export default tool({
+  description: "Get current weather conditions for a city.",
+  inputSchema: z.object({
+    location: z.string().describe("City name"),
+  }),
+  execute: async ({ location }) => {
+    // your implementation
+  },
+});
+```
+
+### Tool Discovery
+
+The build pipeline automatically discovers all `.ts` files in `app/tools/`:
+
+- Each file is registered as an MCP tool
+- Tools with `accepts` are payment-gated on the `/mcp` endpoint
+- Tools without `accepts` are not registered on MCP
+
+<Note>
+  Files starting with `_` (e.g., `_helpers.ts`) are ignored by the build pipeline. Use this convention for shared
+  utilities.
+</Note>
+
+### Per-Tool Pricing
+
+Each tool can declare its own price, enabling granular pricing across your agent:
+
+```typescript
+// app/tools/basic-search.ts — free tool (no accepts)
+export default tool({ ... });
+
+// app/tools/premium-search.ts — paid tool
+export const accepts: Accepts = { scheme: "exact", price: "$0.001" };
+export default tool({ ... });
+```
+
+## Custom Server
+
+For full control over endpoint registration and middleware, create `app/server.ts`. This overrides auto-generation entirely:
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+import { useA2A } from "aixyz/server/adapters/a2a";
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+
+import * as agent from "./agent";
+import * as lookup from "./tools/lookup";
+
+const server = new AixyzServer();
+await server.initialize();
+server.unstable_withIndexPage();
+
+useA2A(server, agent);
+
+const mcp = new AixyzMCP(server);
+await mcp.register("lookup", {
+  default: lookup.default,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+await mcp.connect();
+
+export default server;
+```
+
+See the [Custom Server template](/templates/agent-with-custom-server) for a working example.

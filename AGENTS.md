@@ -77,9 +77,25 @@ examples/agent-*/
   vercel.json
 ```
 
+### Documentation (`docs/`)
+
+Mintlify documentation site (`mint dev` to preview locally). Structure:
+
+- `docs/getting-started/` — Installation, project structure, why Bun, agent and tools, payments (x402), deploying, testing
+- `docs/config/` — aixyz.config.ts reference, environment variables
+- `docs/api-reference/` — File-system conventions (agent.ts, agent.test.ts, tools/) and Functions (AixyzServer, useA2A, AixyzMCP, loadEnv, Accepts)
+- `docs/protocols/` — A2A, MCP, x402, ERC-8004 (collapsed under Documentation tab)
+- `docs/packages/` — Package reference docs (collapsed under Documentation tab)
+- `docs/templates/` — Individual pages for each example template (separate Templates tab)
+- `docs/docs.json` — Mintlify navigation configuration
+
+Protocols and Packages are groups within the Documentation tab (not separate tabs).
+Templates have their own tab with one page per example.
+
+Each `examples/agent-*/TEMPLATE.mdx` is a symlink to `docs/templates/<name>.mdx` for discoverability.
+
 ### Other
 
-- `docs/` — Mintlify documentation site (`mint dev` to preview locally)
 - `CLAUDE.md` symlinks to `AGENTS.md`
 
 ## Architecture

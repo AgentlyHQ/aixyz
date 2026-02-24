@@ -1,0 +1,34 @@
+---
+title: "agent.ts"
+description: "Define your agent with Vercel AI SDK"
+---
+
+The agent definition file. Must export a default `ToolLoopAgent` and optionally an `accepts` for payment gating.
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import weather from "./tools/weather";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful weather assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
+});
+```
+
+## Exports
+
+| Export    | Type            | Required | Description                                   |
+| --------- | --------------- | -------- | --------------------------------------------- |
+| `default` | `ToolLoopAgent` | Yes      | The agent instance                            |
+| `accepts` | `Accepts`       | No       | Payment config — gates the A2A `/agent` route |
+
+When `accepts` is exported, the `/agent` endpoint requires x402 payment. Without it, the agent is not registered on the A2A endpoint.

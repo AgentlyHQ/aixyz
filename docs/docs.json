@@ -15,52 +15,61 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["index", "quickstart"]
+            "pages": [
+              "index",
+              "getting-started/installation",
+              "getting-started/project-structure",
+              "getting-started/why-bun",
+              "getting-started/agent-and-tools",
+              "getting-started/payments",
+              "getting-started/deploying",
+              "getting-started/testing"
+            ]
           },
           {
-            "group": "Guides",
+            "group": "Config",
+            "pages": ["config/aixyz-config", "config/environment-variables"]
+          },
+          {
+            "group": "API Reference",
+            "pages": ["api-reference/agent", "api-reference/agent-test", "api-reference/tools"]
+          },
+          {
+            "group": "Functions",
             "pages": [
-              "guides/getting-started",
-              "guides/agent-structure",
-              "guides/custom-server",
-              "guides/configuration",
-              "guides/cli",
-              "guides/deployment"
+              "api-reference/aixyz-server",
+              "api-reference/use-a2a",
+              "api-reference/aixyz-mcp",
+              "api-reference/load-env",
+              "api-reference/accepts"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Protocols",
-        "groups": [
+          },
           {
             "group": "Protocols",
             "pages": ["protocols/a2a", "protocols/mcp", "protocols/x402", "protocols/erc-8004"]
-          }
-        ]
-      },
-      {
-        "tab": "Packages",
-        "groups": [
+          },
           {
             "group": "Packages",
-            "pages": [
-              "packages/overview",
-              "packages/aixyz",
-              "packages/create-aixyz-app",
-              "packages/config",
-              "packages/erc-8004",
-              "packages/stripe"
-            ]
+            "pages": ["packages/aixyz", "packages/create-aixyz-app", "packages/stripe"]
           }
         ]
       },
       {
-        "tab": "Examples",
+        "tab": "Templates",
         "groups": [
           {
-            "group": "Examples",
-            "pages": ["examples/overview"]
+            "group": "Templates",
+            "pages": [
+              "templates/overview",
+              "templates/agent-boilerplate",
+              "templates/agent-travel",
+              "templates/agent-price-oracle",
+              "templates/agent-chainlink",
+              "templates/agent-job-hunter",
+              "templates/agent-with-custom-server",
+              "templates/agent-byo-facilitator",
+              "templates/agent-with-tests"
+            ]
           }
         ]
       }
