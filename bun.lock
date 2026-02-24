@@ -159,27 +159,15 @@
       },
       "dependencies": {
         "@aixyz/config": "workspace:*",
+        "@aixyz/erc-8004": "workspace:*",
+        "@inquirer/prompts": "^7.5.0",
         "@next/env": "^16.1.6",
         "boxen": "^8.0.0",
         "chalk": "^5.0.0",
         "commander": "^14.0.3",
+        "ethers": "^6.14.3",
         "sharp": "^0.34.5",
-      },
-    },
-    "packages/aixyz-cli-erc": {
-      "name": "@aixyz/cli-erc",
-      "version": "0.0.0",
-      "bin": {
-        "agently-cli": "dist/index.js",
-      },
-      "dependencies": {
-        "@aixyz/erc-8004": "workspace:*",
-        "@inquirer/prompts": "^7.0.0",
-        "boxen": "^8.0.0",
-        "chalk": "^5.0.0",
-        "commander": "^13.0.0",
-        "ethers": "^6.16.0",
-        "viem": "^2.46.2",
+        "viem": "^2.31.3",
       },
     },
     "packages/aixyz-config": {
@@ -244,8 +232,6 @@
     "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@4.0.15", "", { "dependencies": { "@ai-sdk/provider": "3.0.8", "@standard-schema/spec": "^1.1.0", "eventsource-parser": "^3.0.6" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-8XiKWbemmCbvNN0CLR9u3PQiet4gtEVIrX4zzLxnCj06AwsEDJwJVBbKrEI4t6qE8XRSIvU2irka0dcpziKW6w=="],
 
     "@aixyz/cli": ["@aixyz/cli@workspace:packages/aixyz-cli"],
-
-    "@aixyz/cli-erc": ["@aixyz/cli-erc@workspace:packages/aixyz-cli-erc"],
 
     "@aixyz/config": ["@aixyz/config@workspace:packages/aixyz-config"],
 
@@ -976,8 +962,6 @@
     "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
     "zod-to-json-schema": ["zod-to-json-schema@3.25.1", "", { "peerDependencies": { "zod": "^3.25 || ^4" } }, "sha512-pM/SU9d3YAggzi6MtR4h7ruuQlqKtad8e9S0fmxcMi+ueAK5Korys/aWcV9LIIHTVbj01NdzxcnXSN+O74ZIVA=="],
-
-    "@aixyz/cli-erc/commander": ["commander@13.1.0", "", {}, "sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw=="],
 
     "@coinbase/cdp-sdk/@solana/kit": ["@solana/kit@5.5.1", "", { "dependencies": { "@solana/accounts": "5.5.1", "@solana/addresses": "5.5.1", "@solana/codecs": "5.5.1", "@solana/errors": "5.5.1", "@solana/functional": "5.5.1", "@solana/instruction-plans": "5.5.1", "@solana/instructions": "5.5.1", "@solana/keys": "5.5.1", "@solana/offchain-messages": "5.5.1", "@solana/plugin-core": "5.5.1", "@solana/programs": "5.5.1", "@solana/rpc": "5.5.1", "@solana/rpc-api": "5.5.1", "@solana/rpc-parsed-types": "5.5.1", "@solana/rpc-spec-types": "5.5.1", "@solana/rpc-subscriptions": "5.5.1", "@solana/rpc-types": "5.5.1", "@solana/signers": "5.5.1", "@solana/sysvars": "5.5.1", "@solana/transaction-confirmation": "5.5.1", "@solana/transaction-messages": "5.5.1", "@solana/transactions": "5.5.1" }, "peerDependencies": { "typescript": "^5.0.0" }, "optionalPeers": ["typescript"] }, "sha512-irKUGiV2yRoyf+4eGQ/ZeCRxa43yjFEL1DUI5B0DkcfZw3cr0VJtVJnrG8OtVF01vT0OUfYOcUn6zJW5TROHvQ=="],
 

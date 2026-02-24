@@ -16,25 +16,14 @@
   },
   "license": "MIT",
   "author": "AgentlyHQ",
-  "type": "commonjs",
-  "exports": {
-    ".": {
-      "require": "./dist/src/index.js",
-      "default": "./dist/src/index.js"
-    },
-    "./*": {
-      "require": "./dist/src/*.js",
-      "default": "./dist/src/*.js"
-    }
-  },
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "type": "module",
   "files": [
-    "dist",
-    "contracts"
+    "schemas",
+    "abis",
+    "contracts",
+    "index.ts"
   ],
   "scripts": {
-    "build": "tsc",
     "test": "bun test"
   },
   "dependencies": {

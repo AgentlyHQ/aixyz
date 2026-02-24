@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join, resolve } from "path";
 
@@ -9,25 +9,8 @@ const CLI_PATH = resolve(import.meta.dir, "../src/index.ts");
 let tmpDir: string;
 let projectDir: string;
 
-function packPackage(pkgDir: string, destDir: string): string {
-  const result = Bun.spawnSync(["bun", "pm", "pack", "--quiet", "--destination", destDir], {
-    cwd: resolve(ROOT_DIR, pkgDir),
-    stdout: "pipe",
-    stderr: "inherit",
-  });
-  return result.stdout.toString().trim();
-}
-
 beforeAll(() => {
   tmpDir = mkdtempSync(join(tmpdir(), "create-aixyz-test-"));
-
-  // Pack workspace packages so workspace:* references are resolved to real versions
-  const packDir = join(tmpDir, "packs");
-  mkdirSync(packDir);
-
-  const configTarball = packPackage("packages/aixyz-config", packDir);
-  const cliTarball = packPackage("packages/aixyz-cli", packDir);
-  const aixyzTarball = packPackage("packages/aixyz", packDir);
 
   // Run the create-aixyz-app CLI to scaffold a project
   Bun.spawnSync(["bun", CLI_PATH, "--yes", "test-agent"], {
@@ -39,15 +22,20 @@ beforeAll(() => {
 
   projectDir = join(tmpDir, "test-agent");
 
-  // Patch package.json to install from local tarballs instead of npm
+  // Remove workspace:* deps from package.json so bun install can succeed
   const pkgPath = join(projectDir, "package.json");
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
-  pkg.dependencies["aixyz"] = aixyzTarball;
-  pkg.dependencies["@aixyz/cli"] = cliTarball;
-  pkg.dependencies["@aixyz/config"] = configTarball;
+
+  for (const section of ["dependencies", "devDependencies"] as const) {
+    for (const [name, version] of Object.entries((pkg[section] as Record<string, string>) || {})) {
+      if (version.startsWith("workspace:")) {
+        delete pkg[section][name];
+      }
+    }
+  }
+
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
 
-  // Re-install with local packages
   const install = Bun.spawnSync(["bun", "install"], {
     cwd: projectDir,
     stdout: "inherit",
@@ -55,6 +43,37 @@ beforeAll(() => {
   });
   if (install.exitCode !== 0) {
     throw new Error("bun install failed");
+  }
+
+  // Symlink all workspace packages into node_modules
+  const nodeModules = join(projectDir, "node_modules");
+  const binDir = join(nodeModules, ".bin");
+  mkdirSync(binDir, { recursive: true });
+
+  for (const entry of readdirSync(join(ROOT_DIR, "packages"), { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const dir = join(ROOT_DIR, "packages", entry.name);
+    const pkgJsonPath = join(dir, "package.json");
+    if (!existsSync(pkgJsonPath)) continue;
+    const { name, bin } = JSON.parse(readFileSync(pkgJsonPath, "utf8"));
+
+    // Symlink the package
+    const parts = name.split("/");
+    const target = join(nodeModules, ...parts);
+    if (parts.length > 1) {
+      mkdirSync(join(nodeModules, parts[0]), { recursive: true });
+    }
+    rmSync(target, { recursive: true, force: true });
+    symlinkSync(dir, target);
+
+    // Create .bin entries
+    if (typeof bin === "string") {
+      symlinkSync(join(dir, bin), join(binDir, name));
+    } else if (typeof bin === "object") {
+      for (const [cmd, file] of Object.entries(bin as Record<string, string>)) {
+        symlinkSync(join(dir, file), join(binDir, cmd));
+      }
+    }
   }
 }, 120_000);
 
@@ -69,7 +88,7 @@ describe("create-aixyz-app", () => {
     expect(existsSync(join(projectDir, "package.json"))).toBe(true);
     expect(existsSync(join(projectDir, "aixyz.config.ts"))).toBe(true);
     expect(existsSync(join(projectDir, "app/agent.ts"))).toBe(true);
-    expect(existsSync(join(projectDir, "app/tools/weather.ts"))).toBe(true);
+    expect(existsSync(join(projectDir, "app/tools/temperature.ts"))).toBe(true);
     expect(existsSync(join(projectDir, "app/icon.png"))).toBe(true);
     expect(existsSync(join(projectDir, ".gitignore"))).toBe(true);
     expect(existsSync(join(projectDir, ".env.local"))).toBe(true);

@@ -51,15 +51,14 @@ bun run build  # → aixyz build (bundles for deployment)
 
 ### Packages (`packages/*`)
 
-| Package            | npm name           | Description                                                                     |
-| ------------------ | ------------------ | ------------------------------------------------------------------------------- |
-| `aixyz`            | `aixyz`            | Main framework: server, adapters (A2A, MCP), x402 integration, Express-based    |
-| `aixyz-cli`        | `@aixyz/cli`       | CLI commands: `dev` (hot reload server), `build` (bundle for Vercel/standalone) |
-| `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files                |
-| `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                             |
-| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                                   |
-| `aixyz-erc-8004`   | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, addresses, Zod schemas                                  |
-| `aixyz-cli-erc`    | `@aixyz/cli-erc`   | CLI for ERC-8004 registry ops (`register`, `set-agent-uri`)                     |
+| Package            | npm name           | Description                                                                  |
+| ------------------ | ------------------ | ---------------------------------------------------------------------------- |
+| `aixyz`            | `aixyz`            | Main framework: server, adapters (A2A, MCP), x402 integration, Express-based |
+| `aixyz-cli`        | `@aixyz/cli`       | CLI: `dev`, `build`, `erc8004 register`, `erc8004 set-agent-uri`             |
+| `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files             |
+| `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                          |
+| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                                |
+| `aixyz-erc-8004`   | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, addresses, Zod schemas                               |
 
 ### Examples (`examples/*`)
 

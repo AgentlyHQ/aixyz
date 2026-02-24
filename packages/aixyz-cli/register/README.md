@@ -1,20 +1,8 @@
-# @agentlyhq/agently-cli
+# ERC-8004 Registry Commands
 
-CLI for registering agents to the [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) IdentityRegistry.
+CLI commands for registering agents to the [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) IdentityRegistry.
 
-![agently cli UI](assets/agently-cli-ui.webp "agently-cli register")
-
-## Installation
-
-```bash
-bun add -g @agentlyhq/agently-cli
-```
-
-Or run directly with `bunx`:
-
-```bash
-bunx @agentlyhq/agently-cli register --help
-```
+These commands are part of the `aixyz` CLI under the `erc8004` subcommand.
 
 ## Usage
 
@@ -27,7 +15,7 @@ Register a new agent to the IdentityRegistry with multiple wallet options:
 Sign with an Ethereum keystore (V3) JSON file:
 
 ```bash
-agently-cli register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default
+aixyz erc8004 register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
 ```
 
 #### Using Browser Wallet
@@ -35,7 +23,7 @@ agently-cli register --uri "./metadata.json" --chain sepolia --keystore ~/.found
 Opens a localhost page to sign with any browser extension wallet (MetaMask, Rabby, etc.) that are `EIP-6963` compliant:
 
 ```bash
-agently-cli register --uri "ipfs://Qm..." --chain sepolia --browser
+aixyz erc8004 register --uri "ipfs://Qm..." --chain sepolia --browser --broadcast
 ```
 
 > **Note:** `--rpc-url` cannot be used with `--browser`. The browser wallet uses its own RPC endpoint.
@@ -46,7 +34,7 @@ For scripting and CI:
 
 ```bash
 # Not recommended for interactive use
-PRIVATE_KEY=0x... agently-cli register --uri "ipfs://Qm..." --chain sepolia
+PRIVATE_KEY=0x... aixyz erc8004 register --uri "ipfs://Qm..." --chain sepolia --broadcast
 ```
 
 #### Interactive Mode
@@ -54,22 +42,34 @@ PRIVATE_KEY=0x... agently-cli register --uri "ipfs://Qm..." --chain sepolia
 If no wallet option is provided, you'll be prompted to choose:
 
 ```bash
-agently-cli register --uri "ipfs://Qm..." --chain sepolia
+aixyz erc8004 register --uri "ipfs://Qm..." --chain sepolia --broadcast
 ```
-
-![Choose Signing Method](assets/agently-cli-methods-prompt.webp "Choose signing method")
 
 #### Local Development
 
 Register against a local Foundry/Anvil node:
 
 ```bash
-agently-cli register \
+aixyz erc8004 register \
   --chain localhost \
   --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 \
   --rpc-url http://localhost:8545 \
   --uri "./metadata.json" \
-  --keystore ~/.foundry/keystores/default
+  --keystore ~/.foundry/keystores/default \
+  --broadcast
+```
+
+### Set Agent URI
+
+Update the metadata URI of a registered agent:
+
+```bash
+aixyz erc8004 set-agent-uri \
+  --agent-id 1 \
+  --uri "https://my-agent.vercel.app/.well-known/agent-card.json" \
+  --chain sepolia \
+  --keystore ~/.foundry/keystores/default \
+  --broadcast
 ```
 
 ### Options
@@ -82,6 +82,8 @@ agently-cli register \
 | `--registry <address>` | IdentityRegistry contract address (required for `localhost`)                         |
 | `--keystore <path>`    | Path to Ethereum keystore (V3) JSON file                                             |
 | `--browser`            | Use browser extension wallet                                                         |
+| `--broadcast`          | Sign and broadcast the transaction (default: dry-run)                                |
+| `--out-dir <path>`     | Write deployment result as JSON to the given directory                               |
 
 ### Environment Variables
 
@@ -97,19 +99,3 @@ agently-cli register \
 | `sepolia`      | 11155111 | Ethereum Sepolia testnet |
 | `base-sepolia` | 84532    | Base Sepolia testnet     |
 | `localhost`    | 31337    | Local Foundry/Anvil node |
-
-## Development
-
-```bash
-# Install dependencies
-bun install
-
-# Run directly
-bun run src/index.ts register --help
-
-# Build
-bun run build
-
-# Test
-bun test
-```
