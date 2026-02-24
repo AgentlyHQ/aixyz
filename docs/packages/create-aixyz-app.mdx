@@ -1,0 +1,77 @@
+---
+title: "create-aixyz-app"
+description: "Scaffold new aixyz agent projects"
+---
+
+## Overview
+
+`create-aixyz-app` is a project scaffolding CLI that generates a new aixyz agent project with the standard directory structure, configuration, and example files.
+
+## Usage
+
+```bash
+bunx create-aixyz-app my-agent
+```
+
+The CLI prompts for:
+
+- **Agent name** — Used in `aixyz.config.ts` and `package.json`
+- **OpenAI API key** — Saved to `.env.local` (optional)
+
+### Non-Interactive Mode
+
+Skip all prompts with the `-y` flag:
+
+```bash
+bunx create-aixyz-app my-agent -y
+```
+
+## What Gets Scaffolded
+
+```
+my-agent/
+  aixyz.config.ts       # Agent config (name, description, skills)
+  app/
+    agent.ts            # Agent definition using Vercel AI SDK
+    tools/
+      weather.ts        # Example tool
+    icon.png            # Agent icon
+  package.json          # Dependencies and scripts
+  tsconfig.json         # TypeScript configuration
+  vercel.json           # Vercel deployment config
+  .env.local            # Environment variables
+```
+
+### Scripts
+
+The generated `package.json` includes:
+
+```json
+{
+  "scripts": {
+    "dev": "aixyz dev",
+    "build": "aixyz build"
+  }
+}
+```
+
+## After Scaffolding
+
+```bash
+cd my-agent
+bun install
+bun run dev
+```
+
+Your agent starts at `http://localhost:3000` with A2A, MCP, and x402 support ready to go.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Getting Started" icon="rocket" href="/guides/getting-started">
+    Full walkthrough of setting up your agent.
+  </Card>
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    Understand the generated project layout.
+  </Card>
+</CardGroup>

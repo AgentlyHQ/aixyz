@@ -1,0 +1,109 @@
+---
+title: "x402 Payments"
+description: "HTTP 402 micropayments for agent endpoints"
+---
+
+## Overview
+
+[x402](https://www.x402.org/) is a payment protocol for HTTP resources. When a client requests a payment-gated endpoint, the server responds with HTTP 402 and payment requirements. The client includes a payment proof in the `X-Payment` header, and the server verifies it via a facilitator before granting access.
+
+In aixyz, `AixyzServer` extends `x402ResourceServer`, providing built-in payment gating for agent and tool endpoints.
+
+## How It Works
+
+1. Client requests a gated endpoint (e.g., `POST /agent`)
+2. Server returns **HTTP 402** with payment requirements (price, network, payTo address)
+3. Client constructs payment proof and retries with `X-Payment` header
+4. Server verifies payment via a facilitator and grants access
+
+## The `accepts` Export
+
+Define payment requirements by exporting `accepts` from your agent or tool:
+
+```typescript
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+```
+
+This gates the endpoint behind a $0.005 exact payment.
+
+### With Overrides
+
+```typescript
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+  network: "eip155:8453", // override config network
+  payTo: "0x...", // override config payTo
+};
+```
+
+Prices are USD strings: `"$0.005"`, `"$0.01"`, `"$0.0001"`.
+
+## Per-Agent and Per-Tool Pricing
+
+Agents and tools can each declare their own `accepts` export, enabling granular pricing:
+
+```typescript
+// app/agent.ts — agent-level pricing
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.01",
+};
+
+// app/tools/premium-search.ts — tool-level pricing
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.001",
+};
+```
+
+- Agent `accepts` gates the A2A `/agent` endpoint
+- Tool `accepts` gates the tool on the MCP `/mcp` endpoint
+- Agents and tools **without** `accepts` are not registered on protocol endpoints
+
+## Facilitators
+
+Payment verification is handled by a facilitator service:
+
+| Facilitator  | Activation                   | URL                                |
+| ------------ | ---------------------------- | ---------------------------------- |
+| Default      | Always available             | `https://www.x402.org/facilitator` |
+| Coinbase CDP | When `CDP_API_KEY_ID` is set | Auto-configured                    |
+| Custom       | Set `X402_FACILITATOR_URL`   | Your custom URL                    |
+
+### Custom Facilitator
+
+Create `app/accepts.ts` to provide a custom facilitator:
+
+```typescript
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```
+
+## Server Integration
+
+In a [custom server](/guides/custom-server), use `withX402Exact()` to add payment middleware:
+
+```typescript
+server.withX402Exact("POST /agent", {
+  scheme: "exact",
+  price: "$0.005",
+});
+```
+
+<CardGroup cols={2}>
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    Where to define accepts exports.
+  </Card>
+  <Card title="ERC-8004 Identity" icon="id-card" href="/protocols/erc-8004">
+    On-chain agent identity for verified payments.
+  </Card>
+</CardGroup>

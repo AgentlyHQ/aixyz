@@ -1,0 +1,144 @@
+---
+title: "Configuration"
+description: "Configure agent identity, payments, and deployment with aixyz.config.ts"
+---
+
+## `aixyz.config.ts`
+
+Every aixyz project requires an `aixyz.config.ts` at the project root. This file defines your agent's identity, payment settings, and skills. It is validated at build time using Zod schemas from `@aixyz/config`.
+
+```typescript
+import type { AixyzConfig } from "aixyz/config";
+
+const config: AixyzConfig = {
+  name: "Weather Agent",
+  description: "Get current weather for any location worldwide.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x...",
+    network: "eip155:8453",
+  },
+  skills: [
+    {
+      id: "get-weather",
+      name: "Get Weather",
+      description: "Get current weather conditions for any city",
+      tags: ["weather"],
+      examples: ["What's the weather in Tokyo?"],
+    },
+  ],
+};
+
+export default config;
+```
+
+## Config Fields
+
+| Field          | Type           | Required | Description                              |
+| -------------- | -------------- | -------- | ---------------------------------------- |
+| `name`         | `string`       | Yes      | Agent display name                       |
+| `description`  | `string`       | Yes      | What the agent does                      |
+| `version`      | `string`       | Yes      | Semver version                           |
+| `url`          | `string`       | No       | Agent base URL (auto-detected on Vercel) |
+| `x402.payTo`   | `string`       | Yes      | EVM address to receive payments          |
+| `x402.network` | `string`       | Yes      | CAIP-2 chain ID (e.g. `eip155:8453`)     |
+| `skills`       | `AgentSkill[]` | Yes      | Skills exposed in the A2A agent card     |
+
+### AgentSkill
+
+| Field         | Type       | Required | Description             |
+| ------------- | ---------- | -------- | ----------------------- |
+| `id`          | `string`   | Yes      | Unique skill identifier |
+| `name`        | `string`   | Yes      | Skill display name      |
+| `description` | `string`   | Yes      | What the skill does     |
+| `tags`        | `string[]` | Yes      | Categorization tags     |
+| `examples`    | `string[]` | No       | Example prompts         |
+| `inputModes`  | `string[]` | No       | Input MIME types        |
+| `outputModes` | `string[]` | No       | Output MIME types       |
+
+### URL Resolution
+
+If `url` is omitted, it is auto-detected in the following order:
+
+1. `https://${VERCEL_PROJECT_PRODUCTION_URL}` (Vercel production)
+2. `https://${VERCEL_URL}` (Vercel preview)
+3. `http://localhost:3000` (fallback)
+
+### Payment Networks
+
+| Network      | CAIP-2 ID      |
+| ------------ | -------------- |
+| Base         | `eip155:8453`  |
+| Base Sepolia | `eip155:84532` |
+| Ethereum     | `eip155:1`     |
+
+Switch networks per environment:
+
+```typescript
+x402: {
+  payTo: "0x...",
+  network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+},
+```
+
+## Accepts
+
+The `accepts` named export on agents and tools controls [x402 payment](/protocols/x402) gating:
+
+```typescript
+import type { Accepts } from "aixyz/accepts";
+
+// x402 payment
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+```
+
+With optional overrides:
+
+```typescript
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+  network: "eip155:8453", // overrides config
+  payTo: "0x...", // overrides config
+};
+```
+
+Prices are USD strings: `"$0.005"`, `"$0.01"`, `"$0.0001"`.
+
+## Environment Variables
+
+Environment files are loaded in Next.js order: `process.env` → `.env.$(NODE_ENV).local` → `.env.local` → `.env.$(NODE_ENV)` → `.env`
+
+| Variable               | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `OPENAI_API_KEY`       | OpenAI API key                                         |
+| `X402_PAY_TO`          | Default payment recipient address                      |
+| `X402_NETWORK`         | Default payment network                                |
+| `X402_FACILITATOR_URL` | Custom x402 facilitator URL                            |
+| `CDP_API_KEY_ID`       | Coinbase CDP key ID (switches to Coinbase facilitator) |
+| `CDP_API_KEY_SECRET`   | Coinbase CDP key secret                                |
+| `STRIPE_SECRET_KEY`    | Experimental Stripe adapter                            |
+| `STRIPE_PRICE_CENTS`   | Stripe price in cents (default: 100)                   |
+
+## Build-Time vs Runtime Config
+
+`@aixyz/config` exposes two functions:
+
+| Function                  | Usage      | Description                                             |
+| ------------------------- | ---------- | ------------------------------------------------------- |
+| `getAixyzConfig()`        | Build-time | Full config including all fields for the build pipeline |
+| `getAixyzConfigRuntime()` | Runtime    | Subset safe for inclusion in runtime bundles            |
+
+The `AixyzConfigPlugin` build plugin materializes the resolved config into the bundle, replacing `aixyz/config` imports so the runtime bundle does not need the config file.
+
+<CardGroup cols={2}>
+  <Card title="CLI Commands" icon="terminal" href="/guides/cli">
+    Dev and build commands that consume this config.
+  </Card>
+  <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">
+    Deep dive into payment gating.
+  </Card>
+</CardGroup>

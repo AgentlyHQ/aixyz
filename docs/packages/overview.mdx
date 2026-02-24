@@ -1,0 +1,51 @@
+---
+title: "Packages Overview"
+description: "Overview of all packages in the aixyz monorepo"
+---
+
+## Monorepo Packages
+
+The aixyz monorepo contains the following packages, managed with Bun workspaces and Turbo:
+
+| Package                                          | npm Name           | Description                                                            |
+| ------------------------------------------------ | ------------------ | ---------------------------------------------------------------------- |
+| [`aixyz`](/packages/aixyz)                       | `aixyz`            | Main framework: server, protocol adapters (A2A, MCP), x402 integration |
+| [`@aixyz/cli`](/packages/cli)                    | `@aixyz/cli`       | CLI commands: `dev` (hot reload) and `build` (bundle for deployment)   |
+| [`@aixyz/config`](/packages/config)              | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` and `.env` files   |
+| [`create-aixyz-app`](/packages/create-aixyz-app) | `create-aixyz-app` | Project scaffolding CLI (`bunx create-aixyz-app`)                      |
+| [`@aixyz/erc-8004`](/packages/erc-8004)          | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, deployed addresses, and Zod schemas            |
+| `@aixyz/cli-erc`                                 | `@aixyz/cli-erc`   | CLI for ERC-8004 registry operations (`register`, `set-agent-uri`)     |
+| [`@aixyz/stripe`](/packages/stripe)              | `@aixyz/stripe`    | Experimental Stripe payment adapter                                    |
+
+## Dependency Graph
+
+```
+aixyz → @aixyz/cli → @aixyz/config
+     → @a2a-js/sdk, @modelcontextprotocol/sdk, @x402/*, express, zod
+     → ai (optional peer dep, Vercel AI SDK v6)
+```
+
+The main `aixyz` package depends on `@aixyz/cli` for build tooling and `@aixyz/config` for configuration loading. External dependencies include the A2A SDK, MCP SDK, x402 libraries, Express, and Zod.
+
+## Package Distribution
+
+Most packages ship **raw `.ts` files** — they are not compiled to JavaScript before publishing. This means consumers must use a TypeScript-aware bundler or runtime (like Bun).
+
+<Note>
+  The exception is `@aixyz/erc-8004`, which compiles to CommonJS (CJS) for broader compatibility with tools that consume
+  contract ABIs.
+</Note>
+
+## Building and Testing
+
+```bash
+# Build all packages
+bun run build
+
+# Test all packages
+bun run test
+
+# Build/test a specific package
+bun run build --filter=aixyz
+bun run test --filter=@aixyz/erc-8004
+```

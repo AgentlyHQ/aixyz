@@ -1,0 +1,104 @@
+---
+title: "aixyz"
+description: "The main framework package for building AI agent services"
+---
+
+## Overview
+
+The `aixyz` package is the core framework for building AI agent services. It provides the server, protocol adapters (A2A, MCP), x402 payment integration, and the agent execution runtime.
+
+```bash
+bun add aixyz
+```
+
+**Peer dependency:** [Vercel AI SDK](https://ai-sdk.dev) `ai@^6`
+
+## Exports
+
+| Import Path                 | Description                                       |
+| --------------------------- | ------------------------------------------------- |
+| `aixyz/server`              | `AixyzServer` class                               |
+| `aixyz/server/adapters/a2a` | `useA2A`, `getAgentCard`, `ToolLoopAgentExecutor` |
+| `aixyz/server/adapters/mcp` | `AixyzMCP` class                                  |
+| `aixyz/config`              | Re-exports from `@aixyz/config`                   |
+| `aixyz/accepts`             | `Accepts` type, `HTTPFacilitatorClient`           |
+| `aixyz/test`                | Test utilities (`loadEnv`)                        |
+
+## `AixyzServer`
+
+Express 5 server with x402 payment verification. Extends `x402ResourceServer` from `@x402/core/server`.
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+
+const server = new AixyzServer();
+await server.initialize();
+```
+
+### Key Properties
+
+- `server.express` — the raw Express 5 app
+- `server.config` — parsed `AixyzConfig`
+
+### Key Methods
+
+- `server.unstable_withIndexPage(path?)` — add human-readable agent info page
+- `server.withX402Exact(route, accepts)` — register x402 payment-gated route
+- `server.withPaymentRequirements(accepts)` — build payment requirements for a route
+
+## A2A Adapter
+
+```typescript
+import { useA2A } from "aixyz/server/adapters/a2a";
+
+useA2A(server, agentExports);
+// GET  /.well-known/agent-card.json — agent discovery card
+// POST /agent — JSON-RPC endpoint (x402-gated if accepts defined)
+```
+
+The `agentExports` parameter is `import * as agent from "./agent"` — it reads both `default` (the `ToolLoopAgent`) and `accepts` (payment config).
+
+## MCP Adapter
+
+```typescript
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+
+const mcp = new AixyzMCP(server);
+await mcp.register("toolName", {
+  default: toolInstance,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+await mcp.connect();
+// POST /mcp — tool endpoint via StreamableHTTPServerTransport
+```
+
+## Agent Executor
+
+`ToolLoopAgentExecutor` wraps Vercel AI SDK `ToolLoopAgent` instances into the A2A `AgentExecutor` interface, handling multi-step tool execution loops automatically.
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
+});
+```
+
+<CardGroup cols={2}>
+  <Card title="Agent Structure" icon="folder-tree" href="/guides/agent-structure">
+    Define agents and tools in the app/ directory.
+  </Card>
+  <Card title="Custom Server" icon="server" href="/guides/custom-server">
+    Build a custom server with full control.
+  </Card>
+</CardGroup>

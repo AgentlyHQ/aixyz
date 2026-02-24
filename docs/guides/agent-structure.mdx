@@ -1,0 +1,168 @@
+---
+title: "Agent Structure"
+description: "Understand the app/ directory structure and how agents are defined"
+---
+
+An aixyz agent is defined by a small set of files. Run `aixyz dev` and the framework auto-generates a server from them.
+
+## Directory Layout
+
+```
+my-agent/
+  aixyz.config.ts       # Agent identity, payment config, and skills
+  app/
+    agent.ts            # Agent definition (required if no server.ts)
+    server.ts           # Custom server (optional, overrides auto-generation)
+    accepts.ts          # Custom x402 facilitator (optional)
+    tools/
+      weather.ts        # Tool implementations
+      search.ts
+      _helpers.ts       # Ignored — files starting with _ are skipped
+    icon.png            # Agent icon (served as a static asset)
+  package.json
+  tsconfig.json
+  vercel.json
+  .env.local            # API keys and environment variables
+```
+
+The build pipeline scans the `app/` directory to auto-generate a server with A2A, MCP, and x402 support.
+
+## Config (`aixyz.config.ts`)
+
+Agent identity, payment settings, and skills. Used to generate the A2A agent card.
+
+```typescript
+import type { AixyzConfig } from "aixyz/config";
+
+const config: AixyzConfig = {
+  name: "Weather Agent",
+  description: "Get current weather for any location worldwide.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x...",
+    network: "eip155:8453",
+  },
+  skills: [
+    {
+      id: "get-weather",
+      name: "Get Weather",
+      description: "Get current weather conditions for any city",
+      tags: ["weather"],
+      examples: ["What's the weather in Tokyo?"],
+    },
+  ],
+};
+
+export default config;
+```
+
+See [Configuration](/guides/configuration) for all available fields.
+
+## Agent (`app/agent.ts`)
+
+Your agent definition using [Vercel AI SDK](https://ai-sdk.dev) (`ai@^6`). Exports a default `ToolLoopAgent` and an optional `accepts` for payment pricing.
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import weather from "./tools/weather";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful weather assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
+});
+```
+
+The `ToolLoopAgentExecutor` wraps your `ToolLoopAgent` and handles multi-step tool execution loops automatically.
+
+## Tools (`app/tools/*.ts`)
+
+Each `.ts` file in `app/tools/` exports a Vercel AI SDK `tool` and an optional `accepts` for MCP payment gating. Tools are automatically discovered and registered on both A2A and MCP endpoints.
+
+```typescript
+import { tool } from "ai";
+import { z } from "zod";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.0001",
+};
+
+export default tool({
+  description: "Get current weather conditions for a city.",
+  inputSchema: z.object({
+    location: z.string().describe("City name"),
+  }),
+  execute: async ({ location }) => {
+    // your implementation
+  },
+});
+```
+
+<Note>
+  Files starting with `_` (e.g., `_helpers.ts`) are ignored by the build pipeline. Use this convention for shared
+  utilities.
+</Note>
+
+## Payment (`accepts`)
+
+The `accepts` named export controls [x402 payment](/protocols/x402) gating:
+
+```typescript
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005", // USD-denominated
+  network: "eip155:8453", // optional, defaults to config
+  payTo: "0x...", // optional, defaults to config
+};
+```
+
+- Agents and tools **with** `accepts` are registered on payment-gated endpoints.
+- Agents and tools **without** `accepts` are not registered on their protocol endpoints.
+- Prices are USD strings: `"$0.005"`, `"$0.01"`, `"$0.0001"`.
+
+## Custom Facilitator (`app/accepts.ts`)
+
+The optional `app/accepts.ts` file lets you provide a custom x402 facilitator for payment verification:
+
+```typescript
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```
+
+## Icon (`app/icon.png`)
+
+Place an `icon.png` in `app/` to serve it as a static asset. This icon is referenced in the A2A agent card for agent discovery UIs.
+
+## What Happens
+
+With just these files, `aixyz dev` auto-generates a server that registers:
+
+- **A2A** at `/agent` and `/.well-known/agent-card.json`
+- **MCP** at `/mcp`
+- **x402** payment verification on gated endpoints
+
+For full control over the server, see [Custom Server](/guides/custom-server).
+
+<CardGroup cols={2}>
+  <Card title="Custom Server" icon="server" href="/guides/custom-server">
+    Override auto-generation with your own Express server.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/guides/configuration">
+    All config options and environment variables.
+  </Card>
+</CardGroup>
