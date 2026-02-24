@@ -29,8 +29,12 @@
     "@clack/prompts": "^1.0.1"
   },
   "devDependencies": {
+    "@ai-sdk/openai": "^3",
     "@types/bun": "^1.3.9",
     "@types/node": "^22",
-    "typescript": "^5"
+    "ai": "^6",
+    "aixyz": "workspace:*",
+    "typescript": "^5",
+    "zod": "^4"
   }
 }
