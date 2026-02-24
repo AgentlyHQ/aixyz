@@ -2,7 +2,7 @@
 
 CLI for registering agents to the [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) IdentityRegistry.
 
-![agently cli UI](assets/agently-cli-ui.webp "agently-cli register")
+![agently cli UI](../../aixyz-cli-erc/assets/agently-cli-ui.webp "agently-cli register")
 
 ## Installation
 
@@ -57,7 +57,7 @@ If no wallet option is provided, you'll be prompted to choose:
 agently-cli register --uri "ipfs://Qm..." --chain sepolia
 ```
 
-![Choose Signing Method](assets/agently-cli-methods-prompt.webp "Choose signing method")
+![Choose Signing Method](../../aixyz-cli-erc/assets/agently-cli-methods-prompt.webp "Choose signing method")
 
 #### Local Development
 
