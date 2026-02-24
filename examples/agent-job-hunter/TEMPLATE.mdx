@@ -1,1 +1,73 @@
-../../docs/templates/agent-job-hunter.mdx
+---
+title: "Job Hunter Agent"
+description: "Remote job search agent powered by the Jobicy API"
+---
+
+<Info>
+  **Source:** [`examples/agent-job-hunter`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-job-hunter)
+</Info>
+
+## Overview
+
+The Job Hunter agent searches for remote job opportunities worldwide using the Jobicy API. It demonstrates an external REST API integration with an aixyz agent, gated behind x402 payments.
+
+## Project Structure
+
+```
+agent-job-hunter/
+  aixyz.config.ts           # Agent metadata and skills
+  app/
+    agent.ts                # Agent with job search tool
+    tools/
+      search.ts             # Jobicy API integration
+    icon.png                # Agent icon
+  package.json
+  vercel.json
+```
+
+## Skills
+
+| Skill             | Description                                                          |
+| ----------------- | -------------------------------------------------------------------- |
+| Remote Job Search | Search for the latest remote job opportunities in specific countries |
+
+## Configuration
+
+```typescript
+const config: AixyzConfig = {
+  name: "Job Hunter - Career Scout Agent",
+  description: "An AI agent that searches for remote job opportunities worldwide using the Jobicy API.",
+  version: "1.0.0",
+  x402: {
+    payTo: process.env.X402_PAY_TO!,
+    network: process.env.X402_NETWORK!,
+  },
+};
+```
+
+## Key Features
+
+- **Global job search** — Search remote jobs by country or region
+- **Structured results** — Returns job title, company, industry, and direct links
+- **Input validation** — Asks users to specify a country if not provided
+- **Auto-generated server** — No custom `server.ts` needed
+
+## Payment
+
+The agent charges `$0.01` per request via x402. Payment destination is configured via environment variables.
+
+## Environment Variables
+
+| Variable         | Description                            |
+| ---------------- | -------------------------------------- |
+| `OPENAI_API_KEY` | OpenAI API key                         |
+| `X402_PAY_TO`    | Payment destination address            |
+| `X402_NETWORK`   | Payment network (e.g., `eip155:84532`) |
+
+## Running
+
+```bash
+cd examples/agent-job-hunter
+bun install
+bun run dev
+```

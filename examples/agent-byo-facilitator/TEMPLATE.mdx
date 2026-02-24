@@ -1,1 +1,74 @@
-../../docs/templates/agent-byo-facilitator.mdx
+---
+title: "BYO Facilitator Agent"
+description: "Template demonstrating a custom x402 payment facilitator"
+---
+
+<Info>
+  **Source:**
+  [`examples/agent-byo-facilitator`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-byo-facilitator)
+</Info>
+
+## Overview
+
+This template demonstrates how to bring your own x402 payment facilitator by providing an `app/accepts.ts` file. Instead of using the default facilitator at `x402.org`, you can point to a custom facilitator URL for payment verification.
+
+## Project Structure
+
+```
+agent-byo-facilitator/
+  aixyz.config.ts           # Agent metadata
+  app/
+    agent.ts                # Agent with temperature tool
+    accepts.ts              # Custom facilitator configuration
+    tools/
+      temperature.ts        # Temperature conversion tool
+    icon.png                # Agent icon
+  package.json
+  vercel.json
+```
+
+## Custom Facilitator
+
+The `app/accepts.ts` file configures a custom payment facilitator:
+
+```typescript
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```
+
+## Key Features
+
+- **Custom facilitator URL** — Point to any x402-compatible facilitator service
+- **Environment-driven** — Facilitator URL configurable via `X402_FACILITATOR_URL`
+- **Fallback to default** — Uses the default x402.org facilitator if no env var is set
+- **Auto-generated server** — No custom `server.ts` needed; the build pipeline picks up `app/accepts.ts` automatically
+
+## When to Use
+
+Use a custom facilitator when you need to:
+
+- Run your own x402 facilitator service for payment verification
+- Use a third-party facilitator other than the default
+- Test payments against a local or staging facilitator
+
+## Payment
+
+The agent charges `$0.005` per request via x402 on Base Sepolia.
+
+## Environment Variables
+
+| Variable               | Description                                   |
+| ---------------------- | --------------------------------------------- |
+| `OPENAI_API_KEY`       | OpenAI API key                                |
+| `X402_FACILITATOR_URL` | Custom facilitator URL (defaults to x402.org) |
+
+## Running
+
+```bash
+cd examples/agent-byo-facilitator
+bun install
+bun run dev
+```

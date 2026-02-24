@@ -92,7 +92,7 @@ Mintlify documentation site (`mint dev` to preview locally). Structure:
 Protocols and Packages are groups within the Documentation tab (not separate tabs).
 Templates have their own tab with one page per example.
 
-Each `examples/agent-*/TEMPLATE.mdx` is a symlink to `docs/templates/<name>.mdx` for discoverability.
+Each `docs/templates/<name>.mdx` is a symlink to `examples/agent-*/TEMPLATE.mdx` (canonical files live in examples).
 
 ### Other
 

@@ -1,1 +1,83 @@
-../../docs/templates/agent-with-tests.mdx
+---
+title: "Agent with Tests"
+description: "Template demonstrating testing patterns for aixyz agents using bun:test"
+---
+
+<Info>
+  **Source:** [`examples/agent-with-tests`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-with-tests)
+</Info>
+
+## Overview
+
+This template demonstrates how to write both deterministic and non-deterministic tests for aixyz agents using `bun:test`. It covers unit testing agent configuration, tool registration, and end-to-end agent execution.
+
+## Project Structure
+
+```
+agent-with-tests/
+  aixyz.config.ts           # Agent metadata
+  app/
+    agent.ts                # Agent with temperature tool
+    agent.test.ts           # Test suite
+    tools/
+      temperature.ts        # Temperature conversion tool
+    icon.png                # Agent icon
+  package.json
+  vercel.json
+```
+
+## Test Pattern
+
+```typescript
+import { describe, expect, test } from "bun:test";
+import { ToolLoopAgent } from "ai";
+import { loadEnv } from "aixyz/test";
+import agent, { accepts } from "./agent";
+
+// Deterministic tests — no API calls needed
+test("default export is a ToolLoopAgent", () => {
+  expect(agent).toBeInstanceOf(ToolLoopAgent);
+});
+
+test("has convertTemperature tool registered", () => {
+  expect(agent.tools).toHaveProperty("convertTemperature");
+});
+
+test("accepts config uses exact scheme", () => {
+  expect(accepts.scheme).toBe("exact");
+});
+
+// Non-deterministic tests — require OPENAI_API_KEY
+describe("non deterministic agent test", () => {
+  loadEnv();
+
+  test.skipIf(!process.env.OPENAI_API_KEY)("agent can convert temperature", async () => {
+    const result = await agent.generate({
+      prompt: "convert 100 degrees celsius to fahrenheit",
+    });
+    expect(result.text).toContain("212");
+  });
+});
+```
+
+## Key Features
+
+- **Deterministic tests** — Validate agent type, tool registration, and config without API calls
+- **Non-deterministic tests** — Test actual agent execution with `test.skipIf` for missing API keys
+- **Environment loading** — `loadEnv()` from `aixyz/test` loads `.env` files for test runs
+- **CI-friendly** — Deterministic tests always run; non-deterministic tests skip gracefully
+
+## Running Tests
+
+```bash
+cd examples/agent-with-tests
+bun install
+bun test
+```
+
+## Running the Agent
+
+```bash
+cd examples/agent-with-tests
+bun run dev
+```

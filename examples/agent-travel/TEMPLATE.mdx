@@ -1,1 +1,74 @@
-../../docs/templates/agent-travel.mdx
+---
+title: "Travel Agent"
+description: "Flight search agent with Skyscanner API and dual x402/Stripe payments"
+---
+
+<Info>**Source:** [`examples/agent-travel`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-travel)</Info>
+
+## Overview
+
+The travel agent finds the cheapest flights between airports worldwide using real-time pricing data from the Skyscanner API. It demonstrates a custom server setup with dual payment support — both x402 crypto micropayments and Stripe for traditional payments.
+
+## Project Structure
+
+```
+agent-travel/
+  aixyz.config.ts             # Agent metadata and skills
+  app/
+    agent.ts                  # Agent with flight search tool
+    server.ts                 # Custom server with Stripe integration
+    tools/
+      searchFlights.ts        # Skyscanner API integration
+    icon.png                  # Agent icon
+  package.json
+  vercel.json
+```
+
+## Skills
+
+| Skill                  | Description                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| Cheapest Flight Search | Search for the cheapest flights with support for multiple departures and destinations |
+
+## Configuration
+
+```typescript
+const config: AixyzConfig = {
+  name: "Travel Agent - Flight Search",
+  description:
+    "AI agent that finds the cheapest flights between multiple departure airports and destinations worldwide",
+  version: "1.0.0",
+  x402: {
+    payTo: process.env.X402_PAY_TO || "0xYourX402WalletAddress",
+    network: process.env.X402_NETWORK || "eip155:84532",
+  },
+};
+```
+
+## Key Features
+
+- **Multiple departure airports** — Compare prices from several origin airports
+- **Worldwide destinations** — Search flights to any destination
+- **Real-time pricing** — Live data from Skyscanner API
+- **Dual payments** — Supports both x402 crypto and Stripe
+- **Custom server** — Uses `app/server.ts` for manual endpoint control
+
+## Payment
+
+The agent charges `$0.01` per request via x402. Environment variables `X402_PAY_TO` and `X402_NETWORK` configure the payment destination.
+
+## Environment Variables
+
+| Variable         | Description                            |
+| ---------------- | -------------------------------------- |
+| `OPENAI_API_KEY` | OpenAI API key                         |
+| `X402_PAY_TO`    | Payment destination address            |
+| `X402_NETWORK`   | Payment network (e.g., `eip155:84532`) |
+
+## Running
+
+```bash
+cd examples/agent-travel
+bun install
+bun run dev
+```
