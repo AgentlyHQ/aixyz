@@ -1,0 +1,115 @@
+---
+title: "Deploying"
+description: "Deploy your agent to Vercel, standalone Bun, or Docker"
+---
+
+## Vercel
+
+aixyz has first-class Vercel support using the [Build Output API v3](https://vercel.com/docs/build-output-api/v3).
+
+```bash
+bun run build
+vercel deploy
+```
+
+The build automatically detects the Vercel environment via `VERCEL=1` and outputs a Vercel serverless function using Bun Runtime. The agent URL is auto-detected from Vercel environment variables.
+
+### `vercel.json`
+
+Every aixyz project includes a `vercel.json`:
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "bun run build",
+  "bunVersion": "1.x"
+}
+```
+
+No need to pass `--vercel` — the flag is automatically detected during Vercel builds.
+
+Set `OPENAI_API_KEY` and any payment environment variables in the Vercel dashboard under **Settings → Environment Variables**.
+
+## Standalone (Bun Runtime)
+
+For direct deployment on Bun-compatible hosts (DigitalOcean, Railway, Fly.io, etc.):
+
+```bash
+aixyz build
+bun .aixyz/output/server.js
+```
+
+The build outputs a single bundled file at `.aixyz/output/server.js`.
+
+### Environment Variables
+
+Set these before running:
+
+```bash
+export PORT=3000
+export OPENAI_API_KEY=sk-...
+bun .aixyz/output/server.js
+```
+
+## Docker
+
+Using the standalone build:
+
+```dockerfile
+FROM oven/bun:1.3.9
+WORKDIR /app
+COPY . .
+RUN bun install
+RUN bun run build
+CMD ["bun", ".aixyz/output/server.js"]
+```
+
+Build and run:
+
+```bash
+docker build -t my-agent .
+docker run -p 3000:3000 \
+  -e OPENAI_API_KEY=sk-... \
+  -e PORT=3000 \
+  my-agent
+```
+
+<Warning>Never bake API keys into Docker images. Pass them as environment variables at runtime.</Warning>
+
+<Note>
+  Set the `url` field in `aixyz.config.ts` manually for Docker deployments since Vercel environment variables won't be
+  available.
+</Note>
+
+## Build Output Formats
+
+| Format     | Flag                            | Output Path               | Description                                                                       |
+| ---------- | ------------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| Standalone | (default)                       | `.aixyz/output/server.js` | Single-file bundle, run with `bun`                                                |
+| Vercel     | `VERCEL=1` or `--output vercel` | `.vercel/output/`         | [Build Output API v3](https://vercel.com/docs/build-output-api/v3) for serverless |
+
+## Verifying Your Deployment
+
+After deploying, verify your agent is accessible:
+
+```bash
+# Check the agent card
+curl https://your-agent.example.com/.well-known/agent-card.json
+
+# Test the A2A endpoint
+curl -X POST https://your-agent.example.com/agent \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tasks/send",
+    "id": "1",
+    "params": {
+      "id": "task-1",
+      "message": {
+        "role": "user",
+        "parts": [{"type": "text", "text": "Hello"}]
+      }
+    }
+  }'
+```

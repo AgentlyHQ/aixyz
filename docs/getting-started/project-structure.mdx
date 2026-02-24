@@ -1,0 +1,59 @@
+---
+title: "Project Structure"
+description: "Understand the app/ directory structure and file conventions"
+---
+
+An aixyz agent is defined by a small set of files in a standard layout. Run `aixyz dev` and the framework auto-generates a server from them.
+
+## Directory Layout
+
+```
+my-agent/
+  aixyz.config.ts       # Agent identity, payment config, and skills
+  app/
+    agent.ts            # Agent definition (required if no server.ts)
+    agent.test.ts       # Agent tests (optional)
+    server.ts           # Custom server (optional, overrides auto-generation)
+    accepts.ts          # Custom x402 facilitator (optional)
+    tools/
+      weather.ts        # Tool implementations
+      search.ts
+      _helpers.ts       # Ignored — files starting with _ are skipped
+    icon.png            # Agent icon (served as a static asset)
+  package.json
+  tsconfig.json
+  vercel.json           # Vercel deployment config
+  .env.local            # API keys and environment variables
+```
+
+## Key Files
+
+| File                | Required | Description                                        |
+| ------------------- | -------- | -------------------------------------------------- |
+| `aixyz.config.ts`   | Yes      | Agent metadata, payment config, and skills         |
+| `app/agent.ts`      | Yes\*    | Agent definition using Vercel AI SDK               |
+| `app/tools/*.ts`    | No       | Tool implementations, auto-discovered by the build |
+| `app/server.ts`     | No       | Custom server — overrides auto-generation entirely |
+| `app/accepts.ts`    | No       | Custom x402 facilitator for payment verification   |
+| `app/agent.test.ts` | No       | Agent tests using `bun:test`                       |
+| `app/icon.png`      | No       | Agent icon served as a static asset                |
+| `vercel.json`       | No       | Vercel deployment configuration                    |
+
+\* Required if no `app/server.ts` is provided.
+
+## How It Works
+
+The build pipeline scans the `app/` directory to auto-generate a server:
+
+1. Reads `aixyz.config.ts` for agent metadata and skills
+2. Imports `app/agent.ts` for the agent definition
+3. Discovers all `.ts` files in `app/tools/` (excluding `_` prefixed files)
+4. Wires up A2A, MCP, and x402 endpoints automatically
+
+The result is a server exposing:
+
+- **A2A** at `/agent` and `/.well-known/agent-card.json`
+- **MCP** at `/mcp`
+- **x402** payment verification on gated endpoints
+
+For full control, provide `app/server.ts` to override auto-generation. See the [Custom Server template](/templates/agent-with-custom-server) for an example.

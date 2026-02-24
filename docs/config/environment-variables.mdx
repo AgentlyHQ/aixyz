@@ -1,0 +1,68 @@
+---
+title: "Environment Variables"
+description: "Configure your agent with .env files and environment variables"
+---
+
+## `.env` Files
+
+aixyz loads environment variables from `.env` files in the following order (later files take precedence):
+
+1. `.env` — Shared defaults
+2. `.env.local` — Local overrides (gitignored)
+3. `.env.$(NODE_ENV)` — e.g., `.env.production`
+4. `.env.$(NODE_ENV).local` — e.g., `.env.production.local`
+
+This matches the loading order used by Next.js.
+
+<Note>`.env.local` is always gitignored. Use it for API keys and secrets during development.</Note>
+
+## Common Variables
+
+| Variable               | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `OPENAI_API_KEY`       | OpenAI API key                                         |
+| `X402_PAY_TO`          | Default payment recipient address                      |
+| `X402_NETWORK`         | Default payment network                                |
+| `X402_FACILITATOR_URL` | Custom x402 facilitator URL                            |
+| `CDP_API_KEY_ID`       | Coinbase CDP key ID (switches to Coinbase facilitator) |
+| `CDP_API_KEY_SECRET`   | Coinbase CDP key secret                                |
+| `STRIPE_SECRET_KEY`    | Experimental Stripe adapter                            |
+| `STRIPE_PRICE_CENTS`   | Stripe price in cents (default: 100)                   |
+
+## Using in Config
+
+Reference environment variables directly in `aixyz.config.ts`:
+
+```typescript
+import type { AixyzConfig } from "aixyz/config";
+
+const config: AixyzConfig = {
+  name: "My Agent",
+  description: "...",
+  version: "0.1.0",
+  x402: {
+    payTo: process.env.X402_PAY_TO!,
+    network: process.env.X402_NETWORK!,
+  },
+  skills: [],
+};
+
+export default config;
+```
+
+## Testing Environment
+
+For tests, `loadEnv` from `aixyz/test` loads `.env.test.local` (where your `OPENAI_API_KEY` lives for tests). `.env.local` is ignored during testing:
+
+```typescript
+import { loadEnv } from "aixyz/test";
+
+describe("tests", () => {
+  loadEnv();
+  // process.env.OPENAI_API_KEY is now available
+});
+```
+
+## Build-Time Resolution
+
+Environment variables referenced in `aixyz.config.ts` are resolved and baked into the bundle at build time. The config file itself is not included in the output — only the resolved values.

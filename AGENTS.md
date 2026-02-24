@@ -81,7 +81,9 @@ examples/agent-*/
 
 Mintlify documentation site (`mint dev` to preview locally). Structure:
 
-- `docs/guides/` — Getting started, agent structure, custom server, configuration, CLI, deployment
+- `docs/getting-started/` — Installation, project structure, why Bun, agent and tools, payments (x402), deploying, testing
+- `docs/config/` — aixyz.config.ts reference, environment variables
+- `docs/api-reference/` — File-system conventions (agent.ts, agent.test.ts, tools/)
 - `docs/protocols/` — A2A, MCP, x402, ERC-8004 (collapsed under Documentation tab)
 - `docs/packages/` — Package reference docs (collapsed under Documentation tab)
 - `docs/templates/` — Individual pages for each example template (separate Templates tab)

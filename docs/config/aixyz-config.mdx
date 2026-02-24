@@ -1,0 +1,92 @@
+---
+title: "aixyz.config.ts"
+description: "Complete reference for the aixyz configuration file"
+---
+
+Every aixyz project requires an `aixyz.config.ts` at the project root. This file defines your agent's identity, payment settings, and skills. It is validated at build time using Zod schemas.
+
+## Full Example
+
+```typescript
+import type { AixyzConfig } from "aixyz/config";
+
+const config: AixyzConfig = {
+  name: "Weather Agent",
+  description: "Get current weather for any location worldwide.",
+  version: "0.1.0",
+  url: "https://my-agent.vercel.app",
+  x402: {
+    payTo: "0x...",
+    network: "eip155:8453",
+  },
+  skills: [
+    {
+      id: "get-weather",
+      name: "Get Weather",
+      description: "Get current weather conditions for any city",
+      tags: ["weather"],
+      examples: ["What's the weather in Tokyo?"],
+    },
+  ],
+};
+
+export default config;
+```
+
+## Config Fields
+
+| Field          | Type           | Required | Description                              |
+| -------------- | -------------- | -------- | ---------------------------------------- |
+| `name`         | `string`       | Yes      | Agent display name                       |
+| `description`  | `string`       | Yes      | What the agent does                      |
+| `version`      | `string`       | Yes      | Semver version                           |
+| `url`          | `string`       | No       | Agent base URL (auto-detected on Vercel) |
+| `x402`         | `object`       | Yes      | Payment configuration                    |
+| `x402.payTo`   | `string`       | Yes      | EVM address to receive payments          |
+| `x402.network` | `string`       | Yes      | CAIP-2 chain ID (e.g., `eip155:8453`)    |
+| `skills`       | `AgentSkill[]` | Yes      | Skills exposed in the A2A agent card     |
+
+### `AgentSkill`
+
+| Field         | Type       | Required | Description             |
+| ------------- | ---------- | -------- | ----------------------- |
+| `id`          | `string`   | Yes      | Unique skill identifier |
+| `name`        | `string`   | Yes      | Skill display name      |
+| `description` | `string`   | Yes      | What the skill does     |
+| `tags`        | `string[]` | Yes      | Categorization tags     |
+| `examples`    | `string[]` | No       | Example prompts         |
+| `inputModes`  | `string[]` | No       | Input MIME types        |
+| `outputModes` | `string[]` | No       | Output MIME types       |
+
+## URL Resolution
+
+If `url` is omitted, it is auto-detected in the following order:
+
+1. `https://${VERCEL_PROJECT_PRODUCTION_URL}` (Vercel production)
+2. `https://${VERCEL_URL}` (Vercel preview)
+3. `http://localhost:3000` (fallback)
+
+## Payment Networks
+
+| Network      | CAIP-2 ID      |
+| ------------ | -------------- |
+| Base         | `eip155:8453`  |
+| Base Sepolia | `eip155:84532` |
+| Ethereum     | `eip155:1`     |
+
+Switch networks per environment:
+
+```typescript
+x402: {
+  payTo: "0x...",
+  network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+},
+```
+
+## Build-Time vs Runtime
+
+At build time, the `AixyzConfigPlugin` resolves the full config and materializes a runtime-safe subset into the bundle. This means:
+
+- `import config from "aixyz/config"` works at runtime without the config file
+- Environment variables referenced in the config are baked in at build time
+- The config file itself is not included in the output bundle

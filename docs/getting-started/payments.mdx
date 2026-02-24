@@ -1,13 +1,11 @@
 ---
-title: "x402 Payments"
-description: "HTTP 402 micropayments for agent endpoints"
+title: "Payments (x402)"
+description: "Add micropayments to your agent with x402"
 ---
 
 ## Overview
 
-[x402](https://www.x402.org/) is a payment protocol for HTTP resources. When a client requests a payment-gated endpoint, the server responds with HTTP 402 and payment requirements. The client includes a payment proof in the `X-Payment` header, and the server verifies it via a facilitator before granting access.
-
-In aixyz, `AixyzServer` extends `x402ResourceServer`, providing built-in payment gating for agent and tool endpoints.
+[x402](https://www.x402.org/) is a payment protocol for HTTP resources. aixyz has built-in x402 support — when a client requests a payment-gated endpoint, the server responds with HTTP 402 and payment requirements. The client includes a payment proof in the `X-Payment` header, and the server verifies it via a facilitator.
 
 ## How It Works
 
@@ -49,13 +47,13 @@ Prices are USD strings: `"$0.005"`, `"$0.01"`, `"$0.0001"`.
 Agents and tools can each declare their own `accepts` export, enabling granular pricing:
 
 ```typescript
-// app/agent.ts — agent-level pricing
+// app/agent.ts — agent-level pricing (gates /agent)
 export const accepts: Accepts = {
   scheme: "exact",
   price: "$0.01",
 };
 
-// app/tools/premium-search.ts — tool-level pricing
+// app/tools/premium-search.ts — tool-level pricing (gates on /mcp)
 export const accepts: Accepts = {
   scheme: "exact",
   price: "$0.001",
@@ -65,6 +63,25 @@ export const accepts: Accepts = {
 - Agent `accepts` gates the A2A `/agent` endpoint
 - Tool `accepts` gates the tool on the MCP `/mcp` endpoint
 - Agents and tools **without** `accepts` are not registered on protocol endpoints
+
+## Payment Networks
+
+Configure the payment network in `aixyz.config.ts`:
+
+| Network      | CAIP-2 ID      |
+| ------------ | -------------- |
+| Base         | `eip155:8453`  |
+| Base Sepolia | `eip155:84532` |
+| Ethereum     | `eip155:1`     |
+
+Switch networks per environment:
+
+```typescript
+x402: {
+  payTo: "0x...",
+  network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+},
+```
 
 ## Facilitators
 
@@ -88,22 +105,4 @@ export const facilitator = new HTTPFacilitatorClient({
 });
 ```
 
-## Server Integration
-
-In a custom server, use `withX402Exact()` to add payment middleware:
-
-```typescript
-server.withX402Exact("POST /agent", {
-  scheme: "exact",
-  price: "$0.005",
-});
-```
-
-<CardGroup cols={2}>
-  <Card title="Payments" icon="credit-card" href="/getting-started/payments">
-    How to configure payments in your agent.
-  </Card>
-  <Card title="ERC-8004 Identity" icon="id-card" href="/protocols/erc-8004">
-    On-chain agent identity for verified payments.
-  </Card>
-</CardGroup>
+See the [BYO Facilitator template](/templates/agent-byo-facilitator) for a working example.

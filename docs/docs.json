@@ -15,18 +15,24 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["index", "quickstart"]
+            "pages": [
+              "index",
+              "getting-started/installation",
+              "getting-started/project-structure",
+              "getting-started/why-bun",
+              "getting-started/agent-and-tools",
+              "getting-started/payments",
+              "getting-started/deploying",
+              "getting-started/testing"
+            ]
           },
           {
-            "group": "Guides",
-            "pages": [
-              "guides/getting-started",
-              "guides/agent-structure",
-              "guides/custom-server",
-              "guides/configuration",
-              "guides/cli",
-              "guides/deployment"
-            ]
+            "group": "Config",
+            "pages": ["config/aixyz-config", "config/environment-variables"]
+          },
+          {
+            "group": "API Reference",
+            "pages": ["api-reference/file-system-conventions"]
           },
           {
             "group": "Protocols",
@@ -34,14 +40,7 @@
           },
           {
             "group": "Packages",
-            "pages": [
-              "packages/overview",
-              "packages/aixyz",
-              "packages/create-aixyz-app",
-              "packages/config",
-              "packages/erc-8004",
-              "packages/stripe"
-            ]
+            "pages": ["packages/aixyz", "packages/create-aixyz-app", "packages/stripe"]
           }
         ]
       },

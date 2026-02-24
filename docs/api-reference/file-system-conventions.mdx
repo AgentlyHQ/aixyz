@@ -1,0 +1,176 @@
+---
+title: "File-System Conventions"
+description: "How aixyz discovers and registers agents, tools, and tests from the app/ directory"
+---
+
+The build pipeline uses file-system conventions to auto-generate your server. Place files in the `app/` directory and they are automatically wired up.
+
+## `app/agent.ts`
+
+The agent definition file. Must export a default `ToolLoopAgent` and optionally an `accepts` for payment gating.
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import weather from "./tools/weather";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a helpful weather assistant.",
+  tools: { weather },
+  stopWhen: stepCountIs(10),
+});
+```
+
+### Exports
+
+| Export    | Type            | Required | Description                                   |
+| --------- | --------------- | -------- | --------------------------------------------- |
+| `default` | `ToolLoopAgent` | Yes      | The agent instance                            |
+| `accepts` | `Accepts`       | No       | Payment config — gates the A2A `/agent` route |
+
+When `accepts` is exported, the `/agent` endpoint requires x402 payment. Without it, the agent is not registered on the A2A endpoint.
+
+---
+
+## `app/agent.test.ts`
+
+Test file for your agent. Uses `bun:test` and the `loadEnv` helper from `aixyz/test`.
+
+```typescript
+import { describe, expect, test } from "bun:test";
+import { ToolLoopAgent } from "ai";
+import { loadEnv } from "aixyz/test";
+import agent, { accepts } from "./agent";
+
+// Deterministic — always runs
+test("default export is a ToolLoopAgent", () => {
+  expect(agent).toBeInstanceOf(ToolLoopAgent);
+});
+
+test("has convertTemperature tool registered", () => {
+  expect(agent.tools).toHaveProperty("convertTemperature");
+});
+
+test("accepts config uses exact scheme", () => {
+  expect(accepts.scheme).toBe("exact");
+});
+
+// Non-deterministic — skips when no API key
+describe("non deterministic agent test", () => {
+  loadEnv();
+
+  test.skipIf(!process.env.OPENAI_API_KEY)("agent can convert temperature", async () => {
+    const result = await agent.generate({
+      prompt: "convert 100 degrees celsius to fahrenheit",
+    });
+    expect(result.text).toContain("212");
+  });
+});
+```
+
+Run with:
+
+```bash
+bun test app/agent.test.ts
+```
+
+---
+
+## `app/tools/`
+
+Each `.ts` file in `app/tools/` is auto-discovered and registered as a tool on both A2A and MCP endpoints.
+
+```typescript
+import { tool } from "ai";
+import { z } from "zod";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.0001",
+};
+
+export default tool({
+  description: "Get current weather conditions for a city.",
+  inputSchema: z.object({
+    location: z.string().describe("City name"),
+  }),
+  execute: async ({ location }) => {
+    // your implementation
+  },
+});
+```
+
+### Exports
+
+| Export    | Type      | Required | Description                                   |
+| --------- | --------- | -------- | --------------------------------------------- |
+| `default` | `tool()`  | Yes      | The tool instance                             |
+| `accepts` | `Accepts` | No       | Payment config — gates the tool on MCP `/mcp` |
+
+### Conventions
+
+- **Auto-discovered** — All `.ts` files in `app/tools/` are registered automatically
+- **Ignored files** — Files starting with `_` (e.g., `_helpers.ts`) are skipped
+- **Naming** — The tool is registered with the filename as its name (e.g., `weather.ts` → `weather`)
+
+---
+
+## `app/server.ts`
+
+Optional. When present, this file overrides auto-generation entirely. You manually wire up A2A, MCP, and x402:
+
+```typescript
+import { AixyzServer } from "aixyz/server";
+import { useA2A } from "aixyz/server/adapters/a2a";
+import { AixyzMCP } from "aixyz/server/adapters/mcp";
+
+import * as agent from "./agent";
+import lookup from "./tools/lookup";
+
+const server = new AixyzServer();
+await server.initialize();
+server.unstable_withIndexPage();
+
+useA2A(server, agent);
+
+const mcp = new AixyzMCP(server);
+await mcp.register("latestData", {
+  default: lookup,
+  accepts: { scheme: "exact", price: "$0.001" },
+});
+await mcp.connect();
+
+export default server;
+```
+
+See the [Custom Server template](/templates/agent-with-custom-server) for a working example.
+
+---
+
+## `app/accepts.ts`
+
+Optional. Provides a custom x402 facilitator for payment verification:
+
+```typescript
+import { HTTPFacilitatorClient } from "aixyz/accepts";
+
+export const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+});
+```
+
+See the [BYO Facilitator template](/templates/agent-byo-facilitator) for a working example.
+
+---
+
+## `app/icon.png`
+
+Place an image file (PNG recommended) in `app/` to serve it as a static asset. This icon is referenced in the A2A agent card for agent discovery UIs.
