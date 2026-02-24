@@ -29,14 +29,14 @@
   "dependencies": {
     "@aixyz/config": "workspace:*",
     "@aixyz/erc-8004": "workspace:*",
-    "@inquirer/prompts": "^7.5.0",
+    "@inquirer/prompts": "^8.3.0",
     "@next/env": "^16.1.6",
-    "boxen": "^8.0.0",
-    "chalk": "^5.0.0",
+    "boxen": "^8.0.1",
+    "chalk": "^5.6.2",
     "commander": "^14.0.3",
-    "ethers": "^6.14.3",
+    "ethers": "^6.16.0",
     "sharp": "^0.34.5",
-    "viem": "^2.31.3"
+    "viem": "^2.46.3"
   },
   "engines": {
     "bun": ">=1.3.0"
