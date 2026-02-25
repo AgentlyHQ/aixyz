@@ -2,6 +2,7 @@ import { resolve } from "path";
 import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
+import { AixyzBFTPlugin, copyTracedFiles } from "./nft";
 import { findIconFile, copyAgentIcon, generateFavicon } from "./icons";
 import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
