@@ -7,7 +7,7 @@ const config: AixyzConfig = {
   // You can use `process.env.YOUR_PAY_TO_ADDRESS` to conditionally set values based on the environment,
   // For example, .env, .env.local, .env.production, .env.development are supported
   x402: {
-    payTo: "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
+    payTo: "{{PAY_TO}}",
     network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
   },
   skills: [

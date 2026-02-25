@@ -110,6 +110,27 @@ if (!useDefaults) {
   openaiApiKey = apiKey || "";
 }
 
+// Prompt for x402 payTo address (optional, can be skipped)
+const DEFAULT_PAY_TO = "0x0799872E07EA7a63c79357694504FE66EDfE4a0A";
+let payTo = DEFAULT_PAY_TO;
+if (!useDefaults) {
+  const payToInput = await p.text({
+    message: "x402 payTo address (Ethereum address to receive payments, press Enter to skip):",
+    placeholder: DEFAULT_PAY_TO,
+    defaultValue: DEFAULT_PAY_TO,
+    validate(value) {
+      if (value && !value.startsWith("0x")) {
+        return "Ethereum addresses must start with '0x'";
+      }
+    },
+  });
+  if (p.isCancel(payToInput)) {
+    p.cancel("Operation cancelled.");
+    process.exit(0);
+  }
+  payTo = payToInput || DEFAULT_PAY_TO;
+}
+
 // Locate the templates directory relative to this script
 const __filename = fileURLToPath(import.meta.url);
 const templateDir = join(__filename, "..", "..", "templates", "default");
@@ -148,6 +169,7 @@ for (const file of filesToReplace) {
     let content = readFileSync(filePath, "utf-8");
     content = content.replaceAll("{{PKG_NAME}}", pkgName);
     content = content.replaceAll("{{AGENT_NAME}}", agentName);
+    content = content.replaceAll("{{PAY_TO}}", payTo);
     writeFileSync(filePath, content);
   }
 }
