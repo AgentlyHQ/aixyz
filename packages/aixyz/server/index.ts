@@ -1,4 +1,4 @@
-import { getAixyzConfig, Network } from "../config";
+import { getAixyzConfig, Network } from "@aixyz/config";
 import initExpress from "express";
 import { FacilitatorClient, x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware, PaymentRequirements } from "@x402/express";
