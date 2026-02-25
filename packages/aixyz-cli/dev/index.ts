@@ -5,7 +5,12 @@ import { Command } from "commander";
 import { getEntrypointMayGenerate } from "../build/AixyzServerPlugin";
 import pkg from "../package.json";
 
-export async function dev(options: { port?: string }): Promise<void> {
+export const devCommand = new Command("dev")
+  .description("Start a local development server")
+  .option("-p, --port <port>", "Port to listen on", "3000")
+  .action(action);
+
+async function action(options: { port?: string }): Promise<void> {
   const cwd = process.cwd();
 
   // Load environment config
@@ -95,8 +100,3 @@ export async function dev(options: { port?: string }): Promise<void> {
   // Keep the process alive
   await new Promise(() => {});
 }
-
-export const devCommand = new Command("dev")
-  .description("Start a local development server")
-  .option("-p, --port <port>", "Port to listen on", "3000")
-  .action(dev);

@@ -1,9 +1,14 @@
 import { Command } from "commander";
-import { BaseOptions } from "./types";
 import { register } from "./register";
 import { update } from "./update";
+import type { WalletOptions } from "./wallet";
 
-export type { BaseOptions };
+export interface BaseOptions extends WalletOptions {
+  chain?: string;
+  rpcUrl?: string;
+  registry?: string;
+  outDir?: string;
+}
 
 export const erc8004Command = new Command("erc-8004").description("ERC-8004 IdentityRegistry operations");
 

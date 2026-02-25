@@ -1,6 +1,6 @@
 import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log } from "viem";
 import { IdentityRegistryAbi } from "@aixyz/erc-8004";
-import { selectWalletMethod, type WalletOptions } from "./wallet";
+import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
 import {
   resolveChainConfig,
@@ -16,7 +16,7 @@ import { hasErc8004File, createErc8004File, writeRegistrationEntry } from "./uti
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import boxen from "boxen";
-import type { BaseOptions } from "./types";
+import type { BaseOptions } from "./index";
 
 export interface RegisterOptions extends BaseOptions {
   url?: string;

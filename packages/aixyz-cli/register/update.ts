@@ -2,13 +2,7 @@ import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log }
 import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import {
-  resolveChainConfig,
-  resolveRegistryAddress,
-  validateBrowserRpcConflict,
-  getExplorerUrl,
-  CHAINS,
-} from "./utils/chain";
+import { resolveChainConfig, validateBrowserRpcConflict, getExplorerUrl, CHAINS } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
 import { promptAgentUrl, promptSelectRegistration, deriveAgentUri } from "./utils/prompt";
@@ -16,7 +10,7 @@ import { readRegistrations } from "./utils/erc8004-file";
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import boxen from "boxen";
-import type { BaseOptions } from "./types";
+import type { BaseOptions } from "./index";
 
 export interface UpdateOptions extends BaseOptions {
   url?: string;
