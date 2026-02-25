@@ -1,8 +1,7 @@
 import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log } from "viem";
-import { IdentityRegistryAbi } from "@aixyz/erc-8004";
+import { ReputationRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import { resolveUri } from "./utils";
 import {
   resolveChainConfig,
   selectChain,
@@ -11,51 +10,31 @@ import {
   getExplorerUrl,
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
-import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { confirm, input } from "@inquirer/prompts";
+import { label, abiSignature, broadcastAndConfirm, logSignResult } from "./utils/transaction";
 import chalk from "chalk";
 import boxen from "boxen";
 import type { BaseOptions } from "./index";
-import { promptAgentId, promptUri } from "./utils/prompt";
-import { validateAgentId } from "./utils/validate";
+import { promptAgentId, promptFeedbackIndex } from "./utils/prompt";
+import { parseAgentId, parseFeedbackIndex } from "./utils/validate";
 
-export interface SetAgentUriOptions extends BaseOptions {
+export interface RevokeFeedbackOptions extends BaseOptions {
   agentId?: string;
-  uri?: string;
+  feedbackIndex?: string;
 }
 
-async function confirmEmptyUri(): Promise<void> {
-  const yes = await confirm({
-    message: "URI is empty. This will clear the agent's metadata URI. Are you sure?",
-    default: false,
-  });
-  if (!yes) {
-    throw new Error("Aborted.");
-  }
-}
-
-export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
+export async function revokeFeedback(options: RevokeFeedbackOptions): Promise<void> {
   const chainName = options.chain ?? (await selectChain());
   const chainConfig = resolveChainConfig(chainName);
 
-  const agentId = options.agentId ?? (await promptAgentId());
-  validateAgentId(agentId);
+  const agentIdParsed = parseAgentId(options.agentId ?? (await promptAgentId()));
+  const feedbackIndexParsed = parseFeedbackIndex(options.feedbackIndex ?? (await promptFeedbackIndex()));
 
-  const uri = options.uri ?? (await promptUri());
-  if (uri === "") {
-    await confirmEmptyUri();
-  }
-  const resolvedUri = uri === "" ? "" : resolveUri(uri);
-  if (resolvedUri !== uri) {
-    console.log(`Resolved ${uri} to data URI (${resolvedUri.length} chars)`);
-  }
-
-  const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry);
+  const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry, "reputation");
 
   const data = encodeFunctionData({
-    abi: IdentityRegistryAbi,
-    functionName: "setAgentURI",
-    args: [BigInt(agentId), resolvedUri],
+    abi: ReputationRegistryAbi,
+    functionName: "revokeFeedback",
+    args: [agentIdParsed, feedbackIndexParsed],
   });
 
   const printTxDetails = (header: string) => {
@@ -64,9 +43,9 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
     console.log(`  ${label("To")}${registryAddress}`);
     console.log(`  ${label("Data")}${data.slice(0, 10)}${chalk.dim("\u2026" + (data.length - 2) / 2 + " bytes")}`);
     console.log(`  ${label("Chain")}${chainName}`);
-    console.log(`  ${label("Function")}setAgentURI(uint256 agentId, string calldata newURI)`);
-    console.log(`  ${label("Agent ID")}${agentId}`);
-    console.log(`  ${label("URI")}${truncateUri(resolvedUri)}`);
+    console.log(`  ${label("Function")}${abiSignature(ReputationRegistryAbi, "revokeFeedback")}`);
+    console.log(`  ${label("Agent ID")}${agentIdParsed}`);
+    console.log(`  ${label("Index")}${feedbackIndexParsed}`);
     console.log("");
   };
 
@@ -81,6 +60,9 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
     return;
   }
 
+  // TODO: check feedbackIndex is within lastIndex (prevent revert)
+  // TODO: check if feedback is already revoked (prevent revert)
+
   const walletMethod = await selectWalletMethod(options);
   validateBrowserRpcConflict(walletMethod.type === "browser" || undefined, options.rpcUrl);
 
@@ -92,7 +74,7 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
     chain: chainConfig.chain,
     rpcUrl: options.rpcUrl,
     options: {
-      browser: { chainId: chainConfig.chainId, chainName, uri: resolvedUri },
+      browser: { chainId: chainConfig.chainId, chainName },
     },
   });
   logSignResult(walletMethod.type, result);
@@ -106,14 +88,14 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
   const resultData = printResult(receipt, timestamp, chainConfig.chain, chainConfig.chainId, hash);
 
   if (options.outDir) {
-    writeResultJson(options.outDir, "set-agent-uri", resultData);
+    writeResultJson(options.outDir, "revoke-feedback", resultData);
   }
 }
 
-interface SetAgentUriResult {
+interface RevokeFeedbackResult {
   agentId?: string;
-  newUri?: string;
-  updatedBy?: `0x${string}`;
+  clientAddress?: string;
+  feedbackIndex?: string;
   chainId: number;
   block: string;
   timestamp: string;
@@ -129,12 +111,12 @@ function printResult(
   chain: Chain,
   chainId: number,
   hash: `0x${string}`,
-): SetAgentUriResult {
-  const events = parseEventLogs({ abi: IdentityRegistryAbi, logs: receipt.logs as Log[] });
-  const uriUpdated = events.find((e) => e.eventName === "URIUpdated");
+): RevokeFeedbackResult {
+  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs as Log[] });
+  const revoked = events.find((e) => e.eventName === "FeedbackRevoked");
 
   const lines: string[] = [];
-  const result: SetAgentUriResult = {
+  const result: RevokeFeedbackResult = {
     chainId,
     block: receipt.blockNumber.toString(),
     timestamp: new Date(Number(timestamp) * 1000).toUTCString(),
@@ -143,19 +125,19 @@ function printResult(
     txHash: hash,
   };
 
-  if (uriUpdated) {
-    const { agentId, newURI, updatedBy } = uriUpdated.args as {
+  if (revoked) {
+    const { agentId, clientAddress, feedbackIndex } = revoked.args as {
       agentId: bigint;
-      newURI: string;
-      updatedBy: `0x${string}`;
+      clientAddress: `0x${string}`;
+      feedbackIndex: bigint;
     };
     result.agentId = agentId.toString();
-    result.newUri = newURI;
-    result.updatedBy = updatedBy;
+    result.clientAddress = clientAddress;
+    result.feedbackIndex = feedbackIndex.toString();
 
     lines.push(`${label("Agent ID")}${chalk.bold(result.agentId)}`);
-    lines.push(`${label("New URI")}${truncateUri(newURI)}`);
-    lines.push(`${label("Updated By")}${updatedBy}`);
+    lines.push(`${label("Client")}${clientAddress}`);
+    lines.push(`${label("Index")}${result.feedbackIndex}`);
     lines.push(`${label("Block")}${receipt.blockNumber}`);
   } else {
     lines.push(`${label("Block")}${receipt.blockNumber}`);
@@ -177,7 +159,7 @@ function printResult(
       padding: { left: 1, right: 1, top: 0, bottom: 0 },
       borderStyle: "round",
       borderColor: "green",
-      title: "Agent URI updated successfully",
+      title: "Feedback revoked successfully",
       titleAlignment: "left",
     }),
   );

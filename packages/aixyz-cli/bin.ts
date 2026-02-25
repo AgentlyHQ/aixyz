@@ -4,6 +4,9 @@ import { build } from "./build";
 import { dev } from "./dev";
 import { register } from "./register/register";
 import { setAgentUri } from "./register/set-agent-uri";
+import { giveFeedback } from "./register/give-feedback";
+import { revokeFeedback } from "./register/revoke-feedback";
+import { appendResponse } from "./register/append-response";
 import pkg from "./package.json";
 
 function handleAction(
@@ -65,7 +68,7 @@ Examples:
   )
   .action(handleAction(build));
 
-const erc8004 = program.command("erc-8004").description("ERC-8004 IdentityRegistry operations");
+const erc8004 = program.command("erc-8004").description("ERC-8004 registry operations");
 
 erc8004
   .command("register")
@@ -229,5 +232,56 @@ Examples:
   $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --browser --broadcast`,
   )
   .action(handleAction(setAgentUri));
+
+erc8004
+  .command("give-feedback")
+  .description("Submit feedback for a registered agent on the ReputationRegistry")
+  .option("--agent-id <id>", "Agent ID (token ID) to give feedback for")
+  .option("--value <value>", "Feedback value (signed integer)")
+  .option("--value-decimals <decimals>", "Value decimals (0-18)")
+  .option("--tag1 <tag>", "Primary tag (category)")
+  .option("--tag2 <tag>", "Secondary tag (subcategory)")
+  .option("--endpoint <endpoint>", "Endpoint related to the feedback")
+  .option("--feedback-uri <uri>", "URI with additional feedback details")
+  .option("--feedback-hash <hash>", "Bytes32 hash of feedback content")
+  .option("--chain <chain>", "Target chain (mainnet, sepolia, base-sepolia, localhost)")
+  .option("--rpc-url <url>", "Custom RPC URL (uses default if not provided)")
+  .option("--registry <address>", "Contract address of the ReputationRegistry (required for localhost)")
+  .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
+  .option("--browser", "Use browser extension wallet (any extension)")
+  .option("--broadcast", "Sign and broadcast the transaction (default: dry-run)")
+  .option("--out-dir <path>", "Write result as JSON to the given directory")
+  .action(handleAction(giveFeedback));
+
+erc8004
+  .command("revoke-feedback")
+  .description("Revoke previously submitted feedback on the ReputationRegistry")
+  .option("--agent-id <id>", "Agent ID (token ID) of the feedback to revoke")
+  .option("--feedback-index <index>", "Feedback index to revoke")
+  .option("--chain <chain>", "Target chain (mainnet, sepolia, base-sepolia, localhost)")
+  .option("--rpc-url <url>", "Custom RPC URL (uses default if not provided)")
+  .option("--registry <address>", "Contract address of the ReputationRegistry (required for localhost)")
+  .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
+  .option("--browser", "Use browser extension wallet (any extension)")
+  .option("--broadcast", "Sign and broadcast the transaction (default: dry-run)")
+  .option("--out-dir <path>", "Write result as JSON to the given directory")
+  .action(handleAction(revokeFeedback));
+
+erc8004
+  .command("append-response")
+  .description("Append a response to existing feedback on the ReputationRegistry")
+  .option("--agent-id <id>", "Agent ID (token ID) of the feedback")
+  .option("--client-address <address>", "Ethereum address of the feedback author")
+  .option("--feedback-index <index>", "Feedback index to respond to")
+  .option("--response-uri <uri>", "URI with response details")
+  .option("--response-hash <hash>", "Bytes32 hash of response content")
+  .option("--chain <chain>", "Target chain (mainnet, sepolia, base-sepolia, localhost)")
+  .option("--rpc-url <url>", "Custom RPC URL (uses default if not provided)")
+  .option("--registry <address>", "Contract address of the ReputationRegistry (required for localhost)")
+  .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
+  .option("--browser", "Use browser extension wallet (any extension)")
+  .option("--broadcast", "Sign and broadcast the transaction (default: dry-run)")
+  .option("--out-dir <path>", "Write result as JSON to the given directory")
+  .action(handleAction(appendResponse));
 
 program.parse();

@@ -9,6 +9,14 @@ export function label(text: string): string {
   return chalk.dim(text.padEnd(14));
 }
 
+export function abiSignature(abi: readonly Record<string, unknown>[], functionName: string): string {
+  const fn = abi.find((item) => item.type === "function" && item.name === functionName) as
+    | { name: string; inputs: readonly { type: string }[] }
+    | undefined;
+  if (!fn) return functionName;
+  return `${fn.name}(${fn.inputs.map((i) => i.type).join(",")})`;
+}
+
 export function truncateUri(uri: string, maxLength = 80): string {
   if (uri.length <= maxLength) return uri;
   return uri.slice(0, maxLength) + "...";

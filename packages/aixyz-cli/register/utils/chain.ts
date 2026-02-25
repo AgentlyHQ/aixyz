@@ -1,6 +1,6 @@
 import { isAddress, type Chain } from "viem";
 import { mainnet, sepolia, baseSepolia, foundry } from "viem/chains";
-import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
+import { CHAIN_ID, getIdentityRegistryAddress, getReputationRegistryAddress } from "@aixyz/erc-8004";
 import { select } from "@inquirer/prompts";
 
 export interface ChainConfig {
@@ -30,7 +30,12 @@ export async function selectChain(): Promise<string> {
   });
 }
 
-export function resolveRegistryAddress(chainName: string, chainId: number, registry?: string): `0x${string}` {
+export function resolveRegistryAddress(
+  chainName: string,
+  chainId: number,
+  registry?: string,
+  registryType: "identity" | "reputation" = "identity",
+): `0x${string}` {
   if (registry) {
     if (!isAddress(registry)) {
       throw new Error(`Invalid registry address: ${registry}`);
@@ -40,7 +45,8 @@ export function resolveRegistryAddress(chainName: string, chainId: number, regis
   if (chainName === "localhost") {
     throw new Error("--registry is required for localhost (no default contract deployment)");
   }
-  return getIdentityRegistryAddress(chainId) as `0x${string}`;
+  const getter = registryType === "reputation" ? getReputationRegistryAddress : getIdentityRegistryAddress;
+  return getter(chainId) as `0x${string}`;
 }
 
 export function validateBrowserRpcConflict(browser: boolean | undefined, rpcUrl: string | undefined): void {

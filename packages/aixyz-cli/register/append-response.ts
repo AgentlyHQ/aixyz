@@ -1,8 +1,7 @@
 import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log } from "viem";
-import { IdentityRegistryAbi } from "@aixyz/erc-8004";
+import { ReputationRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import { resolveUri } from "./utils";
 import {
   resolveChainConfig,
   selectChain,
@@ -11,51 +10,47 @@ import {
   getExplorerUrl,
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
-import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { confirm, input } from "@inquirer/prompts";
+import { label, abiSignature, broadcastAndConfirm, logSignResult } from "./utils/transaction";
 import chalk from "chalk";
 import boxen from "boxen";
 import type { BaseOptions } from "./index";
-import { promptAgentId, promptUri } from "./utils/prompt";
-import { validateAgentId } from "./utils/validate";
+import { promptAgentId, promptFeedbackIndex, promptClientAddress, promptResponseUri } from "./utils/prompt";
+import { parseAgentId, parseFeedbackIndex, parseClientAddress, parseBytes32Hash } from "./utils/validate";
 
-export interface SetAgentUriOptions extends BaseOptions {
+const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+export interface AppendResponseOptions extends BaseOptions {
   agentId?: string;
-  uri?: string;
+  clientAddress?: string;
+  feedbackIndex?: string;
+  responseUri?: string;
+  responseHash?: string;
 }
 
-async function confirmEmptyUri(): Promise<void> {
-  const yes = await confirm({
-    message: "URI is empty. This will clear the agent's metadata URI. Are you sure?",
-    default: false,
-  });
-  if (!yes) {
-    throw new Error("Aborted.");
-  }
-}
-
-export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
+export async function appendResponse(options: AppendResponseOptions): Promise<void> {
   const chainName = options.chain ?? (await selectChain());
   const chainConfig = resolveChainConfig(chainName);
 
-  const agentId = options.agentId ?? (await promptAgentId());
-  validateAgentId(agentId);
+  const agentIdParsed = parseAgentId(options.agentId ?? (await promptAgentId()));
+  const clientAddressParsed = parseClientAddress(options.clientAddress ?? (await promptClientAddress()));
+  const feedbackIndexParsed = parseFeedbackIndex(options.feedbackIndex ?? (await promptFeedbackIndex()));
 
-  const uri = options.uri ?? (await promptUri());
-  if (uri === "") {
-    await confirmEmptyUri();
+  const responseUri = options.responseUri ?? (await promptResponseUri());
+  if (responseUri.trim() === "") {
+    throw new Error("Response URI must not be empty.");
   }
-  const resolvedUri = uri === "" ? "" : resolveUri(uri);
-  if (resolvedUri !== uri) {
-    console.log(`Resolved ${uri} to data URI (${resolvedUri.length} chars)`);
-  }
+  const responseHashRaw = options.responseHash ?? ZERO_BYTES32;
+  const responseHash =
+    responseHashRaw !== ZERO_BYTES32
+      ? parseBytes32Hash(responseHashRaw, "response hash")
+      : (ZERO_BYTES32 as `0x${string}`);
 
-  const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry);
+  const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry, "reputation");
 
   const data = encodeFunctionData({
-    abi: IdentityRegistryAbi,
-    functionName: "setAgentURI",
-    args: [BigInt(agentId), resolvedUri],
+    abi: ReputationRegistryAbi,
+    functionName: "appendResponse",
+    args: [agentIdParsed, clientAddressParsed, feedbackIndexParsed, responseUri, responseHash],
   });
 
   const printTxDetails = (header: string) => {
@@ -64,9 +59,12 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
     console.log(`  ${label("To")}${registryAddress}`);
     console.log(`  ${label("Data")}${data.slice(0, 10)}${chalk.dim("\u2026" + (data.length - 2) / 2 + " bytes")}`);
     console.log(`  ${label("Chain")}${chainName}`);
-    console.log(`  ${label("Function")}setAgentURI(uint256 agentId, string calldata newURI)`);
-    console.log(`  ${label("Agent ID")}${agentId}`);
-    console.log(`  ${label("URI")}${truncateUri(resolvedUri)}`);
+    console.log(`  ${label("Function")}${abiSignature(ReputationRegistryAbi, "appendResponse")}`);
+    console.log(`  ${label("Agent ID")}${agentIdParsed}`);
+    console.log(`  ${label("Client")}${clientAddressParsed}`);
+    console.log(`  ${label("Index")}${feedbackIndexParsed}`);
+    if (responseUri) console.log(`  ${label("Response URI")}${responseUri}`);
+    if (responseHash !== ZERO_BYTES32) console.log(`  ${label("Response Hash")}${responseHash}`);
     console.log("");
   };
 
@@ -81,6 +79,8 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
     return;
   }
 
+  // TODO: check feedbackIndex is within lastIndex (prevent revert)
+
   const walletMethod = await selectWalletMethod(options);
   validateBrowserRpcConflict(walletMethod.type === "browser" || undefined, options.rpcUrl);
 
@@ -92,7 +92,7 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
     chain: chainConfig.chain,
     rpcUrl: options.rpcUrl,
     options: {
-      browser: { chainId: chainConfig.chainId, chainName, uri: resolvedUri },
+      browser: { chainId: chainConfig.chainId, chainName },
     },
   });
   logSignResult(walletMethod.type, result);
@@ -106,14 +106,17 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
   const resultData = printResult(receipt, timestamp, chainConfig.chain, chainConfig.chainId, hash);
 
   if (options.outDir) {
-    writeResultJson(options.outDir, "set-agent-uri", resultData);
+    writeResultJson(options.outDir, "append-response", resultData);
   }
 }
 
-interface SetAgentUriResult {
+interface AppendResponseResult {
   agentId?: string;
-  newUri?: string;
-  updatedBy?: `0x${string}`;
+  clientAddress?: string;
+  feedbackIndex?: string;
+  responder?: string;
+  responseUri?: string;
+  responseHash?: string;
   chainId: number;
   block: string;
   timestamp: string;
@@ -129,12 +132,12 @@ function printResult(
   chain: Chain,
   chainId: number,
   hash: `0x${string}`,
-): SetAgentUriResult {
-  const events = parseEventLogs({ abi: IdentityRegistryAbi, logs: receipt.logs as Log[] });
-  const uriUpdated = events.find((e) => e.eventName === "URIUpdated");
+): AppendResponseResult {
+  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs as Log[] });
+  const responseAppended = events.find((e) => e.eventName === "ResponseAppended");
 
   const lines: string[] = [];
-  const result: SetAgentUriResult = {
+  const result: AppendResponseResult = {
     chainId,
     block: receipt.blockNumber.toString(),
     timestamp: new Date(Number(timestamp) * 1000).toUTCString(),
@@ -143,19 +146,28 @@ function printResult(
     txHash: hash,
   };
 
-  if (uriUpdated) {
-    const { agentId, newURI, updatedBy } = uriUpdated.args as {
+  if (responseAppended) {
+    const { agentId, clientAddress, feedbackIndex, responder, responseURI, responseHash } = responseAppended.args as {
       agentId: bigint;
-      newURI: string;
-      updatedBy: `0x${string}`;
+      clientAddress: `0x${string}`;
+      feedbackIndex: bigint;
+      responder: `0x${string}`;
+      responseURI: string;
+      responseHash: `0x${string}`;
     };
     result.agentId = agentId.toString();
-    result.newUri = newURI;
-    result.updatedBy = updatedBy;
+    result.clientAddress = clientAddress;
+    result.feedbackIndex = feedbackIndex.toString();
+    result.responder = responder;
+    result.responseUri = responseURI;
+    result.responseHash = responseHash;
 
     lines.push(`${label("Agent ID")}${chalk.bold(result.agentId)}`);
-    lines.push(`${label("New URI")}${truncateUri(newURI)}`);
-    lines.push(`${label("Updated By")}${updatedBy}`);
+    lines.push(`${label("Client")}${clientAddress}`);
+    lines.push(`${label("Index")}${result.feedbackIndex}`);
+    lines.push(`${label("Responder")}${responder}`);
+    lines.push(`${label("Response URI")}${responseURI}`);
+    lines.push(`${label("Response Hash")}${responseHash}`);
     lines.push(`${label("Block")}${receipt.blockNumber}`);
   } else {
     lines.push(`${label("Block")}${receipt.blockNumber}`);
@@ -177,7 +189,7 @@ function printResult(
       padding: { left: 1, right: 1, top: 0, bottom: 0 },
       borderStyle: "round",
       borderColor: "green",
-      title: "Agent URI updated successfully",
+      title: "Response appended successfully",
       titleAlignment: "left",
     }),
   );
