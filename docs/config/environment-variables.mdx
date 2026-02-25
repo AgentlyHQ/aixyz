@@ -63,6 +63,15 @@ describe("tests", () => {
 });
 ```
 
+## Built-in Environment Variables
+
+The CLI automatically sets these environment variables based on the command:
+
+| Variable    | `aixyz dev`     | `aixyz build`  | Description                                                                  |
+| ----------- | --------------- | -------------- | ---------------------------------------------------------------------------- |
+| `NODE_ENV`  | `"development"` | `"production"` | Standard Node.js environment indicator, for compatibility with node packages |
+| `AIXYZ_ENV` | `"development"` | `"production"` | aixyz-specific environment indicator, mirrors `NODE_ENV`                     |
+
 ## Build-Time Resolution
 
 Environment variables referenced in `aixyz.config.ts` are resolved and baked into the bundle at build time. The config file itself is not included in the output — only the resolved values.

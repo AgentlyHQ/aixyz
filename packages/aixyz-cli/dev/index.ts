@@ -16,6 +16,7 @@ async function action(options: { port?: string }): Promise<void> {
   // Load environment config
   const { loadedEnvFiles } = loadEnvConfig(cwd, true);
   process.env.NODE_ENV = "development";
+  process.env.AIXYZ_ENV = "development";
   const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
 
   const port = options.port || process.env.PORT || "3000";
@@ -42,7 +43,7 @@ async function action(options: { port?: string }): Promise<void> {
       cwd,
       stdout: "inherit",
       stderr: "inherit",
-      env: { ...process.env, NODE_ENV: "development" },
+      env: { ...process.env, NODE_ENV: "development", AIXYZ_ENV: "development" },
     });
     child.exited.then((code) => {
       if (!restarting && code !== 0) {
