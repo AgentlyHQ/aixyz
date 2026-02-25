@@ -145,7 +145,7 @@ export function buildHtml(params: {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>agently-cli – Register Agent</title>
+<title>aixyz.sh – ERC-8004 Register Agent</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -475,7 +475,7 @@ export function buildHtml(params: {
 <body>
 <div class="container">
   <div class="header">
-    <div class="brand">agently-cli</div>
+    <div class="brand">aixyz erc-8004</div>
     <h1>Register Agent</h1>
   </div>
 
