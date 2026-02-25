@@ -2,7 +2,7 @@
 
 import * as p from "@clack/prompts";
 import { execSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -91,6 +91,20 @@ if (existsSync(targetDir)) {
   }
 }
 
+// Prompt for ERC-8004 Agent Identity support
+let includeErc8004 = false;
+if (!useDefaults) {
+  const erc8004 = await p.confirm({
+    message: "Support ERC-8004 Agent Identity?",
+    initialValue: false,
+  });
+  if (p.isCancel(erc8004)) {
+    p.cancel("Operation cancelled.");
+    process.exit(0);
+  }
+  includeErc8004 = erc8004;
+}
+
 // Prompt for OPENAI_API_KEY (optional)
 let openaiApiKey = "";
 if (!useDefaults) {
@@ -143,6 +157,14 @@ if (!existsSync(templateDir)) {
 // Copy template files
 mkdirSync(targetDir, { recursive: true });
 cpSync(templateDir, targetDir, { recursive: true });
+
+// Remove erc-8004.ts if user opted out
+if (!includeErc8004) {
+  const erc8004Path = join(targetDir, "app", "erc-8004.ts");
+  if (existsSync(erc8004Path)) {
+    rmSync(erc8004Path);
+  }
+}
 
 // Rename special files (npm strips .gitignore and .env.local)
 const gitignoreSrc = join(targetDir, "gitignore");
