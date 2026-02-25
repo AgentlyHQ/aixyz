@@ -130,6 +130,7 @@
         "@a2a-js/sdk": "^0.3.10",
         "@aixyz/cli": "workspace:*",
         "@aixyz/config": "workspace:*",
+        "@aixyz/erc-8004": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.26.0",
         "@next/env": "^16.1.6",
         "@x402/core": "^2.3.1",
