@@ -7,7 +7,7 @@ import {
   RequestContext,
   TaskStore,
 } from "@a2a-js/sdk/server";
-import { AgentCard, Message, TextPart } from "@a2a-js/sdk";
+import { AgentCard, Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
 import { getAixyzConfigRuntime } from "../../config";
 import { AixyzServer } from "../index";
@@ -18,23 +18,54 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
   constructor(private agent: ToolLoopAgent<never, TOOLS>) {}
 
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus): Promise<void> {
+    const { taskId, contextId } = requestContext;
     try {
       // Extract the user's message text
       const userMessage = requestContext.userMessage;
       const textParts = userMessage.parts.filter((part): part is TextPart => part.kind === "text");
       const prompt = textParts.map((part) => part.text).join("\n");
 
-      // TODO(@fuxingloh): supporting streaming later
-      const result = await this.agent.generate({ prompt });
-      const responseMessage: Message = {
-        kind: "message",
-        messageId: randomUUID(),
-        role: "agent",
-        parts: [{ kind: "text", text: result.text }],
-        contextId: requestContext.contextId,
+      // Signal that the agent is working
+      const workingUpdate: TaskStatusUpdateEvent = {
+        kind: "status-update",
+        taskId,
+        contextId,
+        status: { state: "working", timestamp: new Date().toISOString() },
+        final: false,
       };
+      eventBus.publish(workingUpdate);
 
-      eventBus.publish(responseMessage);
+      // Stream the response and publish artifact chunks as they arrive
+      const result = await this.agent.stream({ prompt });
+      const artifactId = randomUUID();
+      let firstChunk = true;
+
+      for await (const chunk of result.textStream) {
+        if (chunk) {
+          const artifactUpdate: TaskArtifactUpdateEvent = {
+            kind: "artifact-update",
+            taskId,
+            contextId,
+            artifact: {
+              artifactId,
+              parts: [{ kind: "text", text: chunk }],
+            },
+            append: !firstChunk,
+          };
+          eventBus.publish(artifactUpdate);
+          firstChunk = false;
+        }
+      }
+
+      // Publish the final completed status
+      const completedUpdate: TaskStatusUpdateEvent = {
+        kind: "status-update",
+        taskId,
+        contextId,
+        status: { state: "completed", timestamp: new Date().toISOString() },
+        final: true,
+      };
+      eventBus.publish(completedUpdate);
       eventBus.finished();
     } catch (error) {
       // Handle errors by publishing an error message
@@ -48,7 +79,7 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
             text: `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
           },
         ],
-        contextId: requestContext.contextId,
+        contextId,
       };
 
       eventBus.publish(errorMessage);
@@ -71,7 +102,7 @@ export function getAgentCard(): AgentCard {
     version: config.version,
     url: new URL("/agent", config.url).toString(),
     capabilities: {
-      streaming: false,
+      streaming: true,
       pushNotifications: false,
     },
     defaultInputModes: ["text/plain"],
