@@ -2,66 +2,65 @@ import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log }
 import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import { resolveUri } from "./utils";
 import {
   resolveChainConfig,
-  selectChain,
   resolveRegistryAddress,
   validateBrowserRpcConflict,
   getExplorerUrl,
+  CHAINS,
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { confirm, input } from "@inquirer/prompts";
+import { promptAgentUrl, promptSelectRegistration, deriveAgentUri } from "./utils/prompt";
+import { readRegistrations } from "./utils/erc8004-file";
+import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import boxen from "boxen";
 import type { BaseOptions } from "./index";
-import { promptAgentId, promptUri } from "./utils/prompt";
 
-export interface SetAgentUriOptions extends BaseOptions {
-  agentId?: string;
-  uri?: string;
+export interface UpdateOptions extends BaseOptions {
+  url?: string;
 }
 
-async function confirmEmptyUri(): Promise<void> {
+export async function update(options: UpdateOptions): Promise<void> {
+  // Step 1: Read registrations from app/erc-8004.ts
+  const registrations = await readRegistrations();
+
+  if (registrations.length === 0) {
+    throw new Error("No registrations found in app/erc-8004.ts. Run `aixyz erc-8004 register` first.");
+  }
+
+  // Step 2: Select which registration to update
+  const selected = await promptSelectRegistration(registrations);
+
+  // Step 3: Derive chain info from agentRegistry (eip155:<chainId>:<address>)
+  const parts = selected.agentRegistry.split(":");
+  if (parts.length < 3 || parts[0] !== "eip155") {
+    throw new Error(`Invalid agentRegistry format: ${selected.agentRegistry}. Expected eip155:<chainId>:<address>`);
+  }
+
+  const chainId = Number(parts[1]);
+  const registryAddress = parts.slice(2).join(":") as `0x${string}`;
+  const chainName = Object.entries(CHAINS).find(([, config]) => config.chainId === chainId)?.[0] ?? `chain-${chainId}`;
+  const chainConfig = resolveChainConfig(chainName);
+
+  // Step 4: Get new agent URL and derive URI
+  const agentUrl = options.url ?? (await promptAgentUrl());
+  const resolvedUri = deriveAgentUri(agentUrl);
+
   const yes = await confirm({
-    message: "URI is empty. This will clear the agent's metadata URI. Are you sure?",
-    default: false,
+    message: `Will update URI to: ${chalk.cyan(resolvedUri)} — confirm?`,
+    default: true,
   });
   if (!yes) {
     throw new Error("Aborted.");
   }
-}
 
-export function validateAgentId(agentId: string): void {
-  const n = Number(agentId);
-  if (agentId.trim() === "" || !Number.isInteger(n) || n < 0) {
-    throw new Error(`Invalid agent ID: ${agentId}. Must be a non-negative integer.`);
-  }
-}
-
-export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
-  const chainName = options.chain ?? (await selectChain());
-  const chainConfig = resolveChainConfig(chainName);
-
-  const agentId = options.agentId ?? (await promptAgentId());
-  validateAgentId(agentId);
-
-  const uri = options.uri ?? (await promptUri());
-  if (uri === "") {
-    await confirmEmptyUri();
-  }
-  const resolvedUri = uri === "" ? "" : resolveUri(uri);
-  if (resolvedUri !== uri) {
-    console.log(`Resolved ${uri} to data URI (${resolvedUri.length} chars)`);
-  }
-
-  const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry);
-
+  // Step 5: Encode transaction
   const data = encodeFunctionData({
     abi: IdentityRegistryAbi,
     functionName: "setAgentURI",
-    args: [BigInt(agentId), resolvedUri],
+    args: [BigInt(selected.agentId), resolvedUri],
   });
 
   const printTxDetails = (header: string) => {
@@ -71,7 +70,7 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
     console.log(`  ${label("Data")}${data.slice(0, 10)}${chalk.dim("\u2026" + (data.length - 2) / 2 + " bytes")}`);
     console.log(`  ${label("Chain")}${chainName}`);
     console.log(`  ${label("Function")}setAgentURI(uint256 agentId, string calldata newURI)`);
-    console.log(`  ${label("Agent ID")}${agentId}`);
+    console.log(`  ${label("Agent ID")}${selected.agentId}`);
     console.log(`  ${label("URI")}${truncateUri(resolvedUri)}`);
     console.log("");
   };
@@ -112,11 +111,11 @@ export async function setAgentUri(options: SetAgentUriOptions): Promise<void> {
   const resultData = printResult(receipt, timestamp, chainConfig.chain, chainConfig.chainId, hash);
 
   if (options.outDir) {
-    writeResultJson(options.outDir, "set-agent-uri", resultData);
+    writeResultJson(options.outDir, "update", resultData);
   }
 }
 
-interface SetAgentUriResult {
+interface UpdateResult {
   agentId?: string;
   newUri?: string;
   updatedBy?: `0x${string}`;
@@ -135,12 +134,12 @@ function printResult(
   chain: Chain,
   chainId: number,
   hash: `0x${string}`,
-): SetAgentUriResult {
+): UpdateResult {
   const events = parseEventLogs({ abi: IdentityRegistryAbi, logs: receipt.logs as Log[] });
   const uriUpdated = events.find((e) => e.eventName === "URIUpdated");
 
   const lines: string[] = [];
-  const result: SetAgentUriResult = {
+  const result: UpdateResult = {
     chainId,
     block: receipt.blockNumber.toString(),
     timestamp: new Date(Number(timestamp) * 1000).toUTCString(),

@@ -3,7 +3,7 @@ import { program } from "commander";
 import { build } from "./build";
 import { dev } from "./dev";
 import { register } from "./register/register";
-import { setAgentUri } from "./register/set-agent-uri";
+import { update } from "./register/update";
 import pkg from "./package.json";
 
 function handleAction(
@@ -70,7 +70,7 @@ const erc8004 = program.command("erc-8004").description("ERC-8004 IdentityRegist
 erc8004
   .command("register")
   .description("Register a new agent to the ERC-8004 IdentityRegistry")
-  .option("--uri <uri>", "Agent metadata URI or path to .json file (converts to base64 data URI)")
+  .option("--url <url>", "Agent deployment URL (e.g., https://my-agent.example.com)")
   .option("--chain <chain>", "Target chain (mainnet, sepolia, base-sepolia, localhost)")
   .option("--rpc-url <url>", "Custom RPC URL (uses default if not provided)")
   .option("--registry <address>", "Contract address of the IdentityRegistry (required for localhost)")
@@ -82,12 +82,10 @@ erc8004
     "after",
     `
 Option Details:
-  --uri <uri>
-      Agent metadata as a URI or local file path. Accepts http://, https://,
-      ipfs://, and data: URIs directly.
-      If a .json file path is given, it is read and converted to a base64 data URI automatically.
-      Otherwise, the URI is used as-is and the validity of the URI is not checked.
-      If omitted, the agent is registered without metadata.
+  --url <url>
+      Agent deployment URL (e.g., https://my-agent.example.com).
+      The registration URI will be derived as <url>/_aixyz/erc-8004.json.
+      If omitted, you will be prompted to enter the URL interactively.
 
   --chain <chain>
       Target chain for registration. Supported values:
@@ -96,7 +94,6 @@ Option Details:
         base-sepolia  Base Sepolia testnet (chain ID 84532)
         localhost     Local Foundry/Anvil node (chain ID 31337)
       If omitted, you will be prompted to select a chain interactively.
-      Each chain has a default RPC endpoint unless overridden with --rpc-url.
 
   --rpc-url <url>
       Custom RPC endpoint URL. Overrides the default RPC for the selected
@@ -105,8 +102,7 @@ Option Details:
 
   --registry <address>
       Contract address of the ERC-8004 IdentityRegistry. Only required for
-      localhost, where there is no default deployment. For mainnet, sepolia,
-      and base-sepolia the canonical registry address is used automatically.
+      localhost, where there is no default deployment.
 
   --keystore <path>
       Path to an Ethereum keystore (V3) JSON file. You will be prompted for
@@ -115,42 +111,36 @@ Option Details:
   --browser
       Opens a local page in your default browser for signing with any
       EIP-6963 compatible wallet extension (MetaMask, Rabby, etc.).
-      The wallet handles both signing and broadcasting the transaction.
-      Cannot be combined with --rpc-url.
 
   --broadcast
       Sign and broadcast the transaction on-chain. Without this flag the
-      command performs a dry-run: it encodes the transaction and prints
-      its details but does not interact with any wallet or send anything
-      to the network.
+      command performs a dry-run.
 
   --out-dir <path>
-      Directory to write the deployment result as a JSON file. The file
-      is named registration-<chainId>-<timestamp>.json.
+      Directory to write the deployment result as a JSON file.
+
+Behavior:
+  If app/erc-8004.ts does not exist, you will be prompted to create it
+  (selecting supported trust mechanisms). After a successful on-chain
+  registration, the new registration entry is written back to app/erc-8004.ts.
 
 Environment Variables:
-  PRIVATE_KEY    Private key (hex, with or without 0x prefix) used for
-                 signing. Detected automatically if set. Not recommended
-                 for interactive use as the key may appear in shell history.
+  PRIVATE_KEY    Private key (hex, with or without 0x prefix) used for signing.
 
 Examples:
-  # Dry-run (default) — shows encoded transaction, no wallet needed
-  $ aixyz erc-8004 register --uri "./metadata.json" --chain sepolia
+  # Dry-run (default)
+  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia
 
   # Sign and broadcast
-  $ aixyz erc-8004 register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
-  $ PRIVATE_KEY=0x... aixyz erc-8004 register --chain sepolia --broadcast
-  $ aixyz erc-8004 register --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --uri "./metadata.json" --broadcast
-  $ aixyz erc-8004 register --uri "./metadata.json" --chain sepolia --browser --broadcast`,
+  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
+  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --browser --broadcast`,
   )
   .action(handleAction(register));
 
 erc8004
-  .command("set-agent-uri")
+  .command("update")
   .description("Update the metadata URI of a registered agent")
-  .option("--agent-id <id>", "Agent ID (token ID) to update")
-  .option("--uri <uri>", "New agent metadata URI or path to .json file")
-  .option("--chain <chain>", "Target chain (mainnet, sepolia, base-sepolia, localhost)")
+  .option("--url <url>", "New agent deployment URL (e.g., https://my-agent.example.com)")
   .option("--rpc-url <url>", "Custom RPC URL (uses default if not provided)")
   .option("--registry <address>", "Contract address of the IdentityRegistry (required for localhost)")
   .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
@@ -161,73 +151,50 @@ erc8004
     "after",
     `
 Option Details:
-  --agent-id <id>
-      The token ID of the agent whose URI you want to update.
-      Must be a non-negative integer. Only the agent owner, an approved
-      address, or an operator can update the URI.
-      If omitted, you will be prompted to enter the agent ID interactively.
-
-  --uri <uri>
-      New agent metadata as a URI or local file path. Accepts http://, https://,
-      ipfs://, and data: URIs directly.
-      If a .json file path is given, it is read and converted to a base64 data URI automatically.
-      Otherwise, the URI is used as-is and the validity of the URI is not checked.
-      If omitted, you will be prompted to enter the URI interactively.
-
-  --chain <chain>
-      Target chain. Supported values:
-        mainnet       Ethereum mainnet (chain ID 1)
-        sepolia       Ethereum Sepolia testnet (chain ID 11155111)
-        base-sepolia  Base Sepolia testnet (chain ID 84532)
-        localhost     Local Foundry/Anvil node (chain ID 31337)
-      If omitted, you will be prompted to select a chain interactively.
-      Each chain has a default RPC endpoint unless overridden with --rpc-url.
+  --url <url>
+      New agent deployment URL (e.g., https://my-agent.example.com).
+      The URI will be derived as <url>/_aixyz/erc-8004.json.
+      If omitted, you will be prompted to enter the URL interactively.
 
   --rpc-url <url>
       Custom RPC endpoint URL. Overrides the default RPC for the selected
-      chain. Cannot be used with --browser since the browser wallet manages
-      its own RPC connection.
+      chain. Cannot be used with --browser.
 
   --registry <address>
       Contract address of the ERC-8004 IdentityRegistry. Only required for
-      localhost, where there is no default deployment. For mainnet, sepolia,
-      and base-sepolia the canonical registry address is used automatically.
+      localhost, where there is no default deployment.
 
   --keystore <path>
-      Path to an Ethereum keystore (V3) JSON file. You will be prompted for
-      the keystore password to decrypt the private key for signing.
+      Path to an Ethereum keystore (V3) JSON file.
 
   --browser
       Opens a local page in your default browser for signing with any
       EIP-6963 compatible wallet extension (MetaMask, Rabby, etc.).
-      The wallet handles both signing and broadcasting the transaction.
-      Cannot be combined with --rpc-url.
 
   --broadcast
       Sign and broadcast the transaction on-chain. Without this flag the
-      command performs a dry-run: it encodes the transaction and prints
-      its details but does not interact with any wallet or send anything
-      to the network.
+      command performs a dry-run.
 
   --out-dir <path>
-      Directory to write the result as a JSON file. The file
-      is named set-agent-uri-<chainId>-<timestamp>.json.
+      Directory to write the result as a JSON file.
+
+Behavior:
+  Reads existing registrations from app/erc-8004.ts. If there is one
+  registration, confirms it. If multiple, prompts you to select which
+  one to update. The chain and registry address are derived from the
+  selected registration's agentRegistry field.
 
 Environment Variables:
-  PRIVATE_KEY    Private key (hex, with or without 0x prefix) used for
-                 signing. Detected automatically if set. Not recommended
-                 for interactive use as the key may appear in shell history.
+  PRIVATE_KEY    Private key (hex, with or without 0x prefix) used for signing.
 
 Examples:
-  # Dry-run (default) — shows encoded transaction, no wallet needed
-  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia
+  # Dry-run (default)
+  $ aixyz erc-8004 update --url "https://new-domain.example.com"
 
   # Sign and broadcast
-  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
-  $ PRIVATE_KEY=0x... aixyz erc-8004 set-agent-uri --agent-id 42 --uri "https://example.com/agent.json" --chain sepolia --broadcast
-  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --broadcast
-  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --browser --broadcast`,
+  $ aixyz erc-8004 update --url "https://new-domain.example.com" --keystore ~/.foundry/keystores/default --broadcast
+  $ aixyz erc-8004 update --url "https://new-domain.example.com" --browser --broadcast`,
   )
-  .action(handleAction(setAgentUri));
+  .action(handleAction(update));
 
 program.parse();

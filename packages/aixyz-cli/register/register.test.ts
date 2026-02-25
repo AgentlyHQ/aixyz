@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
-import { register } from "./register";
 
 describe("register command chain configuration", () => {
   test("sepolia chain ID is correct", () => {
@@ -63,13 +62,5 @@ describe("register command validation", () => {
       localhost: { chainId: 31337 },
     };
     expect(CHAINS["mainnet"]).toBeUndefined();
-  });
-
-  test("localhost requires --registry flag", async () => {
-    await expect(register({ chain: "localhost" })).rejects.toThrow("--registry is required for localhost");
-  });
-
-  test("dry-run completes without wallet interaction when --broadcast is not set", async () => {
-    await expect(register({ chain: "sepolia", uri: "https://example.com/agent.json" })).resolves.toBeUndefined();
   });
 });
