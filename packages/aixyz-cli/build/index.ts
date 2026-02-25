@@ -49,6 +49,7 @@ Examples:
 async function action(options: BuildOptions = {}): Promise<void> {
   const cwd = process.cwd();
   loadEnvConfig(cwd, false);
+  process.env.NODE_ENV = "production";
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   // Determine output target: explicit CLI flag takes precedence, then config file, then auto-detect VERCEL env

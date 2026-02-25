@@ -15,6 +15,7 @@ async function action(options: { port?: string }): Promise<void> {
 
   // Load environment config
   const { loadedEnvFiles } = loadEnvConfig(cwd, true);
+  process.env.NODE_ENV = "development";
   const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
 
   const port = options.port || process.env.PORT || "3000";
