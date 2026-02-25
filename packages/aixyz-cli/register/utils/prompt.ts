@@ -47,8 +47,12 @@ export async function promptFeedbackIndex(): Promise<string> {
   return input({
     message: "Feedback index (1-indexed):",
     validate: (value) => {
-      const n = Number(value);
-      if (value.trim() === "" || !Number.isInteger(n) || n < 1) return "Must be a positive integer (1-indexed)";
+      const trimmed = value.trim();
+      if (trimmed === "") return "Must be a positive integer (1-indexed)";
+      if (!/^\d+$/.test(trimmed)) return "Must be a positive integer (1-indexed)";
+      const parsed = BigInt(trimmed);
+      const maxUint64 = (1n << 64n) - 1n;
+      if (parsed < 1n || parsed > maxUint64) return "Must be between 1 and 2^64-1 (1-indexed)";
       return true;
     },
   });

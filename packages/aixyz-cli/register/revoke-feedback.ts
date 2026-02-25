@@ -106,13 +106,13 @@ interface RevokeFeedbackResult {
 }
 
 function printResult(
-  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: readonly unknown[] },
+  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: Log[] },
   timestamp: bigint,
   chain: Chain,
   chainId: number,
   hash: `0x${string}`,
 ): RevokeFeedbackResult {
-  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs as Log[] });
+  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs });
   const revoked = events.find((e) => e.eventName === "FeedbackRevoked");
 
   const lines: string[] = [];

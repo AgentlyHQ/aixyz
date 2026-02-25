@@ -127,13 +127,13 @@ interface AppendResponseResult {
 }
 
 function printResult(
-  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: readonly unknown[] },
+  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: Log[] },
   timestamp: bigint,
   chain: Chain,
   chainId: number,
   hash: `0x${string}`,
 ): AppendResponseResult {
-  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs as Log[] });
+  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs });
   const responseAppended = events.find((e) => e.eventName === "ResponseAppended");
 
   const lines: string[] = [];

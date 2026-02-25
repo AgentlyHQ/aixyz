@@ -1,4 +1,4 @@
-import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log } from "viem";
+import { encodeFunctionData, formatEther, formatUnits, parseEventLogs, type Chain, type Log } from "viem";
 import { ReputationRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
@@ -65,7 +65,7 @@ export async function giveFeedback(options: GiveFeedbackOptions): Promise<void> 
     console.log(`  ${label("Function")}${abiSignature(ReputationRegistryAbi, "giveFeedback")}`);
     console.log(`  ${label("Agent ID")}${agentIdParsed}`);
     const displayValue =
-      decimalsParsed > 0 ? `${valueParsed} (${Number(valueParsed) / 10 ** decimalsParsed})` : `${valueParsed}`;
+      decimalsParsed > 0 ? `${valueParsed} (${formatUnits(valueParsed, decimalsParsed)})` : `${valueParsed}`;
     console.log(`  ${label("Value")}${displayValue}`);
     console.log(`  ${label("Decimals")}${decimalsParsed}`);
     console.log(`  ${label("Tag1")}${tag1}`);
@@ -140,13 +140,13 @@ interface GiveFeedbackResult {
 }
 
 function printResult(
-  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: readonly unknown[] },
+  receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint; logs: Log[] },
   timestamp: bigint,
   chain: Chain,
   chainId: number,
   hash: `0x${string}`,
 ): GiveFeedbackResult {
-  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs as Log[] });
+  const events = parseEventLogs({ abi: ReputationRegistryAbi, logs: receipt.logs });
   const newFeedback = events.find((e) => e.eventName === "NewFeedback");
 
   const lines: string[] = [];
@@ -197,7 +197,7 @@ function printResult(
     lines.push(`${label("Agent ID")}${chalk.bold(result.agentId)}`);
     lines.push(`${label("Client")}${clientAddress}`);
     lines.push(`${label("Index")}${result.feedbackIndex}`);
-    const displayValue = valueDecimals > 0 ? `${value} (${Number(value) / 10 ** valueDecimals})` : `${value}`;
+    const displayValue = valueDecimals > 0 ? `${value} (${formatUnits(value, valueDecimals)})` : `${value}`;
     lines.push(`${label("Value")}${displayValue}`);
     lines.push(`${label("Decimals")}${valueDecimals}`);
     lines.push(`${label("Tag1")}${tag1}`);

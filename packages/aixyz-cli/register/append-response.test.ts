@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { appendResponse } from "./append-response";
-import { validateClientAddress, validateFeedbackIndex, validateBytes32Hash } from "./utils/validate";
+import { validateClientAddress, validateBytes32Hash } from "./utils/validate";
 
 describe("append-response validators", () => {
   describe("validateClientAddress", () => {

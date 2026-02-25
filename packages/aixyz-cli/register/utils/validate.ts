@@ -1,22 +1,22 @@
 import { isAddress } from "viem";
 
 export function parseAgentId(agentId: string): bigint {
-  const n = Number(agentId);
-  if (agentId.trim() === "" || !Number.isInteger(n) || n < 0) {
+  const trimmed = agentId.trim();
+  if (trimmed === "" || !/^\d+$/.test(trimmed)) {
     throw new Error(`Invalid agent ID: ${agentId}. Must be a non-negative integer.`);
   }
-  return BigInt(agentId);
+  return BigInt(trimmed);
 }
 
-// as set in ReputationRegistryUpgradeable.sol
-const MAX_INT128 = 10n ** 38n;
+// as set in ReputationRegistryUpgradeable.sol (maximum absolute feedback value)
+const MAX_ABS_VALUE = 10n ** 38n;
 
 export function parseFeedbackValue(value: string): bigint {
   if (value.trim() === "" || !/^-?\d+$/.test(value.trim())) {
     throw new Error(`Invalid feedback value: ${value}. Must be a signed integer.`);
   }
   const parsed = BigInt(value.trim());
-  if (parsed < -MAX_INT128 || parsed > MAX_INT128) {
+  if (parsed < -MAX_ABS_VALUE || parsed > MAX_ABS_VALUE) {
     throw new Error(`Invalid feedback value: ${value}. Must be between -1e38 and 1e38.`);
   }
   return parsed;
@@ -30,12 +30,18 @@ export function parseValueDecimals(valueDecimals: string): number {
   return n;
 }
 
+const MAX_UINT64 = (1n << 64n) - 1n;
+
 export function parseFeedbackIndex(feedbackIndex: string): bigint {
-  const n = Number(feedbackIndex);
-  if (feedbackIndex.trim() === "" || !Number.isInteger(n) || n < 1) {
+  const trimmed = feedbackIndex.trim();
+  if (trimmed === "" || !/^\d+$/.test(trimmed)) {
     throw new Error(`Invalid feedback index: ${feedbackIndex}. Must be a positive integer (1-indexed).`);
   }
-  return BigInt(feedbackIndex);
+  const parsed = BigInt(trimmed);
+  if (parsed < 1n || parsed > MAX_UINT64) {
+    throw new Error(`Invalid feedback index: ${feedbackIndex}. Must be between 1 and 2^64-1 (1-indexed).`);
+  }
+  return parsed;
 }
 
 export function parseClientAddress(address: string): `0x${string}` {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CHAIN_ID, getReputationRegistryAddress } from "@aixyz/erc-8004";
 import { giveFeedback } from "./give-feedback";
-import { validateAgentId, validateFeedbackValue, validateValueDecimals, validateBytes32Hash } from "./utils/validate";
+import { validateFeedbackValue, validateValueDecimals, validateBytes32Hash } from "./utils/validate";
 
 describe("give-feedback validators", () => {
   describe("validateFeedbackValue", () => {

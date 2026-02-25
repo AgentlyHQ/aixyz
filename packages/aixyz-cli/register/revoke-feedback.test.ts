@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { revokeFeedback } from "./revoke-feedback";
-import { validateAgentId, validateFeedbackIndex } from "./utils/validate";
+import { validateFeedbackIndex } from "./utils/validate";
 
 describe("revoke-feedback validators", () => {
   describe("validateFeedbackIndex", () => {
