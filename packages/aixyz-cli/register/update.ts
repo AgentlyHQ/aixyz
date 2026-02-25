@@ -2,13 +2,7 @@ import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log }
 import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import {
-  resolveChainConfig,
-  resolveRegistryAddress,
-  validateBrowserRpcConflict,
-  getExplorerUrl,
-  CHAINS,
-} from "./utils/chain";
+import { resolveChainConfig, validateBrowserRpcConflict, getExplorerUrl, CHAINS } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
 import { promptAgentUrl, promptSelectRegistration, deriveAgentUri } from "./utils/prompt";
