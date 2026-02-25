@@ -80,6 +80,9 @@ async function buildBun(entrypoint: string): Promise<void> {
     target: "bun",
     format: "esm",
     sourcemap: "linked",
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    },
     plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "standalone")],
   });
 
@@ -137,6 +140,9 @@ async function buildVercel(entrypoint: string): Promise<void> {
     target: "bun",
     format: "esm",
     sourcemap: "linked",
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    },
     plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "vercel")],
   });
 

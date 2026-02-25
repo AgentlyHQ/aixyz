@@ -42,7 +42,7 @@ async function action(options: { port?: string }): Promise<void> {
       cwd,
       stdout: "inherit",
       stderr: "inherit",
-      env: process.env,
+      env: { ...process.env, NODE_ENV: "development" },
     });
     child.exited.then((code) => {
       if (!restarting && code !== 0) {
