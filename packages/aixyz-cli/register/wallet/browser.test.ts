@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { escapeHtml, safeJsonEmbed, buildHtml } from "./browser";
+import { escapeHtml, safeJsonEmbed, buildHtml } from "./html.tsx";
 
 describe("escapeHtml", () => {
   test("escapes ampersand", () => {
