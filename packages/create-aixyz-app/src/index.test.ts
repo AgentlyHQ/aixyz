@@ -100,7 +100,9 @@ describe("create-aixyz-app", () => {
     const config = readFileSync(join(projectDir, "aixyz.config.ts"), "utf8");
     expect(config).not.toContain("{{AGENT_NAME}}");
     expect(config).not.toContain("{{PKG_NAME}}");
+    expect(config).not.toContain("{{PAY_TO}}");
     expect(config).toContain("test-agent");
+    expect(config).toContain("0x");
 
     const pkg = JSON.parse(readFileSync(join(projectDir, "package.json"), "utf8"));
     expect(pkg.name).toBe("test-agent");
