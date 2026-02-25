@@ -12,4 +12,12 @@ cli.addCommand(devCommand);
 cli.addCommand(buildCommand);
 cli.addCommand(erc8004Command);
 
-cli.parse();
+try {
+  await cli.parseAsync();
+} catch (error) {
+  if (error instanceof Error && error.name === "ExitPromptError") {
+    process.exit(130);
+  }
+  console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}

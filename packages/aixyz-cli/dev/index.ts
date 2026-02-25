@@ -3,7 +3,6 @@ import { existsSync, watch } from "fs";
 import { loadEnvConfig } from "@next/env";
 import { Command } from "commander";
 import { getEntrypointMayGenerate } from "../build/AixyzServerPlugin";
-import { handleAction } from "../utils";
 import pkg from "../package.json";
 
 export async function dev(options: { port?: string }): Promise<void> {
@@ -100,4 +99,4 @@ export async function dev(options: { port?: string }): Promise<void> {
 export const devCommand = new Command("dev")
   .description("Start a local development server")
   .option("-p, --port <port>", "Port to listen on", "3000")
-  .action(handleAction(dev));
+  .action(dev);

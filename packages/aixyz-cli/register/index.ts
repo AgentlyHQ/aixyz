@@ -2,7 +2,6 @@ import { Command } from "commander";
 import { BaseOptions } from "./types";
 import { register } from "./register";
 import { update } from "./update";
-import { handleAction } from "../utils";
 
 export type { BaseOptions };
 
@@ -76,7 +75,7 @@ Examples:
   $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
   $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --browser --broadcast`,
   )
-  .action(handleAction(register));
+  .action(register);
 
 erc8004Command
   .command("update")
@@ -136,4 +135,4 @@ Examples:
   $ aixyz erc-8004 update --url "https://new-domain.example.com" --keystore ~/.foundry/keystores/default --broadcast
   $ aixyz erc-8004 update --url "https://new-domain.example.com" --browser --broadcast`,
   )
-  .action(handleAction(update));
+  .action(update);

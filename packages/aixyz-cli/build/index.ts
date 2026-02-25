@@ -7,7 +7,6 @@ import { findIconFile, copyAgentIcon, generateFavicon } from "./icons";
 import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
 import chalk from "chalk";
-import { handleAction } from "../utils";
 
 interface BuildOptions {
   output?: string;
@@ -203,4 +202,4 @@ Examples:
   $ aixyz build --output vercel         # Build for Vercel deployment
   $ VERCEL=1 aixyz build                # Auto-detected Vercel build`,
   )
-  .action(handleAction(build));
+  .action(build);
