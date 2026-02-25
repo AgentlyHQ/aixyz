@@ -21,7 +21,7 @@ export function getAgentRegistrationFile(
   if (options.a2a) {
     services.push({
       name: "A2A",
-      endpoint: new URL("/agent", config.url).toString(),
+      endpoint: new URL("/.well-known/agent-card.json", config.url).toString(),
       version: "0.3.0",
     });
   }
