@@ -93,12 +93,13 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   const toolsDir = resolve(appDir, "tools");
-  const tools: { name: string }[] = [];
+  const tools: { name: string; identifier: string }[] = [];
   if (existsSync(toolsDir)) {
     for (const file of readdirSync(toolsDir)) {
       if (glob.includes(`tools/${file}`)) {
         const name = basename(file, ".ts");
-        tools.push({ name });
+        const identifier = toIdentifier(name);
+        tools.push({ name, identifier });
       }
     }
   }
@@ -106,7 +107,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   if (tools.length > 0) {
     imports.push('import { AixyzMCP } from "aixyz/server/adapters/mcp";');
     for (const tool of tools) {
-      imports.push(`import * as ${tool.name} from "${importPrefix}/tools/${tool.name}";`);
+      imports.push(`import * as ${tool.identifier} from "${importPrefix}/tools/${tool.name}";`);
     }
   }
 
@@ -121,7 +122,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   if (tools.length > 0) {
     body.push("const mcp = new AixyzMCP(server);");
     for (const tool of tools) {
-      body.push(`await mcp.register("${tool.name}", ${tool.name});`);
+      body.push(`await mcp.register("${tool.name}", ${tool.identifier});`);
     }
     body.push("await mcp.connect();");
   }
@@ -129,4 +130,17 @@ function generateServer(appDir: string, entrypointDir: string): string {
   body.push("export default server;");
 
   return [...imports, "", ...body].join("\n");
+}
+
+/**
+ * Convert a kebab-case filename into a valid JS identifier.
+ *
+ * Examples:
+ *  "lookup"                    → "lookup"
+ *  "get-aggregator-v3-address" → "getAggregatorV3Address"
+ *  "3d-model"                  → "_3dModel"
+ */
+function toIdentifier(name: string): string {
+  const camel = name.replace(/-(.)/g, (_, c: string) => c.toUpperCase()).replace(/[^a-zA-Z0-9_$]/g, "_");
+  return /^\d/.test(camel) ? `_${camel}` : camel;
 }
