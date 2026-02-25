@@ -37,16 +37,6 @@ export function resolveUri(uri: string): string {
   return uri;
 }
 
-export function validatePrivateKey(key: string): `0x${string}` {
-  const normalizedKey = key.startsWith("0x") ? key : `0x${key}`;
-
-  if (!/^0x[0-9a-fA-F]{64}$/.test(normalizedKey)) {
-    throw new CliError("Invalid private key format. Expected 64 hex characters (with or without 0x prefix).");
-  }
-
-  return normalizedKey as `0x${string}`;
-}
-
 export class CliError extends Error {
   constructor(message: string) {
     super(message);
