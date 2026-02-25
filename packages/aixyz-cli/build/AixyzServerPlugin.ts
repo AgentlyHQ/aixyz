@@ -127,6 +127,16 @@ function generateServer(appDir: string, entrypointDir: string): string {
     body.push("await mcp.connect();");
   }
 
+  // If app/erc-8004.ts exists, auto-register ERC-8004 endpoint
+  const hasErc8004 = existsSync(resolve(appDir, "erc-8004.ts"));
+  if (hasErc8004) {
+    imports.push('import { useERC8004 } from "aixyz/server/adapters/erc-8004";');
+    imports.push(`import * as erc8004 from "${importPrefix}/erc-8004";`);
+    body.push(
+      `useERC8004(server, { default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${hasAgent} } });`,
+    );
+  }
+
   body.push("export default server;");
 
   return [...imports, "", ...body].join("\n");
