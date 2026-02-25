@@ -171,10 +171,10 @@ if (packageManager !== "bun" && packageManager !== "unknown") {
 }
 
 p.note(
-  [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev", "aixyz erc-8004 register"]
-    .filter(Boolean)
-    .join("\n"),
+  [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"].filter(Boolean).join("\n"),
   "Next steps",
 );
+
+p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 
 p.outro(`Success! Created ${agentName} at ./${pkgName}`);
