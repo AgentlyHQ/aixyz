@@ -4,7 +4,6 @@ import { build } from "./build";
 import { dev } from "./dev";
 import { register } from "./register/register";
 import { setAgentUri } from "./register/set-agent-uri";
-import { CliError } from "./register/utils";
 import pkg from "./package.json";
 
 function handleAction(
@@ -14,10 +13,6 @@ function handleAction(
     try {
       await action(options);
     } catch (error) {
-      if (error instanceof CliError) {
-        console.error(`Error: ${error.message}`);
-        process.exit(1);
-      }
       if (error instanceof Error && error.name === "ExitPromptError") {
         process.exit(130);
       }
@@ -70,7 +65,7 @@ Examples:
   )
   .action(handleAction(build));
 
-const erc8004 = program.command("erc8004").description("ERC-8004 IdentityRegistry operations");
+const erc8004 = program.command("erc-8004").description("ERC-8004 IdentityRegistry operations");
 
 erc8004
   .command("register")
@@ -140,13 +135,13 @@ Environment Variables:
 
 Examples:
   # Dry-run (default) — shows encoded transaction, no wallet needed
-  $ aixyz erc8004 register --uri "./metadata.json" --chain sepolia
+  $ aixyz erc-8004 register --uri "./metadata.json" --chain sepolia
 
   # Sign and broadcast
-  $ aixyz erc8004 register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
-  $ PRIVATE_KEY=0x... aixyz erc8004 register --chain sepolia --broadcast
-  $ aixyz erc8004 register --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --uri "./metadata.json" --broadcast
-  $ aixyz erc8004 register --uri "./metadata.json" --chain sepolia --browser --broadcast`,
+  $ aixyz erc-8004 register --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
+  $ PRIVATE_KEY=0x... aixyz erc-8004 register --chain sepolia --broadcast
+  $ aixyz erc-8004 register --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --uri "./metadata.json" --broadcast
+  $ aixyz erc-8004 register --uri "./metadata.json" --chain sepolia --browser --broadcast`,
   )
   .action(handleAction(register));
 
@@ -225,13 +220,13 @@ Environment Variables:
 
 Examples:
   # Dry-run (default) — shows encoded transaction, no wallet needed
-  $ aixyz erc8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia
+  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia
 
   # Sign and broadcast
-  $ aixyz erc8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
-  $ PRIVATE_KEY=0x... aixyz erc8004 set-agent-uri --agent-id 42 --uri "https://example.com/agent.json" --chain sepolia --broadcast
-  $ aixyz erc8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --broadcast
-  $ aixyz erc8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --browser --broadcast`,
+  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
+  $ PRIVATE_KEY=0x... aixyz erc-8004 set-agent-uri --agent-id 42 --uri "https://example.com/agent.json" --chain sepolia --broadcast
+  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain localhost --registry 0x5FbDB2315678afecb367f032d93F642f64180aa3 --broadcast
+  $ aixyz erc-8004 set-agent-uri --agent-id 1 --uri "./metadata.json" --chain sepolia --browser --broadcast`,
   )
   .action(handleAction(setAgentUri));
 

@@ -3,17 +3,16 @@ import { decryptKeystoreJson, isKeystoreJson } from "ethers";
 import { createWalletClient, http, type Chain, type WalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { password } from "@inquirer/prompts";
-import { CliError } from "../utils";
 
 export async function decryptKeystore(keystorePath: string): Promise<`0x${string}`> {
   const file = Bun.file(keystorePath);
   if (!(await file.exists())) {
-    throw new CliError(`Keystore file not found: ${keystorePath}`);
+    throw new Error(`Keystore file not found: ${keystorePath}`);
   }
 
   const json = await file.text();
   if (!isKeystoreJson(json)) {
-    throw new CliError(`Invalid keystore file: ${keystorePath}`);
+    throw new Error(`Invalid keystore file: ${keystorePath}`);
   }
   const pass = await password({ message: "Enter keystore password:", mask: "*" });
   const account = await decryptKeystoreJson(json, pass);

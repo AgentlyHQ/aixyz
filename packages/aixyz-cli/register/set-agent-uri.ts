@@ -2,7 +2,7 @@ import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log }
 import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import { CliError, resolveUri } from "./utils";
+import { resolveUri } from "./utils";
 import {
   resolveChainConfig,
   selectChain,
@@ -29,14 +29,14 @@ async function confirmEmptyUri(): Promise<void> {
     default: false,
   });
   if (!yes) {
-    throw new CliError("Aborted.");
+    throw new Error("Aborted.");
   }
 }
 
 export function validateAgentId(agentId: string): void {
   const n = Number(agentId);
   if (agentId.trim() === "" || !Number.isInteger(n) || n < 0) {
-    throw new CliError(`Invalid agent ID: ${agentId}. Must be a non-negative integer.`);
+    throw new Error(`Invalid agent ID: ${agentId}. Must be a non-negative integer.`);
   }
 }
 

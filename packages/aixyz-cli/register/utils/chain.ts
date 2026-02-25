@@ -2,7 +2,6 @@ import { isAddress, type Chain } from "viem";
 import { mainnet, sepolia, baseSepolia, foundry } from "viem/chains";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
 import { select } from "@inquirer/prompts";
-import { CliError } from "../utils";
 
 export interface ChainConfig {
   chain: Chain;
@@ -19,7 +18,7 @@ export const CHAINS: Record<string, ChainConfig> = {
 export function resolveChainConfig(chainName: string): ChainConfig {
   const config = CHAINS[chainName];
   if (!config) {
-    throw new CliError(`Unsupported chain: ${chainName}. Supported chains: ${Object.keys(CHAINS).join(", ")}`);
+    throw new Error(`Unsupported chain: ${chainName}. Supported chains: ${Object.keys(CHAINS).join(", ")}`);
   }
   return config;
 }
@@ -34,19 +33,19 @@ export async function selectChain(): Promise<string> {
 export function resolveRegistryAddress(chainName: string, chainId: number, registry?: string): `0x${string}` {
   if (registry) {
     if (!isAddress(registry)) {
-      throw new CliError(`Invalid registry address: ${registry}`);
+      throw new Error(`Invalid registry address: ${registry}`);
     }
     return registry as `0x${string}`;
   }
   if (chainName === "localhost") {
-    throw new CliError("--registry is required for localhost (no default contract deployment)");
+    throw new Error("--registry is required for localhost (no default contract deployment)");
   }
   return getIdentityRegistryAddress(chainId) as `0x${string}`;
 }
 
 export function validateBrowserRpcConflict(browser: boolean | undefined, rpcUrl: string | undefined): void {
   if (browser && rpcUrl) {
-    throw new CliError("--rpc-url cannot be used with browser wallet. The browser wallet uses its own RPC endpoint.");
+    throw new Error("--rpc-url cannot be used with browser wallet. The browser wallet uses its own RPC endpoint.");
   }
 }
 

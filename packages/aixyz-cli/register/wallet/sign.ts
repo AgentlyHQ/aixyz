@@ -1,7 +1,6 @@
 import type { Chain } from "viem";
 import { signWithBrowser } from "./browser";
 import { createWalletFromMethod, type WalletMethod } from "./index";
-import { CliError } from "../utils";
 
 export interface TxRequest {
   to: `0x${string}`;
@@ -35,7 +34,7 @@ export async function signTransaction({
   switch (walletMethod.type) {
     case "browser": {
       if (!options?.browser) {
-        throw new CliError("Browser wallet requires chainId and chainName parameters");
+        throw new Error("Browser wallet requires chainId and chainName parameters");
       }
       return signViaBrowser({
         tx,
@@ -72,7 +71,7 @@ async function signViaBrowser({
   });
 
   if (typeof txHash !== "string" || !/^0x[0-9a-f]{64}$/i.test(txHash)) {
-    throw new CliError(`Invalid transaction hash received from browser wallet: ${txHash}`);
+    throw new Error(`Invalid transaction hash received from browser wallet: ${txHash}`);
   }
 
   return { kind: "sent", txHash: txHash as `0x${string}` };
@@ -93,7 +92,7 @@ async function signWithWalletClient({
 
   const account = walletClient.account;
   if (!account) {
-    throw new CliError("Wallet client does not have an account configured");
+    throw new Error("Wallet client does not have an account configured");
   }
 
   const request = await walletClient.prepareTransactionRequest({
