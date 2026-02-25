@@ -7,15 +7,16 @@ export interface BrowserSignParams {
   chainName: string;
   uri?: string;
   gas?: bigint;
+  mode?: "register" | "update";
 }
 
 const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 export async function signWithBrowser(params: BrowserSignParams): Promise<{ txHash: string }> {
-  const { registryAddress, calldata, chainId, chainName, uri, gas } = params;
+  const { registryAddress, calldata, chainId, chainName, uri, gas, mode } = params;
 
   const nonce = crypto.randomUUID();
-  const html = buildHtml({ registryAddress, calldata, chainId, chainName, uri, gas, nonce });
+  const html = buildHtml({ registryAddress, calldata, chainId, chainName, uri, gas, nonce, mode });
 
   const { promise: resultPromise, resolve, reject } = Promise.withResolvers<{ txHash: string }>();
   let settled = false;
@@ -134,8 +135,11 @@ export function buildHtml(params: {
   uri?: string;
   gas?: bigint;
   nonce: string;
+  mode?: "register" | "update";
 }): string {
-  const { registryAddress, calldata, chainId, chainName, uri, gas, nonce } = params;
+  const { registryAddress, calldata, chainId, chainName, uri, gas, nonce, mode } = params;
+  const isUpdate = mode === "update";
+  const actionLabel = isUpdate ? "Update Agent" : "Register Agent";
   const chainIdHex = `0x${chainId.toString(16)}`;
 
   const displayUri = uri && uri.length > 80 ? uri.slice(0, 80) + "..." : (uri ?? "");
@@ -145,7 +149,7 @@ export function buildHtml(params: {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aixyz.sh – ERC-8004 Register Agent</title>
+<title>aixyz.sh – ERC-8004 ${actionLabel}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -476,7 +480,7 @@ export function buildHtml(params: {
 <div class="container">
   <div class="header">
     <div class="brand">aixyz erc-8004</div>
-    <h1>Register Agent</h1>
+    <h1>${actionLabel}</h1>
   </div>
 
   <div class="details" id="details">
@@ -513,7 +517,7 @@ export function buildHtml(params: {
     <div id="walletList"></div>
   </div>
 
-  <button id="registerBtn" disabled>Register Agent</button>
+  <button id="registerBtn" disabled>${actionLabel}</button>
 
   <div class="status" id="status"></div>
 </div>
@@ -524,6 +528,7 @@ export function buildHtml(params: {
   const CHAIN_ID_HEX = ${safeJsonEmbed(chainIdHex)};
   const CHAIN_ID = ${chainId};
   const GAS = ${gas ? safeJsonEmbed(`0x${gas.toString(16)}`) : "undefined"};
+  const ACTION_LABEL = ${safeJsonEmbed(actionLabel)};
 
   const registerBtn = document.getElementById("registerBtn");
   const statusEl = document.getElementById("status");
@@ -543,7 +548,7 @@ export function buildHtml(params: {
     walletInfo.style.display = "none";
     registerBtn.style.display = "none";
     registerBtn.disabled = true;
-    registerBtn.textContent = "Register Agent";
+    registerBtn.textContent = ACTION_LABEL;
     walletSectionEl.style.display = "";
     statusEl.className = "status";
     if (discoveredWallets.size > 0) {
@@ -663,7 +668,7 @@ export function buildHtml(params: {
       walletSectionEl.style.display = "none";
       registerBtn.style.display = "block";
       registerBtn.disabled = false;
-      setStatus("Wallet connected. Ready to register.", "success");
+      setStatus("Wallet connected. Ready to ${isUpdate ? "update" : "register"}.", "success");
 
       // Listen for account/chain changes on the selected provider
       if (selectedProvider.on) {
@@ -739,7 +744,7 @@ export function buildHtml(params: {
         setStatus("Failed: " + err.message + " — You can try again.", "error");
       }
       registerBtn.disabled = false;
-      registerBtn.textContent = "Register Agent";
+      registerBtn.textContent = ACTION_LABEL;
     }
   });
 </script>

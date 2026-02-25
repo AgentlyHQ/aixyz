@@ -9,7 +9,7 @@ export interface TxRequest {
 }
 
 export interface SignOptions {
-  browser?: { chainId: number; chainName: string; uri?: string };
+  browser?: { chainId: number; chainName: string; uri?: string; mode?: "register" | "update" };
 }
 
 export type SignTransactionResult =
@@ -41,6 +41,7 @@ export async function signTransaction({
         chainId: options.browser.chainId,
         chainName: options.browser.chainName,
         uri: options.browser.uri,
+        mode: options.browser.mode,
       });
     }
     default: {
@@ -55,11 +56,13 @@ async function signViaBrowser({
   chainId,
   chainName,
   uri,
+  mode,
 }: {
   tx: TxRequest;
   chainId: number;
   chainName: string;
   uri?: string;
+  mode?: "register" | "update";
 }): Promise<SignTransactionResult> {
   const { txHash } = await signWithBrowser({
     registryAddress: tx.to,
@@ -68,6 +71,7 @@ async function signViaBrowser({
     chainName,
     uri,
     gas: tx.gas,
+    mode,
   });
 
   if (typeof txHash !== "string" || !/^0x[0-9a-f]{64}$/i.test(txHash)) {
