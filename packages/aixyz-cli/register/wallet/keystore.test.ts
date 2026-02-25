@@ -9,7 +9,7 @@ const TEST_PRIVATE_KEY = "0x0000000000000000000000000000000000000000000000000000
 const TEST_ADDRESS = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf";
 const TEST_PASSWORD = "testpassword";
 
-const testDir = join(tmpdir(), "agently-cli-keystore-test");
+const testDir = join(tmpdir(), "aixyz-cli-keystore-test");
 const testKeystorePath = join(testDir, "test-keystore.json");
 
 // Mock the password prompt to return TEST_PASSWORD

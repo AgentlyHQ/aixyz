@@ -195,13 +195,22 @@ aixyz build --output vercel    # Vercel Build Output API v3, outputs to .vercel/
 vercel deploy                  # deploy the Vercel build
 ```
 
-### `agently-cli`
+### `aixyz erc-8004 register`
 
-Register and manage on-chain agent identity (ERC-8004):
+Register your agent's on-chain identity (ERC-8004). Creates
+`app/erc-8004.ts` if it doesn't exist, asks for your deployment URL, and writes the registration back to the file after a successful on-chain transaction.
 
 ```bash
-agently-cli register --chain base-sepolia --broadcast
-agently-cli set-agent-uri --agent-id 1 --uri "https://my-agent.vercel.app/.well-known/agent-card.json" --chain base-sepolia --broadcast
+aixyz erc-8004 register --url "https://my-agent.vercel.app" --chain base-sepolia --broadcast
+```
+
+### `aixyz erc-8004 update`
+
+Update the metadata URI of a registered agent. Reads registrations from
+`app/erc-8004.ts` and lets you select which one to update.
+
+```bash
+aixyz erc-8004 update --url "https://new-domain.example.com" --broadcast
 ```
 
 ## Protocols
@@ -225,6 +234,7 @@ my-agent/
   app/
     agent.ts          # Agent definition (required if no server.ts)
     server.ts         # Custom server (optional, overrides auto-generation)
+    erc-8004.ts       # ERC-8004 identity registration (optional)
     tools/
       weather.ts      # Tool exports (files starting with _ are ignored)
     icon.png          # Agent icon (served as static asset)

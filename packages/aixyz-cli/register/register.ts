@@ -2,7 +2,6 @@ import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log }
 import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod, type WalletOptions } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import { resolveUri } from "./utils";
 import {
   resolveChainConfig,
   selectChain,
@@ -12,30 +11,51 @@ import {
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
+import { promptAgentUrl, promptSupportedTrust, deriveAgentUri } from "./utils/prompt";
+import { hasErc8004File, createErc8004File, writeRegistrationEntry } from "./utils/erc8004-file";
+import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import boxen from "boxen";
 import type { BaseOptions } from "./index";
 
 export interface RegisterOptions extends BaseOptions {
-  uri?: string;
+  url?: string;
   chain?: string;
 }
 
 export async function register(options: RegisterOptions): Promise<void> {
-  const chainName = options.chain ?? (await selectChain());
-  const chainConfig = resolveChainConfig(chainName);
-
-  const resolvedUri = options.uri ? resolveUri(options.uri) : undefined;
-  if (options.uri && resolvedUri !== options.uri) {
-    console.log(`Resolved ${options.uri} to data URI (${resolvedUri!.length} chars)`);
+  // Step 1: Ensure app/erc-8004.ts exists
+  if (!hasErc8004File()) {
+    console.log(chalk.yellow("No app/erc-8004.ts found. Let's create one."));
+    console.log("");
+    const supportedTrust = await promptSupportedTrust();
+    createErc8004File(supportedTrust);
+    console.log(chalk.green("Created app/erc-8004.ts"));
+    console.log("");
   }
 
+  // Step 2: Get agent URL and derive URI
+  const agentUrl = options.url ?? (await promptAgentUrl());
+  const resolvedUri = deriveAgentUri(agentUrl);
+
+  const yes = await confirm({
+    message: `Will register URI as: ${chalk.cyan(resolvedUri)} — confirm?`,
+    default: true,
+  });
+  if (!yes) {
+    throw new Error("Aborted.");
+  }
+
+  // Step 3: Select chain
+  const chainName = options.chain ?? (await selectChain());
+  const chainConfig = resolveChainConfig(chainName);
   const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry);
 
+  // Step 4: Encode transaction
   const data = encodeFunctionData({
     abi: IdentityRegistryAbi,
     functionName: "register",
-    args: resolvedUri ? [resolvedUri] : [],
+    args: [resolvedUri],
   });
 
   const printTxDetails = (header: string) => {
@@ -44,10 +64,8 @@ export async function register(options: RegisterOptions): Promise<void> {
     console.log(`  ${label("To")}${registryAddress}`);
     console.log(`  ${label("Data")}${data.slice(0, 10)}${chalk.dim("\u2026" + (data.length - 2) / 2 + " bytes")}`);
     console.log(`  ${label("Chain")}${chainName}`);
-    console.log(`  ${label("Function")}${resolvedUri ? "register(string memory agentURI)" : "register()"}`);
-    if (resolvedUri) {
-      console.log(`  ${label("URI")}${truncateUri(resolvedUri)}`);
-    }
+    console.log(`  ${label("Function")}register(string memory agentURI)`);
+    console.log(`  ${label("URI")}${truncateUri(resolvedUri)}`);
     console.log("");
   };
 
@@ -85,6 +103,14 @@ export async function register(options: RegisterOptions): Promise<void> {
   });
 
   const resultData = printResult(receipt, timestamp, chainConfig.chain, chainConfig.chainId, hash);
+
+  // Step 5: Write registration entry back to app/erc-8004.ts
+  if (resultData.agentId !== undefined) {
+    const agentRegistry = `eip155:${chainConfig.chainId}:${registryAddress}`;
+    writeRegistrationEntry({ agentId: Number(resultData.agentId), agentRegistry });
+    console.log("");
+    console.log(chalk.green(`Updated app/erc-8004.ts with registration (agentId: ${resultData.agentId})`));
+  }
 
   if (options.outDir) {
     writeResultJson(options.outDir, "registration", resultData);
