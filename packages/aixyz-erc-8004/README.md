@@ -87,26 +87,43 @@ import { ValidationRegistryUpgradeable } from "@aixyz/erc-8004/contracts/Validat
 
 **Mainnets:**
 
-| Chain   | Chain ID | Constant           |
-| ------- | -------- | ------------------ |
-| Mainnet | `1`      | `CHAIN_ID.MAINNET` |
-| Base    | `8453`   | `CHAIN_ID.BASE`    |
-| Polygon | `137`    | `CHAIN_ID.POLYGON` |
-| Scroll  | `534352` | `CHAIN_ID.SCROLL`  |
-| Monad   | `143`    | `CHAIN_ID.MONAD`   |
-| BSC     | `56`     | `CHAIN_ID.BSC`     |
-| Gnosis  | `100`    | `CHAIN_ID.GNOSIS`  |
+| Chain     | Chain ID | Constant             |
+| --------- | -------- | -------------------- |
+| Abstract  | `2741`   | `CHAIN_ID.ABSTRACT`  |
+| Arbitrum  | `42161`  | `CHAIN_ID.ARBITRUM`  |
+| Avalanche | `43114`  | `CHAIN_ID.AVALANCHE` |
+| Base      | `8453`   | `CHAIN_ID.BASE`      |
+| BSC       | `56`     | `CHAIN_ID.BSC`       |
+| Celo      | `42220`  | `CHAIN_ID.CELO`      |
+| Gnosis    | `100`    | `CHAIN_ID.GNOSIS`    |
+| Linea     | `59144`  | `CHAIN_ID.LINEA`     |
+| Mainnet   | `1`      | `CHAIN_ID.MAINNET`   |
+| Mantle    | `5000`   | `CHAIN_ID.MANTLE`    |
+| MegaETH   | `4326`   | `CHAIN_ID.MEGAETH`   |
+| Monad     | `143`    | `CHAIN_ID.MONAD`     |
+| Optimism  | `10`     | `CHAIN_ID.OPTIMISM`  |
+| Polygon   | `137`    | `CHAIN_ID.POLYGON`   |
+| Scroll    | `534352` | `CHAIN_ID.SCROLL`    |
+| Taiko     | `167000` | `CHAIN_ID.TAIKO`     |
 
 **Testnets:**
 
-| Chain          | Chain ID   | Constant                  |
-| -------------- | ---------- | ------------------------- |
-| Sepolia        | `11155111` | `CHAIN_ID.SEPOLIA`        |
-| Base Sepolia   | `84532`    | `CHAIN_ID.BASE_SEPOLIA`   |
-| Polygon Amoy   | `80002`    | `CHAIN_ID.POLYGON_AMOY`   |
-| Scroll Sepolia | `534351`   | `CHAIN_ID.SCROLL_SEPOLIA` |
-| Monad Testnet  | `10143`    | `CHAIN_ID.MONAD_TESTNET`  |
-| BSC Testnet    | `97`       | `CHAIN_ID.BSC_TESTNET`    |
+| Chain            | Chain ID   | Constant                    |
+| ---------------- | ---------- | --------------------------- |
+| Abstract Testnet | `11124`    | `CHAIN_ID.ABSTRACT_TESTNET` |
+| Arbitrum Sepolia | `421614`   | `CHAIN_ID.ARBITRUM_SEPOLIA` |
+| Avalanche Fuji   | `43113`    | `CHAIN_ID.AVALANCHE_FUJI`   |
+| Base Sepolia     | `84532`    | `CHAIN_ID.BASE_SEPOLIA`     |
+| BSC Testnet      | `97`       | `CHAIN_ID.BSC_TESTNET`      |
+| Celo Sepolia     | `11142220` | `CHAIN_ID.CELO_SEPOLIA`     |
+| Linea Sepolia    | `59141`    | `CHAIN_ID.LINEA_SEPOLIA`    |
+| Mantle Sepolia   | `5003`     | `CHAIN_ID.MANTLE_SEPOLIA`   |
+| MegaETH Testnet  | `6342`     | `CHAIN_ID.MEGAETH_TESTNET`  |
+| Monad Testnet    | `10143`    | `CHAIN_ID.MONAD_TESTNET`    |
+| Optimism Sepolia | `11155420` | `CHAIN_ID.OPTIMISM_SEPOLIA` |
+| Polygon Amoy     | `80002`    | `CHAIN_ID.POLYGON_AMOY`     |
+| Scroll Sepolia   | `534351`   | `CHAIN_ID.SCROLL_SEPOLIA`   |
+| Sepolia          | `11155111` | `CHAIN_ID.SEPOLIA`          |
 
 ## ABIs
 
@@ -122,7 +139,7 @@ Versioned ABIs (e.g. `IdentityRegistryAbi_V1`, `ReputationRegistryAbi_V3`) are a
 
 All contracts use UUPS proxies. Addresses are consistent across all chains within each environment.
 
-**Mainnets** (Ethereum, Base, Polygon, Scroll, Monad, BSC, Gnosis):
+**Mainnets** (Abstract, Arbitrum, Avalanche, Base, BSC, Celo, Gnosis, Linea, Ethereum, Mantle, MegaETH, Monad, Optimism, Polygon, Scroll, Taiko):
 
 | Contract             | Address                                      |
 | -------------------- | -------------------------------------------- |
@@ -130,7 +147,7 @@ All contracts use UUPS proxies. Addresses are consistent across all chains withi
 | `reputationRegistry` | `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63` |
 | `validationRegistry` | `0x8004Cc8439f36fd5F9F049D9fF86523Df6dAAB58` |
 
-**Testnets** (Sepolia, Base Sepolia, Polygon Amoy, Scroll Sepolia, Monad Testnet, BSC Testnet):
+**Testnets** (Abstract Testnet, Arbitrum Sepolia, Avalanche Fuji, Base Sepolia, BSC Testnet, Celo Sepolia, Linea Sepolia, Mantle Sepolia, MegaETH Testnet, Monad Testnet, Optimism Sepolia, Polygon Amoy, Scroll Sepolia, Sepolia):
 
 | Contract             | Address                                      |
 | -------------------- | -------------------------------------------- |
