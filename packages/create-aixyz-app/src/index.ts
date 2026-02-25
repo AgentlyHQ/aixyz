@@ -171,7 +171,9 @@ if (packageManager !== "bun" && packageManager !== "unknown") {
 }
 
 p.note(
-  [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"].filter(Boolean).join("\n"),
+  [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev", "aixyz erc-8004 register"]
+    .filter(Boolean)
+    .join("\n"),
   "Next steps",
 );
 
