@@ -16,7 +16,7 @@ import { hasErc8004File, createErc8004File, writeRegistrationEntry } from "./uti
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import boxen from "boxen";
-import type { BaseOptions } from "./index";
+import type { BaseOptions } from "./types";
 
 export interface RegisterOptions extends BaseOptions {
   url?: string;

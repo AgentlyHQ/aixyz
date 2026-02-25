@@ -24,7 +24,8 @@
     "build",
     "dev",
     "register",
-    "bin.ts"
+    "bin.ts",
+    "utils.ts"
   ],
   "dependencies": {
     "@aixyz/config": "workspace:*",

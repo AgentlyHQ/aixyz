@@ -16,7 +16,7 @@ import { readRegistrations } from "./utils/erc8004-file";
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import boxen from "boxen";
-import type { BaseOptions } from "./index";
+import type { BaseOptions } from "./types";
 
 export interface UpdateOptions extends BaseOptions {
   url?: string;
