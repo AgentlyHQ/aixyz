@@ -4,11 +4,14 @@ import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
 import {
   resolveChainConfig,
+  resolveChainConfigById,
   selectChain,
   resolveRegistryAddress,
   validateBrowserRpcConflict,
   getExplorerUrl,
+  CHAINS,
 } from "./utils/chain";
+import type { ChainConfig } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
 import { promptAgentUrl, promptSupportedTrust, deriveAgentUri } from "./utils/prompt";
@@ -21,6 +24,7 @@ import type { BaseOptions } from "./index";
 export interface RegisterOptions extends BaseOptions {
   url?: string;
   chain?: string;
+  chainId?: number;
 }
 
 export async function register(options: RegisterOptions): Promise<void> {
@@ -47,8 +51,17 @@ export async function register(options: RegisterOptions): Promise<void> {
   }
 
   // Step 3: Select chain
-  const chainName = options.chain ?? (await selectChain());
-  const chainConfig = resolveChainConfig(chainName);
+  let chainName: string;
+  let chainConfig: ChainConfig;
+
+  if (options.chainId !== undefined) {
+    chainConfig = resolveChainConfigById(options.chainId, options.rpcUrl);
+    chainName =
+      Object.entries(CHAINS).find(([, c]) => c.chainId === options.chainId)?.[0] ?? `chain-${options.chainId}`;
+  } else {
+    chainName = options.chain ?? (await selectChain());
+    chainConfig = resolveChainConfig(chainName);
+  }
   const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry);
 
   // Step 4: Encode transaction

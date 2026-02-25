@@ -16,9 +16,10 @@ erc8004Command
   .command("register")
   .description("Register a new agent to the ERC-8004 IdentityRegistry")
   .option("--url <url>", "Agent deployment URL (e.g., https://my-agent.example.com)")
-  .option("--chain <chain>", "Target chain (mainnet, sepolia, base-sepolia, localhost)")
+  .option("--chain <chain>", "Target chain by name (e.g., base-sepolia, sepolia, mainnet)")
+  .option("--chain-id <chainId>", "Target chain by numeric chain ID (for BYO/custom chains)", parseInt)
   .option("--rpc-url <url>", "Custom RPC URL (uses default if not provided)")
-  .option("--registry <address>", "Contract address of the IdentityRegistry (required for localhost)")
+  .option("--registry <address>", "Contract address of the IdentityRegistry (required for localhost and custom chains)")
   .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
   .option("--browser", "Use browser extension wallet (any extension)")
   .option("--broadcast", "Sign and broadcast the transaction (default: dry-run)")
@@ -33,21 +34,28 @@ Option Details:
       If omitted, you will be prompted to enter the URL interactively.
 
   --chain <chain>
-      Target chain for registration. Supported values:
-        mainnet       Ethereum mainnet (chain ID 1)
-        sepolia       Ethereum Sepolia testnet (chain ID 11155111)
-        base-sepolia  Base Sepolia testnet (chain ID 84532)
-        localhost     Local Foundry/Anvil node (chain ID 31337)
+      Target chain for registration. Supported named chains (from @aixyz/erc-8004):
+        mainnet, base, arbitrum, optimism, polygon, avalanche, bsc, celo,
+        gnosis, linea, mantle, megaeth, monad, scroll, taiko, abstract,
+        sepolia, base-sepolia, arbitrum-sepolia, optimism-sepolia, polygon-amoy,
+        avalanche-fuji, bsc-testnet, celo-sepolia, linea-sepolia, mantle-sepolia,
+        monad-testnet, scroll-sepolia, abstract-testnet, localhost
       If omitted, you will be prompted to select a chain interactively.
+
+  --chain-id <chainId>
+      Target chain by numeric chain ID instead of name. Useful for BYO or
+      custom chains not in the named list. Requires --rpc-url for unknown chain IDs.
+      For known chain IDs, the RPC URL defaults to the chain's public endpoint.
 
   --rpc-url <url>
       Custom RPC endpoint URL. Overrides the default RPC for the selected
-      chain. Cannot be used with --browser since the browser wallet manages
+      chain. Required when using --chain-id with an unknown chain ID.
+      Cannot be used with --browser since the browser wallet manages
       its own RPC connection.
 
   --registry <address>
-      Contract address of the ERC-8004 IdentityRegistry. Only required for
-      localhost, where there is no default deployment.
+      Contract address of the ERC-8004 IdentityRegistry. Required for
+      localhost and custom chains, where there is no default deployment.
 
   --keystore <path>
       Path to an Ethereum keystore (V3) JSON file. You will be prompted for
@@ -78,7 +86,11 @@ Examples:
 
   # Sign and broadcast
   $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --keystore ~/.foundry/keystores/default --broadcast
-  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --browser --broadcast`,
+  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --browser --broadcast
+
+  # BYO: register on any EVM chain by chain ID
+  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain-id 84532 --broadcast
+  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain-id 999999 --rpc-url https://my-rpc.example.com --registry 0xABCD... --broadcast`,
   )
   .action(register);
 

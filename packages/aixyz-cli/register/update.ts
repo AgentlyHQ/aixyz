@@ -2,7 +2,7 @@ import { encodeFunctionData, formatEther, parseEventLogs, type Chain, type Log }
 import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
-import { resolveChainConfig, validateBrowserRpcConflict, getExplorerUrl, CHAINS } from "./utils/chain";
+import { resolveChainConfigById, validateBrowserRpcConflict, getExplorerUrl, CHAINS } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
 import { promptAgentUrl, promptSelectRegistration, deriveAgentUri } from "./utils/prompt";
@@ -36,7 +36,7 @@ export async function update(options: UpdateOptions): Promise<void> {
   const chainId = Number(parts[1]);
   const registryAddress = parts.slice(2).join(":") as `0x${string}`;
   const chainName = Object.entries(CHAINS).find(([, config]) => config.chainId === chainId)?.[0] ?? `chain-${chainId}`;
-  const chainConfig = resolveChainConfig(chainName);
+  const chainConfig = resolveChainConfigById(chainId, options.rpcUrl);
 
   // Step 4: Get new agent URL and derive URI
   const agentUrl = options.url ?? (await promptAgentUrl());
