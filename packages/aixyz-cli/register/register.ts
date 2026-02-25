@@ -3,7 +3,6 @@ import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
 import {
-  resolveChainConfig,
   resolveChainConfigById,
   selectChain,
   resolveRegistryAddress,
@@ -11,7 +10,6 @@ import {
   getExplorerUrl,
   CHAINS,
 } from "./utils/chain";
-import type { ChainConfig } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
 import { promptAgentUrl, promptSupportedTrust, deriveAgentUri } from "./utils/prompt";
@@ -23,7 +21,6 @@ import type { BaseOptions } from "./index";
 
 export interface RegisterOptions extends BaseOptions {
   url?: string;
-  chain?: string;
   chainId?: number;
 }
 
@@ -51,18 +48,10 @@ export async function register(options: RegisterOptions): Promise<void> {
   }
 
   // Step 3: Select chain
-  let chainName: string;
-  let chainConfig: ChainConfig;
-
-  if (options.chainId !== undefined) {
-    chainConfig = resolveChainConfigById(options.chainId, options.rpcUrl);
-    chainName =
-      Object.entries(CHAINS).find(([, c]) => c.chainId === options.chainId)?.[0] ?? `chain-${options.chainId}`;
-  } else {
-    chainName = options.chain ?? (await selectChain());
-    chainConfig = resolveChainConfig(chainName);
-  }
-  const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry);
+  const chainId = options.chainId ?? (await selectChain());
+  const chainConfig = resolveChainConfigById(chainId, options.rpcUrl);
+  const chainName = Object.entries(CHAINS).find(([, c]) => c.chainId === chainId)?.[0] ?? `chain-${chainId}`;
+  const registryAddress = resolveRegistryAddress(chainId, options.registry);
 
   // Step 4: Encode transaction
   const data = encodeFunctionData({
