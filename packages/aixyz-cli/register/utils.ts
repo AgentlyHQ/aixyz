@@ -12,11 +12,11 @@ export function resolveUri(uri: string): string {
     const filePath = resolve(uri);
 
     if (!existsSync(filePath)) {
-      throw new CliError(`File not found: ${filePath}`);
+      throw new Error(`File not found: ${filePath}`);
     }
 
     if (!statSync(filePath).isFile()) {
-      throw new CliError(`Not a file: ${filePath}`);
+      throw new Error(`Not a file: ${filePath}`);
     }
 
     const content = readFileSync(filePath, "utf-8");
@@ -25,7 +25,7 @@ export function resolveUri(uri: string): string {
     try {
       JSON.parse(content);
     } catch {
-      throw new CliError(`Invalid JSON in file: ${filePath}`);
+      throw new Error(`Invalid JSON in file: ${filePath}`);
     }
 
     // Convert to base64 data URI
@@ -35,11 +35,4 @@ export function resolveUri(uri: string): string {
 
   // Return as-is for other URIs
   return uri;
-}
-
-export class CliError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "CliError";
-  }
 }

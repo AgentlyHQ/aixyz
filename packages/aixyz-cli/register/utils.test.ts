@@ -1,37 +1,8 @@
 import { describe, expect, test, afterAll, beforeAll } from "bun:test";
 import { rmSync } from "fs";
 import { mkdir } from "node:fs/promises";
-import { CliError, resolveUri } from "./utils";
+import { resolveUri } from "./utils";
 import { join } from "path";
-
-describe("CliError", () => {
-  test("is an instance of Error", () => {
-    const error = new CliError("test message");
-    expect(error).toBeInstanceOf(Error);
-  });
-
-  test("has correct name property", () => {
-    const error = new CliError("test message");
-    expect(error.name).toStrictEqual("CliError");
-  });
-
-  test("has correct message property", () => {
-    const error = new CliError("test message");
-    expect(error.message).toStrictEqual("test message");
-  });
-
-  test("can be caught as Error", () => {
-    let caught = false;
-    try {
-      throw new CliError("test");
-    } catch (e) {
-      if (e instanceof Error) {
-        caught = true;
-      }
-    }
-    expect(caught).toStrictEqual(true);
-  });
-});
 
 describe("resolveUri", () => {
   const testDir = join(import.meta.dir, "__test_fixtures__");
@@ -85,7 +56,7 @@ describe("resolveUri", () => {
     await mkdir(dirWithJsonSuffix, { recursive: true });
 
     try {
-      expect(() => resolveUri(dirWithJsonSuffix)).toThrow(CliError);
+      expect(() => resolveUri(dirWithJsonSuffix)).toThrow(Error);
       expect(() => resolveUri(dirWithJsonSuffix)).toThrow("Not a file");
     } finally {
       rmSync(dirWithJsonSuffix, { recursive: true, force: true });
@@ -93,7 +64,7 @@ describe("resolveUri", () => {
   });
 
   test("throws for non-existent .json file", () => {
-    expect(() => resolveUri("./non-existent.json")).toThrow(CliError);
+    expect(() => resolveUri("./non-existent.json")).toThrow(Error);
     expect(() => resolveUri("./non-existent.json")).toThrow("File not found");
   });
 
@@ -101,7 +72,7 @@ describe("resolveUri", () => {
     await Bun.write(testJsonPath, "not valid json {{{");
 
     try {
-      expect(() => resolveUri(testJsonPath)).toThrow(CliError);
+      expect(() => resolveUri(testJsonPath)).toThrow(Error);
       expect(() => resolveUri(testJsonPath)).toThrow("Invalid JSON");
     } finally {
       await Bun.file(testJsonPath).unlink();
