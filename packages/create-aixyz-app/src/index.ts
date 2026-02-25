@@ -175,4 +175,6 @@ p.note(
   "Next steps",
 );
 
+p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
+
 p.outro(`Success! Created ${agentName} at ./${pkgName}`);
