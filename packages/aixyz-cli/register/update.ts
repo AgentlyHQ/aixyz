@@ -97,7 +97,7 @@ export async function update(options: UpdateOptions): Promise<void> {
     chain: chainConfig.chain,
     rpcUrl: options.rpcUrl,
     options: {
-      browser: { chainId: chainConfig.chainId, chainName, uri: resolvedUri },
+      browser: { chainId: chainConfig.chainId, chainName, uri: resolvedUri, mode: "update" },
     },
   });
   logSignResult(walletMethod.type, result);

@@ -103,4 +103,22 @@ describe("buildHtml", () => {
     expect(html).not.toContain('<script>alert("xss")</script>');
     expect(html).toContain("&lt;script&gt;");
   });
+
+  test("shows 'Register Agent' by default (no mode)", () => {
+    const html = buildHtml(baseParams);
+    expect(html).toContain("Register Agent");
+    expect(html).not.toContain("Update Agent");
+  });
+
+  test("shows 'Register Agent' when mode is 'register'", () => {
+    const html = buildHtml({ ...baseParams, mode: "register" });
+    expect(html).toContain("Register Agent");
+    expect(html).not.toContain("Update Agent");
+  });
+
+  test("shows 'Update Agent' when mode is 'update'", () => {
+    const html = buildHtml({ ...baseParams, mode: "update" });
+    expect(html).toContain("Update Agent");
+    expect(html).not.toContain("Register Agent");
+  });
 });
