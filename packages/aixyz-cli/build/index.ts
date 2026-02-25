@@ -49,6 +49,8 @@ Examples:
 async function action(options: BuildOptions = {}): Promise<void> {
   const cwd = process.cwd();
   loadEnvConfig(cwd, false);
+  process.env.NODE_ENV = "production";
+  process.env.AIXYZ_ENV = "production";
   const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   // Determine output target: explicit CLI flag takes precedence, then config file, then auto-detect VERCEL env
@@ -79,6 +81,10 @@ async function buildBun(entrypoint: string): Promise<void> {
     target: "bun",
     format: "esm",
     sourcemap: "linked",
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+      "process.env.AIXYZ_ENV": JSON.stringify("production"),
+    },
     plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "standalone")],
   });
 
@@ -136,6 +142,10 @@ async function buildVercel(entrypoint: string): Promise<void> {
     target: "bun",
     format: "esm",
     sourcemap: "linked",
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+      "process.env.AIXYZ_ENV": JSON.stringify("production"),
+    },
     plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "vercel")],
   });
 
