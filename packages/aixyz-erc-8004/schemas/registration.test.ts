@@ -1,20 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import {
   ERC8004_REGISTRATION_TYPE,
-  RawAgentRegistrationFileSchema,
+  AgentRegistrationFileSchema,
   StrictAgentRegistrationFileSchema,
   TrustMechanismSchema,
   ServiceSchema,
   RegistrationEntrySchema,
-  parseRawRegistrationFile,
-  validateRegistrationFile,
   getServices,
   hasX402Support,
 } from "./registration";
-
-// =============================================================================
-// Fixtures
-// =============================================================================
 
 const minimalValid = {
   name: "Agently Price Feed",
@@ -52,10 +46,6 @@ const fullValid = {
   did: "did:pkh:eip155:11155111:0x1234567890abcdef1234567890abcdef12345678",
 };
 
-// =============================================================================
-// TrustMechanismSchema
-// =============================================================================
-
 describe("TrustMechanismSchema", () => {
   test.each(["reputation", "crypto-economic", "tee-attestation", "social", "governance"])("accepts '%s'", (value) => {
     expect(TrustMechanismSchema.parse(value)).toBe(value);
@@ -65,10 +55,6 @@ describe("TrustMechanismSchema", () => {
     expect(() => TrustMechanismSchema.parse("unknown")).toThrow();
   });
 });
-
-// =============================================================================
-// ServiceSchema
-// =============================================================================
 
 describe("ServiceSchema", () => {
   test("accepts minimal service", () => {
@@ -101,10 +87,6 @@ describe("ServiceSchema", () => {
     expect(() => ServiceSchema.parse({ name: "mcp-server" })).toThrow();
   });
 });
-
-// =============================================================================
-// RegistrationEntrySchema
-// =============================================================================
 
 describe("RegistrationEntrySchema", () => {
   test("accepts string agentId and transforms to number", () => {
@@ -173,18 +155,14 @@ describe("RegistrationEntrySchema", () => {
   });
 });
 
-// =============================================================================
-// RawAgentRegistrationFileSchema
-// =============================================================================
-
 describe("RawAgentRegistrationFileSchema", () => {
   test("accepts minimal valid file", () => {
-    const result = RawAgentRegistrationFileSchema.parse(minimalValid);
+    const result = AgentRegistrationFileSchema.parse(minimalValid);
     expect(result.name).toBe("Agently Price Feed");
   });
 
   test("accepts fully specified file", () => {
-    const result = RawAgentRegistrationFileSchema.parse(fullValid);
+    const result = AgentRegistrationFileSchema.parse(fullValid);
     expect(result.services).toHaveLength(2);
     expect(result.registrations).toHaveLength(1);
     expect(result.active).toBe(true);
@@ -193,12 +171,12 @@ describe("RawAgentRegistrationFileSchema", () => {
   });
 
   test("type field is optional", () => {
-    const result = RawAgentRegistrationFileSchema.parse(minimalValid);
+    const result = AgentRegistrationFileSchema.parse(minimalValid);
     expect(result.type).toBeUndefined();
   });
 
   test("accepts endpoints as legacy field", () => {
-    const result = RawAgentRegistrationFileSchema.parse({
+    const result = AgentRegistrationFileSchema.parse({
       ...minimalValid,
       endpoints: [{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }],
     });
@@ -206,34 +184,30 @@ describe("RawAgentRegistrationFileSchema", () => {
   });
 
   test("accepts both x402support casings", () => {
-    const r1 = RawAgentRegistrationFileSchema.parse({ ...minimalValid, x402support: true });
-    const r2 = RawAgentRegistrationFileSchema.parse({ ...minimalValid, x402Support: true });
+    const r1 = AgentRegistrationFileSchema.parse({ ...minimalValid, x402support: true });
+    const r2 = AgentRegistrationFileSchema.parse({ ...minimalValid, x402Support: true });
     expect(r1.x402support).toBe(true);
     expect(r2.x402Support).toBe(true);
   });
 
   test("rejects missing name", () => {
-    expect(() => RawAgentRegistrationFileSchema.parse({ description: "x", image: "x" })).toThrow();
+    expect(() => AgentRegistrationFileSchema.parse({ description: "x", image: "x" })).toThrow();
   });
 
   test("rejects missing description", () => {
-    expect(() => RawAgentRegistrationFileSchema.parse({ name: "x", image: "x" })).toThrow();
+    expect(() => AgentRegistrationFileSchema.parse({ name: "x", image: "x" })).toThrow();
   });
 
   test("rejects missing image", () => {
-    expect(() => RawAgentRegistrationFileSchema.parse({ name: "x", description: "x" })).toThrow();
+    expect(() => AgentRegistrationFileSchema.parse({ name: "x", description: "x" })).toThrow();
   });
 
   test("rejects non-object input", () => {
-    expect(() => RawAgentRegistrationFileSchema.parse("string")).toThrow();
-    expect(() => RawAgentRegistrationFileSchema.parse(null)).toThrow();
-    expect(() => RawAgentRegistrationFileSchema.parse(42)).toThrow();
+    expect(() => AgentRegistrationFileSchema.parse("string")).toThrow();
+    expect(() => AgentRegistrationFileSchema.parse(null)).toThrow();
+    expect(() => AgentRegistrationFileSchema.parse(42)).toThrow();
   });
 });
-
-// =============================================================================
-// StrictAgentRegistrationFileSchema
-// =============================================================================
 
 describe("StrictAgentRegistrationFileSchema", () => {
   const strictValid = {
@@ -287,34 +261,26 @@ describe("StrictAgentRegistrationFileSchema", () => {
   });
 });
 
-// =============================================================================
-// parseRawRegistrationFile
-// =============================================================================
-
-describe("parseRawRegistrationFile", () => {
+describe("AgentRegistrationFileSchema.safeParse", () => {
   test("returns success for valid data", () => {
-    const result = parseRawRegistrationFile(minimalValid);
+    const result = AgentRegistrationFileSchema.safeParse(minimalValid);
     expect(result.success).toBe(true);
   });
 
   test("returns failure for invalid data (does not throw)", () => {
-    const result = parseRawRegistrationFile({ bad: "data" });
+    const result = AgentRegistrationFileSchema.safeParse({ bad: "data" });
     expect(result.success).toBe(false);
   });
 
   test("returns failure for null", () => {
-    const result = parseRawRegistrationFile(null);
+    const result = AgentRegistrationFileSchema.safeParse(null);
     expect(result.success).toBe(false);
   });
 });
 
-// =============================================================================
-// validateRegistrationFile
-// =============================================================================
-
-describe("validateRegistrationFile", () => {
+describe("StrictAgentRegistrationFileSchema.safeParse", () => {
   test("returns success for strict-valid data", () => {
-    const result = validateRegistrationFile({
+    const result = StrictAgentRegistrationFileSchema.safeParse({
       ...minimalValid,
       type: ERC8004_REGISTRATION_TYPE,
       services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
@@ -323,7 +289,7 @@ describe("validateRegistrationFile", () => {
   });
 
   test("returns failure when type is missing", () => {
-    const result = validateRegistrationFile({
+    const result = StrictAgentRegistrationFileSchema.safeParse({
       ...minimalValid,
       services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
     });
@@ -331,7 +297,7 @@ describe("validateRegistrationFile", () => {
   });
 
   test("returns failure when services is empty", () => {
-    const result = validateRegistrationFile({
+    const result = StrictAgentRegistrationFileSchema.safeParse({
       ...minimalValid,
       type: ERC8004_REGISTRATION_TYPE,
       services: [],
@@ -339,10 +305,6 @@ describe("validateRegistrationFile", () => {
     expect(result.success).toBe(false);
   });
 });
-
-// =============================================================================
-// getServices
-// =============================================================================
 
 describe("getServices", () => {
   test("returns services when present", () => {
@@ -374,10 +336,6 @@ describe("getServices", () => {
     expect(getServices(minimalValid as any)).toEqual([]);
   });
 });
-
-// =============================================================================
-// hasX402Support
-// =============================================================================
 
 describe("hasX402Support", () => {
   test("returns true for x402support: true", () => {
