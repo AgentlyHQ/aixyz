@@ -37,7 +37,7 @@ export function AixyzConfigPlugin(): BunPlugin {
   return {
     name: "aixyz-config",
     setup(build) {
-      build.onLoad({ filter: /@aixyz\/config(\/index)?(\.ts)?$/ }, () => ({
+      build.onLoad({ filter: /aixyz[-/]config\/index\.ts$/ }, () => ({
         contents: `
         const config = ${JSON.stringify(materialized)};
         export function getAixyzConfig() {
