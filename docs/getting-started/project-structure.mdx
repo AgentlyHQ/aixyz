@@ -15,6 +15,7 @@ my-agent/
     agent.test.ts       # Agent tests (optional)
     server.ts           # Custom server (optional, overrides auto-generation)
     accepts.ts          # Custom x402 facilitator (optional)
+    erc-8004.ts         # ERC-8004 identity registration (optional)
     tools/
       weather.ts        # Tool implementations
       search.ts
@@ -35,6 +36,7 @@ my-agent/
 | `app/tools/*.ts`    | No       | Tool implementations, auto-discovered by the build |
 | `app/server.ts`     | No       | Custom server — overrides auto-generation entirely |
 | `app/accepts.ts`    | No       | Custom x402 facilitator for payment verification   |
+| `app/erc-8004.ts`   | No       | ERC-8004 identity registration and trust config    |
 | `app/agent.test.ts` | No       | Agent tests using `bun:test`                       |
 | `app/icon.png`      | No       | Agent icon served as a static asset                |
 | `vercel.json`       | No       | Vercel deployment configuration                    |

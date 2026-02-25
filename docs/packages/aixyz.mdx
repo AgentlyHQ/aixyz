@@ -61,3 +61,40 @@ The build process:
 3. Detects or auto-generates the server entrypoint
 4. Bundles with `Bun.build()`, [materializing the config](/api-reference/aixyz-config) into the bundle
 5. Copies static assets from `public/` and `app/icon.png`
+
+### `aixyz erc-8004 register`
+
+Registers a new agent on the ERC-8004 IdentityRegistry. Creates `app/erc-8004.ts` if it doesn't exist (prompting for supported trust mechanisms), asks for your agent's deployment URL, and derives the on-chain URI as `<url>/_aixyz/erc-8004.json`. After a successful registration, the entry is written back to `app/erc-8004.ts`.
+
+```bash
+aixyz erc-8004 register --url "https://my-agent.example.com" --chain sepolia --broadcast
+```
+
+| Flag          | Description                                       |
+| ------------- | ------------------------------------------------- |
+| `--url`       | Agent deployment URL (prompted if omitted)        |
+| `--chain`     | `mainnet`, `sepolia`, `base-sepolia`, `localhost` |
+| `--rpc-url`   | Custom RPC endpoint                               |
+| `--keystore`  | Encrypted keystore file                           |
+| `--browser`   | Use browser wallet (EIP-6963)                     |
+| `--broadcast` | Send transaction (default is dry-run)             |
+| `--out-dir`   | Write result JSON to directory                    |
+
+### `aixyz erc-8004 update`
+
+Updates the metadata URI of a registered agent. Reads existing registrations from `app/erc-8004.ts`, lets you select which one to update (if multiple), and derives the new URI from the provided URL.
+
+```bash
+aixyz erc-8004 update --url "https://new-domain.example.com" --broadcast
+```
+
+| Flag          | Description                                    |
+| ------------- | ---------------------------------------------- |
+| `--url`       | New agent deployment URL (prompted if omitted) |
+| `--rpc-url`   | Custom RPC endpoint                            |
+| `--keystore`  | Encrypted keystore file                        |
+| `--browser`   | Use browser wallet (EIP-6963)                  |
+| `--broadcast` | Send transaction (default is dry-run)          |
+| `--out-dir`   | Write result JSON to directory                 |
+
+See [ERC-8004 Identity](/protocols/erc-8004) for the full protocol documentation.
