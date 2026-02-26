@@ -64,19 +64,19 @@
           {
             "group": "Basic",
             "pages": [
-              "templates/agent-boilerplate",
-              "templates/agent-travel",
-              "templates/agent-price-oracle",
-              "templates/agent-chainlink",
-              "templates/agent-job-hunter"
+              "templates/basic/agent-boilerplate",
+              "templates/basic/agent-chainlink",
+              "templates/basic/agent-travel",
+              "templates/basic/agent-price-oracle",
+              "templates/basic/agent-job-hunter"
             ]
           },
           {
             "group": "Advanced",
             "pages": [
-              "templates/agent-with-custom-server",
-              "templates/agent-byo-facilitator",
-              "templates/agent-with-tests"
+              "templates/advanced/agent-with-custom-server",
+              "templates/advanced/agent-byo-facilitator",
+              "templates/advanced/agent-with-tests"
             ]
           }
         ]
