@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 import { DefaultExecutionEventBus } from "@a2a-js/sdk/server";
-import type { Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
+import type { Message, Task, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 import type { AgentExecutionEvent } from "@a2a-js/sdk/server";
 import { ToolLoopAgentExecutor } from "./a2a";
 import type { ToolLoopAgent } from "ai";
@@ -34,7 +34,7 @@ function makeAsyncIterable(chunks: string[]): AsyncIterable<string> {
 }
 
 describe("ToolLoopAgentExecutor streaming", () => {
-  test("publishes working status, artifact chunks, and completed status when streaming", async () => {
+  test("publishes initial task, working status, artifact chunks, and completed status when streaming", async () => {
     const chunks = ["Hello", ", ", "world", "!"];
     const mockAgent = {
       stream: mock(async () => ({
@@ -51,8 +51,15 @@ describe("ToolLoopAgentExecutor streaming", () => {
     const ctx = makeRequestContext();
     await executor.execute(ctx, eventBus);
 
-    // First event: working status
-    const workingUpdate = events[0] as TaskStatusUpdateEvent;
+    // First event: initial Task object
+    const initialTask = events[0] as Task;
+    expect(initialTask.kind).toBe("task");
+    expect(initialTask.id).toBe("task-1");
+    expect(initialTask.contextId).toBe("ctx-1");
+    expect(initialTask.status.state).toBe("submitted");
+
+    // Second event: working status
+    const workingUpdate = events[1] as TaskStatusUpdateEvent;
     expect(workingUpdate.kind).toBe("status-update");
     expect(workingUpdate.status.state).toBe("working");
     expect(workingUpdate.final).toBe(false);
@@ -60,7 +67,7 @@ describe("ToolLoopAgentExecutor streaming", () => {
     expect(workingUpdate.contextId).toBe("ctx-1");
 
     // Artifact update events (one per non-empty chunk)
-    const artifactUpdates = events.slice(1, events.length - 1) as TaskArtifactUpdateEvent[];
+    const artifactUpdates = events.slice(2, events.length - 1) as TaskArtifactUpdateEvent[];
     expect(artifactUpdates.length).toBe(chunks.length);
     expect(artifactUpdates[0].kind).toBe("artifact-update");
     expect(artifactUpdates[0].append).toBe(false);
@@ -81,6 +88,33 @@ describe("ToolLoopAgentExecutor streaming", () => {
     expect(completedUpdate.final).toBe(true);
   });
 
+  test("does not publish initial task when task context already exists", async () => {
+    const mockAgent = {
+      stream: mock(async () => ({
+        textStream: makeAsyncIterable(["hi"]),
+      })),
+    } as unknown as ToolLoopAgent<never>;
+
+    const executor = new ToolLoopAgentExecutor(mockAgent);
+    const eventBus = new DefaultExecutionEventBus();
+
+    const events: AgentExecutionEvent[] = [];
+    eventBus.on("event", (event) => events.push(event));
+
+    const existingTask: Task = {
+      kind: "task",
+      id: "task-1",
+      contextId: "ctx-1",
+      status: { state: "working", timestamp: new Date().toISOString() },
+    };
+    await executor.execute(makeRequestContext({ task: existingTask }), eventBus);
+
+    // No initial task published; first event is working status
+    const first = events[0] as TaskStatusUpdateEvent;
+    expect(first.kind).toBe("status-update");
+    expect(first.status.state).toBe("working");
+  });
+
   test("skips empty chunks", async () => {
     const mockAgent = {
       stream: mock(async () => ({
@@ -96,9 +130,9 @@ describe("ToolLoopAgentExecutor streaming", () => {
 
     await executor.execute(makeRequestContext(), eventBus);
 
-    // working + 1 artifact ("content") + completed
-    expect(events.length).toBe(3);
-    const artifact = events[1] as TaskArtifactUpdateEvent;
+    // initial task + working + 1 artifact ("content") + completed
+    expect(events.length).toBe(4);
+    const artifact = events[2] as TaskArtifactUpdateEvent;
     expect(artifact.kind).toBe("artifact-update");
     expect((artifact.artifact.parts[0] as { kind: string; text: string }).text).toBe("content");
   });
@@ -118,9 +152,9 @@ describe("ToolLoopAgentExecutor streaming", () => {
 
     await executor.execute(makeRequestContext(), eventBus);
 
-    // working status + error message
-    expect(events.length).toBe(2);
-    const errorMsg = events[1] as Message;
+    // initial task + working status + error message
+    expect(events.length).toBe(3);
+    const errorMsg = events[2] as Message;
     expect(errorMsg.kind).toBe("message");
     expect((errorMsg.parts[0] as { kind: string; text: string }).text).toContain("stream failed");
   });

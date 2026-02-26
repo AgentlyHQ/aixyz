@@ -7,7 +7,7 @@ import {
   RequestContext,
   TaskStore,
 } from "@a2a-js/sdk/server";
-import { AgentCard, Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent, TextPart } from "@a2a-js/sdk";
+import { AgentCard, Message, Task, TaskArtifactUpdateEvent, TaskStatusUpdateEvent, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
 import { getAixyzConfigRuntime } from "../../config";
 import { AixyzServer } from "../index";
@@ -18,12 +18,24 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
   constructor(private agent: ToolLoopAgent<never, TOOLS>) {}
 
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus): Promise<void> {
-    const { taskId, contextId } = requestContext;
+    const { taskId, contextId, userMessage, task } = requestContext;
     try {
       // Extract the user's message text
-      const userMessage = requestContext.userMessage;
       const textParts = userMessage.parts.filter((part): part is TextPart => part.kind === "text");
       const prompt = textParts.map((part) => part.text).join("\n");
+
+      // Publish the initial Task object if one does not exist yet — required by ResultManager
+      // before any TaskArtifactUpdateEvent can be processed.
+      if (!task) {
+        const initialTask: Task = {
+          kind: "task",
+          id: taskId,
+          contextId,
+          status: { state: "submitted", timestamp: new Date().toISOString() },
+          history: [userMessage],
+        };
+        eventBus.publish(initialTask);
+      }
 
       // Signal that the agent is working
       const workingUpdate: TaskStatusUpdateEvent = {
