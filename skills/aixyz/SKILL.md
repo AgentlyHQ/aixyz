@@ -6,7 +6,6 @@ description: >-
   configuring x402 micropayments, or deploying to Vercel.
 license: MIT
 metadata:
-  version: 1.0.0
   framework: aixyz
   runtime: bun
 ---
