@@ -181,7 +181,9 @@ export async function selectChain(): Promise<number> {
   return selected;
 }
 
-export function resolveRegistryAddress(chainId: number, registry?: string): `0x${string}` {
+// Returns the registry address if known, or null if no default exists for the chain (requires interactive prompt).
+// Throws only for an explicitly invalid registry address.
+export function resolveRegistryAddress(chainId: number, registry?: string): `0x${string}` | null {
   if (registry) {
     if (!isAddress(registry)) {
       throw new Error(`Invalid registry address: ${registry}`);
@@ -189,12 +191,12 @@ export function resolveRegistryAddress(chainId: number, registry?: string): `0x$
     return registry as `0x${string}`;
   }
   if (chainId === 31337) {
-    throw new Error("--registry is required for localhost (no default contract deployment)");
+    return null;
   }
   try {
     return getIdentityRegistryAddress(chainId) as `0x${string}`;
   } catch {
-    throw new Error(`--registry is required for chain ID ${chainId} (no default contract deployment)`);
+    return null;
   }
 }
 

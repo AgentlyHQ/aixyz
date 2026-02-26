@@ -12,7 +12,7 @@ import {
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { promptAgentUrl, promptSupportedTrust, deriveAgentUri } from "./utils/prompt";
+import { promptAgentUrl, promptSupportedTrust, promptRegistryAddress, deriveAgentUri } from "./utils/prompt";
 import { hasErc8004File, createErc8004File, writeRegistrationEntry } from "./utils/erc8004-file";
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
@@ -51,7 +51,7 @@ export async function register(options: RegisterOptions): Promise<void> {
   const chainId = options.chainId ?? (await selectChain());
   const chainConfig = resolveChainConfigById(chainId, options.rpcUrl);
   const chainName = Object.entries(CHAINS).find(([, c]) => c.chainId === chainId)?.[0] ?? `chain-${chainId}`;
-  const registryAddress = resolveRegistryAddress(chainId, options.registry);
+  const registryAddress = resolveRegistryAddress(chainId, options.registry) ?? (await promptRegistryAddress());
 
   // Step 4: Encode transaction
   const data = encodeFunctionData({
