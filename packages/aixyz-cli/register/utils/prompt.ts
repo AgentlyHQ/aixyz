@@ -1,4 +1,5 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
+import { isAddress } from "viem";
 import type { RegistrationEntry } from "@aixyz/erc-8004/schemas/registration";
 
 export async function promptAgentUrl(): Promise<string> {
@@ -52,6 +53,14 @@ export async function promptSelectRegistration(registrations: RegistrationEntry[
       value: reg,
     })),
   });
+}
+
+export async function promptRegistryAddress(): Promise<`0x${string}`> {
+  const value = await input({
+    message: "IdentityRegistry contract address (no default for this chain):",
+    validate: (v) => (isAddress(v) ? true : "Must be a valid Ethereum address (0x…)"),
+  });
+  return value as `0x${string}`;
 }
 
 export function deriveAgentUri(url: string): string {

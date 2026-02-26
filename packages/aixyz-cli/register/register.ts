@@ -3,15 +3,16 @@ import { IdentityRegistryAbi } from "@aixyz/erc-8004";
 import { selectWalletMethod } from "./wallet";
 import { signTransaction } from "./wallet/sign";
 import {
-  resolveChainConfig,
+  resolveChainConfigById,
   selectChain,
   resolveRegistryAddress,
   validateBrowserRpcConflict,
   getExplorerUrl,
+  CHAINS,
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { promptAgentUrl, promptSupportedTrust, deriveAgentUri } from "./utils/prompt";
+import { promptAgentUrl, promptSupportedTrust, promptRegistryAddress, deriveAgentUri } from "./utils/prompt";
 import { hasErc8004File, createErc8004File, writeRegistrationEntry } from "./utils/erc8004-file";
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
@@ -20,7 +21,7 @@ import type { BaseOptions } from "./index";
 
 export interface RegisterOptions extends BaseOptions {
   url?: string;
-  chain?: string;
+  chainId?: number;
 }
 
 export async function register(options: RegisterOptions): Promise<void> {
@@ -47,9 +48,10 @@ export async function register(options: RegisterOptions): Promise<void> {
   }
 
   // Step 3: Select chain
-  const chainName = options.chain ?? (await selectChain());
-  const chainConfig = resolveChainConfig(chainName);
-  const registryAddress = resolveRegistryAddress(chainName, chainConfig.chainId, options.registry);
+  const chainId = options.chainId ?? (await selectChain());
+  const chainConfig = resolveChainConfigById(chainId, options.rpcUrl);
+  const chainName = Object.entries(CHAINS).find(([, c]) => c.chainId === chainId)?.[0] ?? `chain-${chainId}`;
+  const registryAddress = resolveRegistryAddress(chainId, options.registry) ?? (await promptRegistryAddress());
 
   // Step 4: Encode transaction
   const data = encodeFunctionData({
