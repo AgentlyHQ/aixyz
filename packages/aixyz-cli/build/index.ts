@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, cpSync, rmSync } from "fs";
 import { Command } from "commander";
 import { AixyzConfigPlugin } from "./AixyzConfigPlugin";
 import { AixyzServerPlugin, getEntrypointMayGenerate } from "./AixyzServerPlugin";
+import { traceFileSystemAssets, copyTracedFiles, copyAppAssets } from "./nft";
 import { findIconFile, copyAgentIcon, generateFavicon } from "./icons";
 import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
@@ -113,6 +114,14 @@ async function buildBun(entrypoint: string): Promise<void> {
     await generateFavicon(iconFile, resolve(outputDir, "public/favicon.ico"));
   }
 
+  // BFT: trace node:fs / Bun.file() accesses in source files and copy the
+  // referenced data files into the output so the deployment is self-contained.
+  const appDir = resolve(cwd, "app");
+  const bftConfig = getAixyzConfig().build;
+  const tracedFiles = await traceFileSystemAssets(appDir, cwd);
+  await copyTracedFiles(tracedFiles, cwd, outputDir);
+  await copyAppAssets(appDir, outputDir, bftConfig.outputFileTracingIncludes, bftConfig.outputFileTracingExcludes);
+
   // Log summary
   console.log("");
   console.log("Build complete! Output:");
@@ -205,6 +214,15 @@ async function buildVercel(entrypoint: string): Promise<void> {
     await generateFavicon(iconFile, resolve(staticDir, "favicon.ico"));
     console.log("Copied app/icon →", staticDir);
   }
+
+  // BFT: trace node:fs / Bun.file() accesses in source files and copy the
+  // referenced data files into the function directory so the deployment is
+  // self-contained.
+  const appDir = resolve(cwd, "app");
+  const bftConfig = getAixyzConfig().build;
+  const tracedFiles = await traceFileSystemAssets(appDir, cwd);
+  await copyTracedFiles(tracedFiles, cwd, funcDir);
+  await copyAppAssets(appDir, funcDir, bftConfig.outputFileTracingIncludes, bftConfig.outputFileTracingExcludes);
 
   // Log summary
   console.log("");

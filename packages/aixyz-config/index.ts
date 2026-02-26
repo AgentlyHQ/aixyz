@@ -53,6 +53,31 @@ export type AixyzConfig = {
      * @default ["**\/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"]
      */
     excludes?: string | string[];
+    /**
+     * Glob pattern(s) for additional files to copy into the build output
+     * alongside the bundle (e.g. prompt templates, SQLite databases, JSON
+     * corpora).  Patterns are matched against paths relative to the `app/`
+     * directory.
+     *
+     * Files already referenced by literal-string `node:fs` / `Bun.file()`
+     * calls in source code are traced and copied automatically; use this
+     * option only for files that are discovered or read dynamically at
+     * runtime (e.g. via `fs.readdirSync`).
+     *
+     * Mirrors Next.js `outputFileTracingIncludes`.
+     *
+     * @default []
+     */
+    outputFileTracingIncludes?: string | string[];
+    /**
+     * Glob pattern(s) for files to exclude from the output file tracing
+     * sweep.  Takes precedence over `outputFileTracingIncludes`.
+     *
+     * Mirrors Next.js `outputFileTracingExcludes`.
+     *
+     * @default []
+     */
+    outputFileTracingExcludes?: string | string[];
   };
   skills?: InferredAixyzConfig["skills"];
 };
@@ -65,6 +90,8 @@ const defaultConfig = {
   build: {
     includes: ["**/*.{js,jsx,ts,tsx}"],
     excludes: ["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"],
+    outputFileTracingIncludes: [] as string[],
+    outputFileTracingExcludes: [] as string[],
   },
   skills: [],
 };
@@ -105,6 +132,14 @@ const AixyzConfigSchema = z.object({
       excludes: z
         .union([z.string(), z.array(z.string())])
         .default(["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"])
+        .transform((v) => (Array.isArray(v) ? v : [v])),
+      outputFileTracingIncludes: z
+        .union([z.string(), z.array(z.string())])
+        .default([])
+        .transform((v) => (Array.isArray(v) ? v : [v])),
+      outputFileTracingExcludes: z
+        .union([z.string(), z.array(z.string())])
+        .default([])
         .transform((v) => (Array.isArray(v) ? v : [v])),
     })
     .default(defaultConfig.build),
