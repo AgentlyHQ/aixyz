@@ -1,1 +1,69 @@
-../../examples/agent-price-oracle/TEMPLATE.mdx
+---
+title: "Price Oracle Agent"
+description: "Cryptocurrency market data agent powered by CoinGecko Pro API"
+---
+
+<Info>
+  **Source:** [`examples/agent-price-oracle`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-price-oracle)
+</Info>
+
+## Overview
+
+Price Gecky is a cryptocurrency market data agent that uses the CoinGecko Pro API. It supports token price lookups, discovering newly listed tokens, and tracking top gainers and losers — all gated behind x402 micropayments.
+
+## Project Structure
+
+```
+agent-price-oracle/
+  aixyz.config.ts                 # Agent metadata and skills
+  app/
+    agent.ts                      # Agent with three market data tools
+    tools/
+      getTokenPrice.ts            # Token price lookup
+      getNewListedTokens.ts       # Newly listed token discovery
+      getTopGainersLosers.ts      # Top gainers and losers
+    icon.png                      # Agent icon
+  package.json
+  vercel.json
+```
+
+## Skills
+
+| Skill                | Description                                                |
+| -------------------- | ---------------------------------------------------------- |
+| Token Price Lookup   | Get the current price for any cryptocurrency token         |
+| Newly Listed Tokens  | Discover recently listed tokens on CoinGecko               |
+| Top Gainers & Losers | Get the top gaining and losing tokens in the last 24 hours |
+
+## Configuration
+
+```typescript
+const config: AixyzConfig = {
+  name: "Price Gecky - Price Oracle Agent",
+  description: "An AI agent that provides real-time cryptocurrency market data using CoinGecko Pro.",
+  version: "1.0.0",
+  x402: {
+    payTo: "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+  },
+};
+```
+
+## Key Features
+
+- **Three specialized tools** — Price lookup, new listings, and market trends
+- **Scope-limited agent** — Strictly responds only to cryptocurrency market queries
+- **Safety-focused** — Provides information only, never financial advice
+- **Auto-generated server** — No custom `server.ts` needed
+
+## Payment
+
+The agent charges `$0.01` per request via x402 on Base (mainnet in production, Base Sepolia in development).
+
+## Running
+
+```bash
+cd examples/agent-price-oracle
+bun install
+bun run dev
+```
