@@ -34,6 +34,12 @@ export type AixyzConfig = {
      * The x402 network to use for the agent.
      */
     network: string;
+    /**
+     * Custom x402 facilitator URL.
+     * Useful for local development or self-hosted facilitators.
+     * Defaults to the aixyz-hosted facilitator if not set.
+     */
+    facilitatorUrl?: string;
   };
   build?: {
     /**
@@ -94,6 +100,7 @@ const AixyzConfigSchema = z.object({
   x402: z.object({
     payTo: z.string(),
     network: NetworkSchema,
+    facilitatorUrl: z.string().url().optional(),
   }),
   build: z
     .object({

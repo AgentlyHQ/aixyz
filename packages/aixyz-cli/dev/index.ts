@@ -2,6 +2,7 @@ import { resolve, relative } from "path";
 import { existsSync, watch } from "fs";
 import { loadEnvConfig } from "@next/env";
 import { Command } from "commander";
+import { getAixyzConfig } from "@aixyz/config";
 import { getEntrypointMayGenerate } from "../build/AixyzServerPlugin";
 import pkg from "../package.json";
 
@@ -21,12 +22,16 @@ async function action(options: { port?: string }): Promise<void> {
 
   const port = options.port || process.env.PORT || "3000";
   const baseUrl = `http://localhost:${port}`;
+  const config = getAixyzConfig();
 
   console.log("");
   console.log(`⟡ aixyz.sh v${pkg.version}`);
   console.log("");
   console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
   console.log(`- MCP:          ${baseUrl}/mcp`);
+  if (config.x402.facilitatorUrl) {
+    console.log(`- Facilitator:  ${config.x402.facilitatorUrl}`);
+  }
   if (envFileNames.length > 0) {
     console.log(`- Environments: ${envFileNames.join(", ")}`);
   }

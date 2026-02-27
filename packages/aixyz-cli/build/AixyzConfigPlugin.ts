@@ -3,10 +3,6 @@ import type { BunPlugin } from "bun";
 import boxen from "boxen";
 import chalk from "chalk";
 
-function label(text: string): string {
-  return chalk.dim(text.padEnd(14));
-}
-
 export function AixyzConfigPlugin(): BunPlugin {
   const materialized = getAixyzConfig();
 
@@ -16,6 +12,12 @@ export function AixyzConfigPlugin(): BunPlugin {
       ? materialized.description.slice(0, maxLen - 1) + "…"
       : materialized.description;
 
+  const labels = ["Name", "Description", "URL", "Version", "x402 PayTo", "x402 Network"];
+  if (materialized.x402.facilitatorUrl) labels.push("x402 Facilitator");
+  // get max length of labels for padding
+  const pad = Math.max(...labels.map((l) => l.length)) + 2;
+  const label = (text: string) => chalk.dim(text.padEnd(pad));
+
   const lines = [
     `${label("Name")}${materialized.name}`,
     `${label("Description")}${description}`,
@@ -23,6 +25,7 @@ export function AixyzConfigPlugin(): BunPlugin {
     `${label("Version")}${materialized.version}`,
     `${label("x402 PayTo")}${materialized.x402.payTo}`,
     `${label("x402 Network")}${materialized.x402.network}`,
+    ...(materialized.x402.facilitatorUrl ? [`${label("x402 Facilitator")}${materialized.x402.facilitatorUrl}`] : []),
   ];
   console.log(
     boxen(lines.join("\n"), {

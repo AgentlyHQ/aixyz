@@ -82,6 +82,9 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
   if (hasAccepts) {
     imports.push(`import { facilitator } from "${importPrefix}/accepts";`);
+  } else if (glob.config.x402.facilitatorUrl) {
+    imports.push('import { createFacilitator } from "aixyz/accepts";');
+    imports.push(`const facilitator = createFacilitator(${JSON.stringify(glob.config.x402.facilitatorUrl)});`);
   } else {
     imports.push('import { facilitator } from "aixyz/accepts";');
   }

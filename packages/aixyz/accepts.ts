@@ -30,9 +30,19 @@ export type { FacilitatorClient };
 
 export { HTTPFacilitatorClient };
 
+const DEFAULT_FACILITATOR_URL = "https://x402.use-agently.com/facilitator";
+
+/**
+ * Create a facilitator client with a custom URL.
+ * Falls back to the default aixyz-hosted facilitator if no URL is provided.
+ */
+export function createFacilitator(url?: string): FacilitatorClient {
+  return new HTTPFacilitatorClient({
+    url: url ?? DEFAULT_FACILITATOR_URL,
+  });
+}
+
 /**
  * The default facilitator client provided by aixyz.
  */
-export const facilitator: FacilitatorClient = new HTTPFacilitatorClient({
-  url: "https://x402.use-agently.com/facilitator",
-});
+export const facilitator: FacilitatorClient = createFacilitator();

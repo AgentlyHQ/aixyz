@@ -1,5 +1,6 @@
 import { getAixyzConfig, Network } from "@aixyz/config";
 import initExpress from "express";
+import { x402Version } from "@x402/core";
 import { FacilitatorClient, x402ResourceServer } from "@x402/core/server";
 import { paymentMiddleware, PaymentRequirements } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
@@ -15,6 +16,18 @@ export class AixyzServer extends x402ResourceServer {
   ) {
     super(facilitator);
     this.register(config.x402.network as any, new ExactEvmScheme());
+  }
+
+  async initialize(): Promise<void> {
+    await super.initialize();
+
+    if (!this.getSupportedKind(x402Version, this.config.x402.network, "exact")) {
+      const facilitatorUrl = this.config.x402.facilitatorUrl ?? "https://x402.agently.to/facilitator";
+      throw new Error(
+        `Facilitator (${facilitatorUrl}) does not support "exact" on ${this.config.x402.network}. ` +
+          `Check that the facilitator is running and supports the configured network.`,
+      );
+    }
   }
 
   public unstable_withIndexPage(path = "/") {
