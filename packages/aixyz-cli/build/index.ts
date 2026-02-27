@@ -14,7 +14,7 @@ interface BuildOptions {
 
 export const buildCommand = new Command("build")
   .description("Build the aixyz agent")
-  .option("--output <type>", "Output format: 'standalone' or 'vercel'")
+  .option("--output <type>", "Output format: 'standalone', 'vercel', or 'executable'")
   .addHelpText(
     "after",
     `
@@ -27,6 +27,10 @@ Details:
   With --output vercel or VERCEL=1 env:
     Generates Vercel Build Output API v3 structure at .vercel/output/
     (Automatically detected when deploying to Vercel)
+
+  With --output executable:
+    Compiles into a self-contained binary at ./.aixyz/output/aixyz
+    (No Bun runtime required to run the output)
 
   The build process:
     1. Loads aixyz.config.ts from the current directory
@@ -42,6 +46,7 @@ Examples:
   $ aixyz build                         # Build standalone (default)
   $ aixyz build --output standalone     # Build standalone explicitly
   $ aixyz build --output vercel         # Build for Vercel deployment
+  $ aixyz build --output executable     # Build self-contained binary
   $ VERCEL=1 aixyz build                # Auto-detected Vercel build`,
   )
   .action(action);
@@ -60,6 +65,9 @@ async function action(options: BuildOptions = {}): Promise<void> {
   if (target === "vercel") {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Vercel") + "...");
     await buildVercel(entrypoint);
+  } else if (target === "executable") {
+    console.log(chalk.cyan("▶") + " Building " + chalk.bold("Executable") + "...");
+    await buildExecutable(entrypoint);
   } else {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Standalone") + "...");
     await buildBun(entrypoint);
@@ -123,6 +131,62 @@ async function buildBun(entrypoint: string): Promise<void> {
   }
   console.log("");
   console.log("To run: bun .aixyz/output/server.js");
+}
+
+async function buildExecutable(entrypoint: string): Promise<void> {
+  const cwd = process.cwd();
+
+  const outputDir = resolve(cwd, ".aixyz/output");
+  rmSync(outputDir, { recursive: true, force: true });
+  mkdirSync(outputDir, { recursive: true });
+
+  const outfile = resolve(outputDir, "aixyz");
+
+  // Build as a self-contained compiled binary using Bun's compile feature
+  const result = await Bun.build({
+    entrypoints: [entrypoint],
+    outdir: outputDir,
+    target: "bun",
+    sourcemap: "linked",
+    compile: { outfile },
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+      "process.env.AIXYZ_ENV": JSON.stringify("production"),
+    },
+    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "executable")],
+  });
+
+  if (!result.success) {
+    console.error("Build failed:");
+    for (const log of result.logs) {
+      console.error(log);
+    }
+    process.exit(1);
+  }
+
+  // Copy static assets (public/ → .aixyz/output/public/)
+  const publicDir = resolve(cwd, "public");
+  if (existsSync(publicDir)) {
+    const destPublicDir = resolve(outputDir, "public");
+    cpSync(publicDir, destPublicDir, { recursive: true });
+    console.log("Copied public/ →", destPublicDir);
+  }
+
+  const iconFile = findIconFile(resolve(cwd, "app"));
+  if (iconFile) {
+    await copyAgentIcon(iconFile, resolve(outputDir, "icon.png"));
+    await generateFavicon(iconFile, resolve(outputDir, "public/favicon.ico"));
+  }
+
+  // Log summary
+  console.log("");
+  console.log("Build complete! Output:");
+  console.log("  .aixyz/output/aixyz");
+  if (existsSync(publicDir) || iconFile) {
+    console.log("  .aixyz/output/public/ and assets");
+  }
+  console.log("");
+  console.log("To run: ./.aixyz/output/aixyz");
 }
 
 async function buildVercel(entrypoint: string): Promise<void> {

@@ -40,9 +40,10 @@ export type AixyzConfig = {
      * Output format for `aixyz build`.
      * - `"standalone"`: Bundles into a single executable file (default).
      * - `"vercel"`: Generates Vercel Build Output API v3 structure.
+     * - `"executable"`: Compiles into a self-contained binary (no Bun runtime required).
      * Overrides the `VERCEL=1` environment variable, but is overridden by the `--output` CLI flag.
      */
-    output?: "standalone" | "vercel";
+    output?: "standalone" | "vercel" | "executable";
     /**
      * Glob pattern(s) for files to include in the build from the `app/` directory.
      * @default ["**\/*.{js,jsx,ts,tsx}"]
@@ -97,7 +98,7 @@ const AixyzConfigSchema = z.object({
   }),
   build: z
     .object({
-      output: z.enum(["standalone", "vercel"]).optional(),
+      output: z.enum(["standalone", "vercel", "executable"]).optional(),
       includes: z
         .union([z.string(), z.array(z.string())])
         .default(["**/*.{js,jsx,ts,tsx}"])
