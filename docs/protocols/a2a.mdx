@@ -87,6 +87,21 @@ This registers:
 - A **GET** handler at `/.well-known/agent-card.json` serving the agent card
 - A **POST** handler at `/agent` routing JSON-RPC requests to `ToolLoopAgentExecutor`
 
+### Sub-Agent Routing
+
+Pass an optional `prefix` argument to mount a sub-agent under its own path:
+
+```typescript
+import * as research from "./agents/research";
+import * as implement from "./agents/implement";
+
+useA2A(server, agent); // → /agent
+useA2A(server, research, "research"); // → /research/agent
+useA2A(server, implement, "implement"); // → /implement/agent
+```
+
+Each sub-agent gets its own agent card at `/{prefix}/.well-known/agent-card.json` and its own JSON-RPC endpoint at `/{prefix}/agent`. When using `app/agents/`, the build pipeline generates these calls automatically.
+
 ## Payment Integration
 
 When an agent exports an `accepts` configuration with `scheme: "exact"`, the `/agent` endpoint is gated behind [x402 payment](/protocols/x402). Clients must include a valid `X-Payment` header. Agents without `accepts` are served without payment requirements.

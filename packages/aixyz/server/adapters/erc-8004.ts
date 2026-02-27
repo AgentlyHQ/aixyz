@@ -12,16 +12,16 @@ export function getAgentRegistrationFile(
   data: unknown,
   options: {
     mcp: boolean;
-    a2a: boolean;
+    a2a: string[];
   },
 ): StrictAgentRegistrationFile {
   const config = getAixyzConfigRuntime();
   const services: StrictAgentRegistrationFile["services"] = [];
 
-  if (options.a2a) {
+  for (const path of options.a2a) {
     services.push({
       name: "A2A",
-      endpoint: new URL("/.well-known/agent-card.json", config.url).toString(),
+      endpoint: new URL(path, config.url).toString(),
       version: "0.3.0",
     });
   }
@@ -53,7 +53,7 @@ export function useERC8004(
     default: unknown;
     options: {
       mcp: boolean;
-      a2a: boolean;
+      a2a: string[];
     };
   },
 ): void {

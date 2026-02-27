@@ -105,14 +105,14 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
   }
 }
 
-export function getAgentCard(): AgentCard {
+export function getAgentCard(agentPath = "/agent"): AgentCard {
   const config = getAixyzConfigRuntime();
   return {
     name: config.name,
     description: config.description,
     protocolVersion: "0.3.0",
     version: config.version,
-    url: new URL("/agent", config.url).toString(),
+    url: new URL(agentPath, config.url).toString(),
     capabilities: {
       streaming: true,
       pushNotifications: false,
@@ -129,6 +129,7 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
     default: ToolLoopAgent<never, TOOLS>;
     accepts?: Accepts;
   },
+  prefix?: string,
   taskStore: TaskStore = new InMemoryTaskStore(),
 ): void {
   if (exports.accepts) {
@@ -140,22 +141,27 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
     return;
   }
 
+  const agentPath: `/${string}` = prefix ? `/${prefix}/agent` : "/agent";
+  const wellKnownPath: `/${string}` = prefix
+    ? `/${prefix}/.well-known/agent-card.json`
+    : "/.well-known/agent-card.json";
+
   const agentExecutor = new ToolLoopAgentExecutor(exports.default);
-  const requestHandler = new DefaultRequestHandler(getAgentCard(), taskStore, agentExecutor);
+  const requestHandler = new DefaultRequestHandler(getAgentCard(agentPath), taskStore, agentExecutor);
 
   app.express.use(
-    "/.well-known/agent-card.json",
+    wellKnownPath,
     agentCardHandler({
       agentCardProvider: requestHandler,
     }),
   );
 
   if (exports.accepts.scheme === "exact") {
-    app.withX402Exact("POST /agent", exports.accepts);
+    app.withX402Exact(`POST ${agentPath}`, exports.accepts);
   }
 
   app.express.use(
-    "/agent",
+    agentPath,
     jsonRpcHandler({
       requestHandler,
       userBuilder: UserBuilder.noAuthentication,

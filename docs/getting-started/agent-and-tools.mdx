@@ -41,6 +41,43 @@ The optional `accepts` named export controls [x402 payment](/getting-started/pay
 - Agents **with** `accepts` are registered on payment-gated A2A endpoints
 - Agents **without** `accepts` are not registered
 
+## Sub-Agents (`app/agents/*.ts`)
+
+Place additional agent files in `app/agents/` to expose multiple A2A endpoints from a single deployment. Each file follows the same format as `app/agent.ts` and is automatically registered on its own path.
+
+```typescript
+// app/agents/research.ts → /research/agent
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a research assistant.",
+  stopWhen: stepCountIs(10),
+});
+```
+
+With the layout below, the build auto-generates three independent A2A endpoints:
+
+```
+app/
+  agent.ts           # → /agent
+  agents/
+    research.ts      # → /research/agent
+    implement.ts     # → /implement/agent
+```
+
+<Note>
+  Files starting with `_` (e.g., `_helpers.ts`) are ignored by the build pipeline. Use this convention for shared
+  utilities.
+</Note>
+
 ## Tools (`app/tools/*.ts`)
 
 Each `.ts` file in `app/tools/` exports a Vercel AI SDK `tool` and an optional `accepts` for MCP payment gating. Tools are automatically discovered and registered on both A2A and MCP endpoints.
