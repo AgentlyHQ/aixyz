@@ -109,6 +109,19 @@
         "typescript": "^5",
       },
     },
+    "examples/agent-with-sub-agents": {
+      "name": "@examples/agent-with-sub-agents",
+      "dependencies": {
+        "@ai-sdk/openai": "^3",
+        "ai": "^6",
+        "aixyz": "^0",
+        "zod": "^4",
+      },
+      "devDependencies": {
+        "@types/bun": "^1",
+        "typescript": "^5",
+      },
+    },
     "examples/agent-with-tests": {
       "name": "@examples/agent-with-tests",
       "dependencies": {
@@ -263,6 +276,8 @@
     "@examples/agent-travel": ["@examples/agent-travel@workspace:examples/agent-travel"],
 
     "@examples/agent-with-custom-server": ["@examples/agent-with-custom-server@workspace:examples/agent-with-custom-server"],
+
+    "@examples/agent-with-sub-agents": ["@examples/agent-with-sub-agents@workspace:examples/agent-with-sub-agents"],
 
     "@examples/agent-with-tests": ["@examples/agent-with-tests@workspace:examples/agent-with-tests"],
 
