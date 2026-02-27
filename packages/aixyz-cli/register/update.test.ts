@@ -7,6 +7,7 @@ import {
   promptAgentUrl,
   promptRegistryAddress,
   promptSupportedTrust,
+  withTTY,
 } from "./utils/prompt";
 import { selectChain } from "./utils/chain";
 
@@ -93,6 +94,35 @@ describe("parseSupportedTrust", () => {
 describe("isTTY", () => {
   test("returns a boolean", () => {
     expect(typeof isTTY()).toBe("boolean");
+  });
+});
+
+describe("withTTY", () => {
+  async function withNoTTYOverride<T>(fn: () => Promise<T>): Promise<T> {
+    const originalIsTTY = process.stdin.isTTY;
+    (process.stdin as NodeJS.ReadStream & { isTTY: boolean | undefined }).isTTY = undefined;
+    try {
+      return await fn();
+    } finally {
+      (process.stdin as NodeJS.ReadStream & { isTTY: boolean | undefined }).isTTY = originalIsTTY;
+    }
+  }
+
+  test("throws the provided message when no TTY", async () => {
+    await withNoTTYOverride(async () => {
+      await expect(withTTY(() => Promise.resolve("ok"), "use --flag instead")).rejects.toThrow("use --flag instead");
+    });
+  });
+
+  test("returns the fn result when TTY is available", async () => {
+    const originalIsTTY = process.stdin.isTTY;
+    (process.stdin as NodeJS.ReadStream & { isTTY: boolean | undefined }).isTTY = true;
+    try {
+      const result = await withTTY(() => Promise.resolve("hello"), "should not throw");
+      expect(result).toBe("hello");
+    } finally {
+      (process.stdin as NodeJS.ReadStream & { isTTY: boolean | undefined }).isTTY = originalIsTTY;
+    }
   });
 });
 

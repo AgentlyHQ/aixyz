@@ -33,7 +33,7 @@ import {
 } from "viem/chains";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
 import { input, select } from "@inquirer/prompts";
-import { isTTY } from "./prompt";
+import { withTTY } from "./prompt";
 
 export interface ChainConfig {
   chain: Chain;
@@ -157,32 +157,31 @@ export function resolveChainConfigById(chainId: number, rpcUrl?: string): ChainC
 // Prompt user to select a chain interactively, returning the numeric chain ID.
 // Chains are sorted by popularity. "Other" allows entering any custom chain ID.
 export async function selectChain(): Promise<number> {
-  if (!isTTY()) {
-    throw new Error("No TTY detected. Provide --chain-id to specify the target chain.");
-  }
-  const chainById = new Map(Object.values(CHAINS).map((c) => [c.chainId, c]));
-  const nameById = new Map(Object.entries(CHAINS).map(([name, c]) => [c.chainId, name]));
+  return withTTY(async () => {
+    const chainById = new Map(Object.values(CHAINS).map((c) => [c.chainId, c]));
+    const nameById = new Map(Object.entries(CHAINS).map(([name, c]) => [c.chainId, name]));
 
-  const choices = CHAIN_SELECTION_ORDER.filter((id) => chainById.has(id)).map((id) => ({
-    name: `${nameById.get(id) ?? `chain-${id}`} (${id})`,
-    value: id,
-  }));
-  choices.push({ name: "Other (enter chain ID)", value: OTHER_CHAIN_ID });
+    const choices = CHAIN_SELECTION_ORDER.filter((id) => chainById.has(id)).map((id) => ({
+      name: `${nameById.get(id) ?? `chain-${id}`} (${id})`,
+      value: id,
+    }));
+    choices.push({ name: "Other (enter chain ID)", value: OTHER_CHAIN_ID });
 
-  const selected = await select({ message: "Select target chain:", choices });
+    const selected = await select({ message: "Select target chain:", choices });
 
-  if (selected === OTHER_CHAIN_ID) {
-    const raw = await input({
-      message: "Enter chain ID:",
-      validate: (v) => {
-        const n = parseInt(v, 10);
-        return Number.isInteger(n) && n > 0 ? true : "Must be a positive integer";
-      },
-    });
-    return parseInt(raw, 10);
-  }
+    if (selected === OTHER_CHAIN_ID) {
+      const raw = await input({
+        message: "Enter chain ID:",
+        validate: (v) => {
+          const n = parseInt(v, 10);
+          return Number.isInteger(n) && n > 0 ? true : "Must be a positive integer";
+        },
+      });
+      return parseInt(raw, 10);
+    }
 
-  return selected;
+    return selected;
+  }, "No TTY detected. Provide --chain-id to specify the target chain.");
 }
 
 // Returns the registry address if known, or null if no default exists for the chain (requires interactive prompt).

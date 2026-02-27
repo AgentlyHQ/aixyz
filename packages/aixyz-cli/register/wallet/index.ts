@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import type { Chain, WalletClient } from "viem";
 import { select, input, password } from "@inquirer/prompts";
-import { isTTY } from "../utils/prompt";
+import { withTTY } from "../utils/prompt";
 import { createPrivateKeyWallet } from "./privatekey";
 import { createKeystoreWallet } from "./keystore";
 
@@ -34,41 +34,38 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
   }
 
   // Interactive: prompt user to choose
-  if (!isTTY()) {
-    throw new Error(
-      "No TTY detected. Provide --keystore, --browser, or PRIVATE_KEY environment variable to specify a signing method.",
-    );
-  }
-  const method = await select({
-    message: "Select signing method:",
-    choices: [
-      { name: "Keystore file", value: "keystore" },
-      { name: "Browser wallet (any EIP-6963 compatible wallets)", value: "browser" },
-      { name: "Private key (not recommended)", value: "privatekey" },
-    ],
-  });
+  return withTTY(async () => {
+    const method = await select({
+      message: "Select signing method:",
+      choices: [
+        { name: "Keystore file", value: "keystore" },
+        { name: "Browser wallet (any EIP-6963 compatible wallets)", value: "browser" },
+        { name: "Private key (not recommended)", value: "privatekey" },
+      ],
+    });
 
-  switch (method) {
-    case "keystore": {
-      const keystorePath = await input({
-        message: "Enter keystore path:",
-        default: `${homedir()}/.foundry/keystores/default`,
-      });
-      return { type: "keystore", path: keystorePath };
+    switch (method) {
+      case "keystore": {
+        const keystorePath = await input({
+          message: "Enter keystore path:",
+          default: `${homedir()}/.foundry/keystores/default`,
+        });
+        return { type: "keystore", path: keystorePath };
+      }
+      case "browser":
+        return { type: "browser" };
+      case "privatekey": {
+        const key = await password({
+          message: "Enter private key:",
+          mask: "*",
+        });
+        console.warn("Warning: Using raw private key is not recommended for production");
+        return { type: "privatekey", resolveKey: () => Promise.resolve(key) };
+      }
+      default:
+        throw new Error("No wallet method selected");
     }
-    case "browser":
-      return { type: "browser" };
-    case "privatekey": {
-      const key = await password({
-        message: "Enter private key:",
-        mask: "*",
-      });
-      console.warn("Warning: Using raw private key is not recommended for production");
-      return { type: "privatekey", resolveKey: () => Promise.resolve(key) };
-    }
-    default:
-      throw new Error("No wallet method selected");
-  }
+  }, "No TTY detected. Provide --keystore, --browser, or PRIVATE_KEY environment variable to specify a signing method.");
 }
 
 export async function createWalletFromMethod(
