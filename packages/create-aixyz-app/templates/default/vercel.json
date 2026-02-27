@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "bunx aixyz build"
+  "buildCommand": "bunx aixyz build",
+  "maxDuration": 60
 }
