@@ -34,5 +34,5 @@ export { HTTPFacilitatorClient };
  * The default facilitator client provided by aixyz.
  */
 export const facilitator: FacilitatorClient = new HTTPFacilitatorClient({
-  url: "https://x402.agently.to/facilitator",
+  url: "https://x402.use-agently.com/facilitator",
 });
