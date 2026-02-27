@@ -40,8 +40,9 @@ bunx create-aixyz-app my-agent --yes
 bunx create-aixyz-app my-agent --erc-8004 --pay-to 0x... --no-install
 ```
 
-> `--openai-api-key` is optional. The scaffolded template uses `@ai-sdk/openai` by default, but you can
-> swap it for any [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) (e.g. `@ai-sdk/anthropic`, `@ai-sdk/google`, `@ai-sdk/amazon-bedrock`).
+> `--openai-api-key` is optional — if omitted, set `OPENAI_API_KEY` in `.env.local` before running the agent.
+> The scaffolded template uses `@ai-sdk/openai` by default, but you can swap it for any
+> [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) (e.g. `@ai-sdk/anthropic`, `@ai-sdk/google`, `@ai-sdk/amazon-bedrock`).
 
 This creates the standard project layout:
 
@@ -143,8 +144,8 @@ The default template uses `@ai-sdk/openai`, but you can use any [Vercel AI SDK p
 import { openai } from "@ai-sdk/openai";
 
 // Or swap the model provider — install the adapter and change the import:
-// import { anthropic } from "@ai-sdk/anthropic";
-// import { google } from "@ai-sdk/google";
+// import { anthropic } from "@ai-sdk/anthropic";  // set ANTHROPIC_API_KEY
+// import { google } from "@ai-sdk/google";        // set GOOGLE_GENERATIVE_AI_API_KEY
 
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
@@ -297,14 +298,14 @@ All CLI commands are designed for non-interactive use. When `stdin` is not a TTY
 bunx create-aixyz-app --help
 ```
 
-| Flag                     | Description                                | Default                                      |
-| ------------------------ | ------------------------------------------ | -------------------------------------------- |
-| `[name]`                 | Agent name (positional argument)           | `my-agent`                                   |
-| `-y, --yes`              | Use all defaults, skip prompts             |                                              |
-| `--erc-8004`             | Include ERC-8004 Agent Identity support    | `false`                                      |
-| `--openai-api-key <key>` | OpenAI API key for `.env.local` (optional) | empty                                        |
-| `--pay-to <address>`     | x402 payTo Ethereum address                | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
-| `--no-install`           | Skip `bun install`                         |                                              |
+| Flag                     | Description                             | Default                                      |
+| ------------------------ | --------------------------------------- | -------------------------------------------- |
+| `[name]`                 | Agent name (positional argument)        | `my-agent`                                   |
+| `-y, --yes`              | Use all defaults, skip prompts          |                                              |
+| `--erc-8004`             | Include ERC-8004 Agent Identity support | `false`                                      |
+| `--openai-api-key <key>` | OpenAI API key for `.env.local`         | empty                                        |
+| `--pay-to <address>`     | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
+| `--no-install`           | Skip `bun install`                      |                                              |
 
 ### `aixyz dev` / `aixyz build`
 
