@@ -1,0 +1,54 @@
+---
+title: "agents/[name].ts"
+description: "Auto-discovered sub-agent definitions for multiple A2A endpoints"
+---
+
+Each `.ts` file in `app/agents/` is auto-discovered and registered as a sub-agent on its own A2A endpoint.
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.005",
+};
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a research assistant specialized in finding and summarizing information.",
+  stopWhen: stepCountIs(10),
+});
+```
+
+Given the file `app/agents/research.ts`, the sub-agent is exposed at `/research/agent` with its agent card at `/research/.well-known/agent-card.json`.
+
+## Exports
+
+| Export    | Type            | Required | Description                                                 |
+| --------- | --------------- | -------- | ----------------------------------------------------------- |
+| `default` | `ToolLoopAgent` | Yes      | The agent instance                                          |
+| `accepts` | `Accepts`       | No       | Payment config — gates the sub-agent A2A endpoint with x402 |
+
+When `accepts` is exported, the sub-agent endpoint requires x402 payment. Without it, the sub-agent is not registered.
+
+## Conventions
+
+- **Auto-discovered** — All `.ts` files in `app/agents/` are registered automatically
+- **Ignored files** — Files starting with `_` (e.g., `_helpers.ts`) are skipped
+- **Routing** — The filename (without `.ts`) becomes the URL prefix (e.g., `research.ts` → `/research/agent`)
+
+## Multiple Sub-Agents
+
+You can mix `app/agent.ts` (main agent) with `app/agents/` (sub-agents) in the same project:
+
+```
+app/
+  agent.ts           # → /agent
+  agents/
+    research.ts      # → /research/agent
+    implement.ts     # → /implement/agent
+```
+
+This exposes three independent A2A endpoints from a single deployment.

@@ -11,11 +11,14 @@ An aixyz agent is defined by a small set of files in a standard layout. Run `aix
 my-agent/
   aixyz.config.ts       # Agent identity, payment config, and skills
   app/
-    agent.ts            # Agent definition (required if no server.ts)
+    agent.ts            # Main agent definition (required if no server.ts)
     agent.test.ts       # Agent tests (optional)
     server.ts           # Custom server (optional, overrides auto-generation)
     accepts.ts          # Custom x402 facilitator (optional)
     erc-8004.ts         # ERC-8004 identity registration (optional)
+    agents/
+      research.ts       # Sub-agent → /research/agent
+      implement.ts      # Sub-agent → /implement/agent
     tools/
       weather.ts        # Tool implementations
       search.ts
@@ -33,6 +36,7 @@ my-agent/
 | ------------------- | -------- | -------------------------------------------------- |
 | `aixyz.config.ts`   | Yes      | Agent metadata, payment config, and skills         |
 | `app/agent.ts`      | Yes\*    | Agent definition using Vercel AI SDK               |
+| `app/agents/*.ts`   | No       | Sub-agent definitions, each gets its own endpoint  |
 | `app/tools/*.ts`    | No       | Tool implementations, auto-discovered by the build |
 | `app/server.ts`     | No       | Custom server — overrides auto-generation entirely |
 | `app/accepts.ts`    | No       | Custom x402 facilitator for payment verification   |
@@ -48,13 +52,15 @@ my-agent/
 The build pipeline scans the `app/` directory to auto-generate a server:
 
 1. Reads `aixyz.config.ts` for agent metadata and skills
-2. Imports `app/agent.ts` for the agent definition
-3. Discovers all `.ts` files in `app/tools/` (excluding `_` prefixed files)
-4. Wires up A2A, MCP, and x402 endpoints automatically
+2. Imports `app/agent.ts` for the main agent definition
+3. Discovers all `.ts` files in `app/agents/` for sub-agents (each gets its own A2A endpoint)
+4. Discovers all `.ts` files in `app/tools/` (excluding `_` prefixed files)
+5. Wires up A2A, MCP, and x402 endpoints automatically
 
 The result is a server exposing:
 
-- **A2A** at `/agent` and `/.well-known/agent-card.json`
+- **A2A** at `/agent` and `/.well-known/agent-card.json` (main agent)
+- **A2A** at `/{name}/agent` and `/{name}/.well-known/agent-card.json` (per sub-agent in `app/agents/`)
 - **MCP** at `/mcp`
 - **x402** payment verification on gated endpoints
 

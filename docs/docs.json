@@ -36,7 +36,7 @@
           },
           {
             "group": "File-system layout",
-            "pages": ["api-reference/agent", "api-reference/tools"]
+            "pages": ["api-reference/agent", "api-reference/agents", "api-reference/tools"]
           },
           {
             "group": "Functions",
