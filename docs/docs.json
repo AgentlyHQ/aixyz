@@ -74,6 +74,7 @@
           {
             "group": "Advanced",
             "pages": [
+              "templates/advanced/agent-with-sub-agents",
               "templates/advanced/agent-with-custom-server",
               "templates/advanced/agent-byo-facilitator",
               "templates/advanced/agent-with-tests"

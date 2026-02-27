@@ -1,0 +1,101 @@
+---
+title: "Agent with Sub-Agents"
+description: "Template demonstrating multiple A2A endpoints from a single deployment using app/agents/[name].ts"
+---
+
+<Info>
+  **Source:**
+  [`examples/agent-with-sub-agents`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-with-sub-agents)
+</Info>
+
+## Overview
+
+This template shows how to deploy **multiple specialist agents** from a single service using the `app/agents/` directory. Each file in `app/agents/` becomes an independent A2A endpoint alongside the main `app/agent.ts` coordinator.
+
+The example has three agents and two tools:
+
+- **Coordinator** (`app/agent.ts`) — routes users to the right specialist
+- **Math specialist** (`app/agents/math.ts`) — performs arithmetic using the `calculate` tool
+- **Text specialist** (`app/agents/text.ts`) — analyzes text using the `word-count` tool
+
+## Project Structure
+
+```
+agent-with-sub-agents/
+  aixyz.config.ts           # Agent metadata and skills
+  app/
+    agent.ts                # Coordinator agent → /agent
+    agents/
+      math.ts               # Math sub-agent → /math/agent
+      text.ts               # Text sub-agent → /text/agent
+    tools/
+      calculate.ts          # Arithmetic tool (add/subtract/multiply/divide)
+      word-count.ts         # Text analysis tool (words/characters/sentences)
+    icon.png
+  package.json
+  vercel.json
+```
+
+## Endpoints
+
+A single deployment exposes three independent A2A endpoints:
+
+| Endpoint                            | Agent       | Description                       |
+| ----------------------------------- | ----------- | --------------------------------- |
+| `/agent`                            | Coordinator | Routes users to specialists       |
+| `/math/agent`                       | Math        | Arithmetic calculations           |
+| `/text/agent`                       | Text        | Word / character / sentence count |
+| `/.well-known/agent-card.json`      | Coordinator | A2A discovery card                |
+| `/math/.well-known/agent-card.json` | Math        | A2A discovery card                |
+| `/text/.well-known/agent-card.json` | Text        | A2A discovery card                |
+| `/mcp`                              | —           | MCP tool endpoint                 |
+
+## Sub-Agent Definition
+
+Each file in `app/agents/` follows the same pattern as `app/agent.ts`:
+
+```typescript
+// app/agents/math.ts
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import calculate from "../tools/calculate";
+
+export const accepts: Accepts = { scheme: "exact", price: "$0.001" };
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a math specialist...",
+  tools: { calculate },
+  stopWhen: stepCountIs(5),
+});
+```
+
+The filename (`math.ts`) determines the URL prefix (`/math/agent`).
+
+## Key Features
+
+- **Auto-discovery** — All `.ts` files in `app/agents/` are automatically registered
+- **Independent endpoints** — Each sub-agent gets its own A2A endpoint and agent card
+- **Shared tools via MCP** — Tools in `app/tools/` are exposed on a single `/mcp` endpoint
+- **Mixed deployment** — `app/agent.ts` and `app/agents/` can coexist in the same project
+
+## Running
+
+```bash
+cd examples/agent-with-sub-agents
+bun install
+bun run dev
+```
+
+Agents available at `http://localhost:3000`:
+
+| Endpoint                            | Protocol | Description              |
+| ----------------------------------- | -------- | ------------------------ |
+| `/.well-known/agent-card.json`      | A2A      | Coordinator discovery    |
+| `/agent`                            | A2A      | Coordinator JSON-RPC     |
+| `/math/.well-known/agent-card.json` | A2A      | Math sub-agent discovery |
+| `/math/agent`                       | A2A      | Math sub-agent JSON-RPC  |
+| `/text/.well-known/agent-card.json` | A2A      | Text sub-agent discovery |
+| `/text/agent`                       | A2A      | Text sub-agent JSON-RPC  |
+| `/mcp`                              | MCP      | Shared tool endpoint     |
