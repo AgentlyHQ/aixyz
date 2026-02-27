@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import sharp from "sharp";
 
 // Vibrant colors that look good as backgrounds
@@ -17,7 +18,7 @@ const PALETTE = [
 ];
 
 function randomColor(): string {
-  return PALETTE[Math.floor(Math.random() * PALETTE.length)] as string;
+  return PALETTE[randomInt(PALETTE.length)] as string;
 }
 
 // Relative luminance per WCAG 2.1
