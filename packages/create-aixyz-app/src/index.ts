@@ -3,6 +3,7 @@
 import * as p from "@clack/prompts";
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { generateIcon } from "./generate-icon.js";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -157,6 +158,9 @@ if (!existsSync(templateDir)) {
 // Copy template files
 mkdirSync(targetDir, { recursive: true });
 cpSync(templateDir, targetDir, { recursive: true });
+
+// Generate a random icon.png (overwrites the static template placeholder)
+await generateIcon(join(targetDir, "app", "icon.png"));
 
 // Remove erc-8004.ts if user opted out
 if (!includeErc8004) {

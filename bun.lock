@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "@workspace/aixyz",
+      "dependencies": {
+        "sharp": "^0.34.5",
+      },
       "devDependencies": {
         "@types/bun": "^1.3.9",
         "husky": "^9.1.7",
