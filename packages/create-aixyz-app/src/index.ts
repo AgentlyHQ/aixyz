@@ -1,88 +1,42 @@
 #!/usr/bin/env node
 
 import * as p from "@clack/prompts";
+import { Command } from "commander";
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Parse CLI arguments: supports --key value, --key=value, --flag, -y, and positional args
-// Flags listed in VALUE_FLAGS expect a following argument as their value.
-const VALUE_FLAGS = new Set(["--openai-api-key", "--pay-to"]);
+const DEFAULT_PAY_TO = "0x0799872E07EA7a63c79357694504FE66EDfE4a0A";
 
-function parseArgs(argv: string[]): { flags: Map<string, string | true>; positional: string[] } {
-  const flags = new Map<string, string | true>();
-  const positional: string[] = [];
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]!;
-    if (arg === "--") {
-      positional.push(...argv.slice(i + 1));
-      break;
-    }
-    if (arg.startsWith("--")) {
-      const eqIndex = arg.indexOf("=");
-      if (eqIndex !== -1) {
-        flags.set(arg.slice(0, eqIndex), arg.slice(eqIndex + 1));
-      } else if (VALUE_FLAGS.has(arg)) {
-        const next = argv[i + 1];
-        if (next !== undefined) {
-          flags.set(arg, next);
-          i++;
-        } else {
-          console.error(`Error: ${arg} requires a value.`);
-          process.exit(1);
-        }
-      } else {
-        flags.set(arg, true);
-      }
-    } else if (arg.startsWith("-")) {
-      flags.set(arg, true);
-    } else {
-      positional.push(arg);
-    }
-  }
-  return { flags, positional };
-}
-
-const { flags, positional } = parseArgs(process.argv.slice(2));
-
-function hasFlag(...names: string[]): boolean {
-  return names.some((n) => flags.has(n));
-}
-
-function getFlagValue(...names: string[]): string | undefined {
-  for (const n of names) {
-    const v = flags.get(n);
-    if (typeof v === "string") return v;
-  }
-  return undefined;
-}
-
-const useDefaults = hasFlag("--yes", "-y");
-
-// --help / -h
-if (hasFlag("--help", "-h")) {
-  console.log(`Usage: create-aixyz-app [name] [options]
-
-Scaffold a new aixyz agent project.
-
-Arguments:
-  name                         Agent name (default: "my-agent")
-
-Options:
-  -y, --yes                    Use defaults for all prompts (non-interactive)
-  --erc-8004                   Include ERC-8004 Agent Identity support
-  --openai-api-key <key>       Set OpenAI API Key in .env.local
-  --pay-to <address>           x402 payTo Ethereum address (default: 0x0799872E07EA7a63c79357694504FE66EDfE4a0A)
-  --no-install                 Skip dependency installation
-  -h, --help                   Show this help message
-
+const program = new Command();
+program
+  .name("create-aixyz-app")
+  .description("Scaffold a new aixyz agent project")
+  .argument("[name]", "Agent name", "my-agent")
+  .option("-y, --yes", "Use defaults for all prompts (non-interactive)")
+  .option("--erc-8004", "Include ERC-8004 Agent Identity support")
+  .option("--openai-api-key <key>", "Set OpenAI API Key in .env.local")
+  .option("--pay-to <address>", "x402 payTo Ethereum address", DEFAULT_PAY_TO)
+  .option("--no-install", "Skip dependency installation")
+  .addHelpText(
+    "after",
+    `
 Non-interactive example (CI/AI-friendly):
-  bunx create-aixyz-app my-agent --yes
-  bunx create-aixyz-app my-agent --erc-8004 --openai-api-key sk-... --pay-to 0x...
-  bunx create-aixyz-app my-agent --yes --no-install`);
-  process.exit(0);
-}
+  $ bunx create-aixyz-app my-agent --yes
+  $ bunx create-aixyz-app my-agent --erc-8004 --openai-api-key sk-... --pay-to 0x...
+  $ bunx create-aixyz-app my-agent --yes --no-install`,
+  );
+
+program.parse();
+
+const opts = program.opts<{
+  yes?: boolean;
+  erc8004?: boolean;
+  openaiApiKey?: string;
+  payTo: string;
+  install: boolean;
+}>();
 
 // Check if Bun is installed
 function checkBunInstalled(): boolean {
@@ -128,9 +82,9 @@ if (!hasBun) {
   process.exit(1);
 }
 
-const isNonInteractive = useDefaults || !process.stdin.isTTY;
+const isNonInteractive = opts.yes || !process.stdin.isTTY;
 
-let agentName = positional[0];
+let agentName = program.args[0];
 
 if (!agentName) {
   if (isNonInteractive) {
@@ -166,7 +120,7 @@ if (existsSync(targetDir)) {
 }
 
 // Prompt for ERC-8004 Agent Identity support
-let includeErc8004 = hasFlag("--erc-8004");
+let includeErc8004 = opts.erc8004 ?? false;
 if (!includeErc8004 && !isNonInteractive) {
   const erc8004 = await p.confirm({
     message: "Support ERC-8004 Agent Identity?",
@@ -180,7 +134,7 @@ if (!includeErc8004 && !isNonInteractive) {
 }
 
 // Prompt for OPENAI_API_KEY (optional)
-let openaiApiKey = getFlagValue("--openai-api-key") ?? "";
+let openaiApiKey = opts.openaiApiKey ?? "";
 if (!openaiApiKey && !isNonInteractive) {
   const apiKey = await p.text({
     message: "OpenAI API Key (optional, can be set later in .env.local):",
@@ -199,9 +153,8 @@ if (!openaiApiKey && !isNonInteractive) {
 }
 
 // Prompt for x402 payTo address (optional, can be skipped)
-const DEFAULT_PAY_TO = "0x0799872E07EA7a63c79357694504FE66EDfE4a0A";
-let payTo = getFlagValue("--pay-to") ?? DEFAULT_PAY_TO;
-if (!getFlagValue("--pay-to") && !isNonInteractive) {
+let payTo = opts.payTo;
+if (payTo === DEFAULT_PAY_TO && !isNonInteractive) {
   const payToInput = await p.text({
     message: "x402 payTo address (Ethereum address to receive payments, press Enter to skip):",
     placeholder: DEFAULT_PAY_TO,
@@ -269,7 +222,7 @@ for (const file of filesToReplace) {
 }
 
 // Install dependencies with Bun (always, regardless of which PM invoked this CLI)
-if (hasFlag("--no-install")) {
+if (!opts.install) {
   p.log.info("Skipping dependency installation (--no-install).");
 } else {
   const s = p.spinner();

@@ -26,9 +26,18 @@ Use this skill when:
 
 ### 1. Scaffold a new project
 
+All CLI commands support `--help` for full usage details. Use `--help` to discover available options.
+
 ```bash
+# See all options
+bunx create-aixyz-app --help
+
+# Interactive (TTY)
 bunx create-aixyz-app my-agent
-cd my-agent
+
+# Non-interactive (recommended for AI/CI)
+bunx create-aixyz-app my-agent --yes
+bunx create-aixyz-app my-agent --erc-8004 --openai-api-key sk-... --pay-to 0x... --no-install
 ```
 
 This creates the standard project layout:
@@ -244,3 +253,66 @@ Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-pric
 - **Agent card missing skills** — `skills` defaults to `[]`; add at least one entry to be discoverable.
 - **Free endpoint** — export `accepts: { scheme: "free" }` to expose an endpoint without payment.
 - **Port conflict in dev** — use `aixyz dev -p <port>` to change the default port (3000).
+
+## CLI Reference (Non-TTY / AI-Friendly)
+
+All CLI commands are designed for non-interactive use. When `stdin` is not a TTY, prompts are skipped — values come from CLI flags, environment variables, or sensible defaults. Use `--help` on any command for full usage.
+
+### `create-aixyz-app`
+
+```bash
+bunx create-aixyz-app --help
+```
+
+| Flag                     | Description                             | Default                                      |
+| ------------------------ | --------------------------------------- | -------------------------------------------- |
+| `[name]`                 | Agent name (positional argument)        | `my-agent`                                   |
+| `-y, --yes`              | Use all defaults, skip prompts          |                                              |
+| `--erc-8004`             | Include ERC-8004 Agent Identity support | `false`                                      |
+| `--openai-api-key <key>` | OpenAI API key for `.env.local`         | empty                                        |
+| `--pay-to <address>`     | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
+| `--no-install`           | Skip `bun install`                      |                                              |
+
+### `aixyz dev` / `aixyz build`
+
+```bash
+aixyz dev --help
+aixyz build --help
+```
+
+### `aixyz erc-8004 register`
+
+```bash
+aixyz erc-8004 register --help
+```
+
+| Flag                       | Description                           | Required in non-TTY |
+| -------------------------- | ------------------------------------- | ------------------- |
+| `--url <url>`              | Agent deployment URL                  | Yes                 |
+| `--chain-id <id>`          | Target chain numeric ID               | Yes                 |
+| `--supported-trust <list>` | Comma-separated trust mechanisms      | If no erc-8004.ts   |
+| `--keystore <path>`        | Keystore file path                    | One of keystore,    |
+| `--browser`                | Use browser wallet                    | browser, or         |
+| `PRIVATE_KEY` env          | Private key for signing               | PRIVATE_KEY         |
+| `--broadcast`              | Execute on-chain (default is dry-run) | No                  |
+| `--rpc-url <url>`          | Custom RPC endpoint                   | For custom chains   |
+| `--registry <address>`     | Registry contract address             | For custom chains   |
+| `--out-dir <path>`         | Write result JSON to directory        | No                  |
+
+### `aixyz erc-8004 update`
+
+```bash
+aixyz erc-8004 update --help
+```
+
+| Flag                   | Description                           | Required in non-TTY       |
+| ---------------------- | ------------------------------------- | ------------------------- |
+| `--url <url>`          | New agent deployment URL              | Yes                       |
+| `--agent-id <id>`      | Agent ID to update                    | If multiple registrations |
+| `--keystore <path>`    | Keystore file path                    | One of keystore,          |
+| `--browser`            | Use browser wallet                    | browser, or               |
+| `PRIVATE_KEY` env      | Private key for signing               | PRIVATE_KEY               |
+| `--broadcast`          | Execute on-chain (default is dry-run) | No                        |
+| `--rpc-url <url>`      | Custom RPC endpoint                   | For custom chains         |
+| `--registry <address>` | Registry contract address             | For localhost only        |
+| `--out-dir <path>`     | Write result JSON to directory        | No                        |
