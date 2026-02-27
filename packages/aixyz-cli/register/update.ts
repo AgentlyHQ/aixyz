@@ -14,6 +14,7 @@ import type { BaseOptions } from "./index";
 
 export interface UpdateOptions extends BaseOptions {
   url?: string;
+  agentId?: number;
 }
 
 export async function update(options: UpdateOptions): Promise<void> {
@@ -25,7 +26,18 @@ export async function update(options: UpdateOptions): Promise<void> {
   }
 
   // Step 2: Select which registration to update
-  const selected = await promptSelectRegistration(registrations);
+  let selected: (typeof registrations)[number];
+  if (options.agentId !== undefined) {
+    const match = registrations.find((r) => r.agentId === options.agentId);
+    if (!match) {
+      throw new Error(
+        `No registration found with agentId ${options.agentId}. Available: ${registrations.map((r) => r.agentId).join(", ")}`,
+      );
+    }
+    selected = match;
+  } else {
+    selected = await promptSelectRegistration(registrations);
+  }
 
   // Step 3: Derive chain info from agentRegistry (eip155:<chainId>:<address>)
   const parts = selected.agentRegistry.split(":");
