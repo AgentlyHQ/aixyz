@@ -29,7 +29,7 @@ Details:
     (Automatically detected when deploying to Vercel)
 
   With --output executable:
-    Compiles into a self-contained binary at ./.aixyz/output/aixyz
+    Compiles into a self-contained binary at ./.aixyz/output/server
     (No Bun runtime required to run the output)
 
   The build process:
@@ -140,7 +140,7 @@ async function buildExecutable(entrypoint: string): Promise<void> {
   rmSync(outputDir, { recursive: true, force: true });
   mkdirSync(outputDir, { recursive: true });
 
-  const outfile = resolve(outputDir, "aixyz");
+  const outfile = resolve(outputDir, "server");
 
   // Build as a self-contained compiled binary using Bun's compile feature
   const result = await Bun.build({
@@ -181,12 +181,12 @@ async function buildExecutable(entrypoint: string): Promise<void> {
   // Log summary
   console.log("");
   console.log("Build complete! Output:");
-  console.log("  .aixyz/output/aixyz");
+  console.log("  .aixyz/output/server");
   if (existsSync(publicDir) || iconFile) {
     console.log("  .aixyz/output/public/ and assets");
   }
   console.log("");
-  console.log("To run: ./.aixyz/output/aixyz");
+  console.log("To run: ./.aixyz/output/server");
 }
 
 async function buildVercel(entrypoint: string): Promise<void> {
