@@ -59,7 +59,7 @@ async function action(options: BuildOptions = {}): Promise<void> {
 
   if (target === "vercel") {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Vercel") + "...");
-    await buildVercel(entrypoint);
+    await buildVercel(entrypoint, config);
   } else {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Standalone") + "...");
     await buildBun(entrypoint);
@@ -125,7 +125,7 @@ async function buildBun(entrypoint: string): Promise<void> {
   console.log("To run: bun .aixyz/output/server.js");
 }
 
-async function buildVercel(entrypoint: string): Promise<void> {
+async function buildVercel(entrypoint: string, config: ReturnType<typeof getAixyzConfig>): Promise<void> {
   const cwd = process.cwd();
 
   const outputDir = resolve(cwd, ".vercel/output");
@@ -165,6 +165,7 @@ async function buildVercel(entrypoint: string): Promise<void> {
         handler: "server.js",
         runtime: "bun1.x",
         launcherType: "Bun",
+        maxDuration: config.vercel.maxDuration,
         shouldAddHelpers: true,
         shouldAddSourcemapSupport: true,
       },
