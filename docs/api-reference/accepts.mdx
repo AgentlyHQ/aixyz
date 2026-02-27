@@ -60,7 +60,7 @@ Client for communicating with an x402 facilitator service. Re-exported from `@x4
 import { HTTPFacilitatorClient } from "aixyz/accepts";
 
 const client = new HTTPFacilitatorClient({
-  url: "https://x402.agently.to/facilitator",
+  url: "https://x402.use-agently.com/facilitator",
 });
 ```
 
@@ -114,6 +114,6 @@ Create `app/accepts.ts` to override the default facilitator:
 import { HTTPFacilitatorClient } from "aixyz/accepts";
 
 export const facilitator = new HTTPFacilitatorClient({
-  url: process.env.X402_FACILITATOR_URL ?? "https://x402.agently.to/facilitator",
+  url: process.env.X402_FACILITATOR_URL ?? "https://x402.use-agently.com/facilitator",
 });
 ```

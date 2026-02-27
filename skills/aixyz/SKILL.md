@@ -151,12 +151,12 @@ Environment variables are loaded in the same priority order as Next.js:
 
 Common variables:
 
-| Variable               | Description                                                             |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `X402_PAY_TO`          | Default EVM address to receive payments                                 |
-| `X402_NETWORK`         | Default payment network (e.g. `eip155:8453`)                            |
-| `X402_FACILITATOR_URL` | Custom facilitator URL (default: `https://x402.agently.to/facilitator`) |
-| `OPENAI_API_KEY`       | OpenAI API key                                                          |
+| Variable               | Description                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `X402_PAY_TO`          | Default EVM address to receive payments                                      |
+| `X402_NETWORK`         | Default payment network (e.g. `eip155:8453`)                                 |
+| `X402_FACILITATOR_URL` | Custom facilitator URL (default: `https://x402.use-agently.com/facilitator`) |
+| `OPENAI_API_KEY`       | OpenAI API key                                                               |
 
 ### 7. Agent icon (`app/icon.png`)
 
@@ -169,7 +169,7 @@ No configuration needed — the build step auto-detects and processes the icon.
 
 ### 8. Custom facilitator (`app/accepts.ts`)
 
-By default, aixyz uses `https://x402.agently.to/facilitator` to verify payments. To use a different
+By default, aixyz uses `https://x402.use-agently.com/facilitator` to verify payments. To use a different
 facilitator, create `app/accepts.ts` and export a `facilitator`:
 
 ```ts
@@ -233,7 +233,8 @@ vercel deploy
 
 ## Examples
 
-Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`, `examples/agent-byo-facilitator`.
+Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`,
+`examples/agent-byo-facilitator`.
 
 ## Common Edge Cases
 
