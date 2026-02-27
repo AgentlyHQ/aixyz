@@ -33,6 +33,7 @@ import {
 } from "viem/chains";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
 import { input, select } from "@inquirer/prompts";
+import { isTTY } from "./prompt";
 
 export interface ChainConfig {
   chain: Chain;
@@ -156,6 +157,9 @@ export function resolveChainConfigById(chainId: number, rpcUrl?: string): ChainC
 // Prompt user to select a chain interactively, returning the numeric chain ID.
 // Chains are sorted by popularity. "Other" allows entering any custom chain ID.
 export async function selectChain(): Promise<number> {
+  if (!isTTY()) {
+    throw new Error("No TTY detected. Provide --chain-id to specify the target chain.");
+  }
   const chainById = new Map(Object.values(CHAINS).map((c) => [c.chainId, c]));
   const nameById = new Map(Object.entries(CHAINS).map(([name, c]) => [c.chainId, name]));
 

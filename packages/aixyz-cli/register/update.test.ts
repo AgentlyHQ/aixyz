@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
-import { deriveAgentUri } from "./utils/prompt";
+import { deriveAgentUri, isTTY, promptAgentUrl, promptRegistryAddress, promptSupportedTrust } from "./utils/prompt";
+import { selectChain } from "./utils/chain";
 
 describe("update command chain configuration", () => {
   test("sepolia chain ID is correct", () => {
@@ -43,5 +44,49 @@ describe("deriveAgentUri", () => {
     expect(deriveAgentUri("https://example.com/agents/my-agent")).toBe(
       "https://example.com/agents/my-agent/_aixyz/erc-8004.json",
     );
+  });
+});
+
+describe("isTTY", () => {
+  test("returns a boolean", () => {
+    expect(typeof isTTY()).toBe("boolean");
+  });
+});
+
+describe("TTY-gated prompts throw in non-interactive environments", () => {
+  // Tests run in a piped (non-TTY) environment, so these error paths are exercised directly.
+
+  async function withNoTTY<T>(fn: () => Promise<T>): Promise<T> {
+    const originalIsTTY = process.stdin.isTTY;
+    (process.stdin as NodeJS.ReadStream & { isTTY: boolean | undefined }).isTTY = undefined;
+    try {
+      return await fn();
+    } finally {
+      (process.stdin as NodeJS.ReadStream & { isTTY: boolean | undefined }).isTTY = originalIsTTY;
+    }
+  }
+
+  test("promptAgentUrl throws when stdin is not a TTY", async () => {
+    await withNoTTY(async () => {
+      await expect(promptAgentUrl()).rejects.toThrow("No TTY detected. Provide --url");
+    });
+  });
+
+  test("promptSupportedTrust throws when stdin is not a TTY", async () => {
+    await withNoTTY(async () => {
+      await expect(promptSupportedTrust()).rejects.toThrow("No TTY detected");
+    });
+  });
+
+  test("promptRegistryAddress throws when stdin is not a TTY", async () => {
+    await withNoTTY(async () => {
+      await expect(promptRegistryAddress()).rejects.toThrow("No TTY detected. Provide --registry");
+    });
+  });
+
+  test("selectChain throws when stdin is not a TTY", async () => {
+    await withNoTTY(async () => {
+      await expect(selectChain()).rejects.toThrow("No TTY detected. Provide --chain-id");
+    });
   });
 });

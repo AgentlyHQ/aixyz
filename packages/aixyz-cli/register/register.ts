@@ -12,7 +12,7 @@ import {
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { promptAgentUrl, promptSupportedTrust, promptRegistryAddress, deriveAgentUri } from "./utils/prompt";
+import { promptAgentUrl, promptSupportedTrust, promptRegistryAddress, deriveAgentUri, isTTY } from "./utils/prompt";
 import { hasErc8004File, createErc8004File, writeRegistrationEntry } from "./utils/erc8004-file";
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
@@ -39,12 +39,14 @@ export async function register(options: RegisterOptions): Promise<void> {
   const agentUrl = options.url ?? (await promptAgentUrl());
   const resolvedUri = deriveAgentUri(agentUrl);
 
-  const yes = await confirm({
-    message: `Will register URI as: ${chalk.cyan(resolvedUri)} — confirm?`,
-    default: true,
-  });
-  if (!yes) {
-    throw new Error("Aborted.");
+  if (isTTY()) {
+    const yes = await confirm({
+      message: `Will register URI as: ${chalk.cyan(resolvedUri)} — confirm?`,
+      default: true,
+    });
+    if (!yes) {
+      throw new Error("Aborted.");
+    }
   }
 
   // Step 3: Select chain

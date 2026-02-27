@@ -1,6 +1,7 @@
 import { homedir } from "node:os";
 import type { Chain, WalletClient } from "viem";
 import { select, input, password } from "@inquirer/prompts";
+import { isTTY } from "../utils/prompt";
 import { createPrivateKeyWallet } from "./privatekey";
 import { createKeystoreWallet } from "./keystore";
 
@@ -33,6 +34,11 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
   }
 
   // Interactive: prompt user to choose
+  if (!isTTY()) {
+    throw new Error(
+      "No TTY detected. Provide --keystore, --browser, or PRIVATE_KEY environment variable to specify a signing method.",
+    );
+  }
   const method = await select({
     message: "Select signing method:",
     choices: [

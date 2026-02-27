@@ -2,7 +2,14 @@ import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { isAddress } from "viem";
 import type { RegistrationEntry } from "@aixyz/erc-8004/schemas/registration";
 
+export function isTTY(): boolean {
+  return Boolean(process.stdin.isTTY);
+}
+
 export async function promptAgentUrl(): Promise<string> {
+  if (!isTTY()) {
+    throw new Error("No TTY detected. Provide --url to specify the agent deployment URL.");
+  }
   return input({
     message: "Agent deployment URL (e.g., https://my-agent.example.com):",
     validate: (value) => {
@@ -20,6 +27,9 @@ export async function promptAgentUrl(): Promise<string> {
 }
 
 export async function promptSupportedTrust(): Promise<string[]> {
+  if (!isTTY()) {
+    throw new Error("No TTY detected. Create app/erc-8004.ts manually or run this command in an interactive terminal.");
+  }
   return checkbox({
     message: "Select supported trust mechanisms:",
     choices: [
@@ -36,6 +46,9 @@ export async function promptSupportedTrust(): Promise<string[]> {
 export async function promptSelectRegistration(registrations: RegistrationEntry[]): Promise<RegistrationEntry> {
   if (registrations.length === 1) {
     const reg = registrations[0]!;
+    if (!isTTY()) {
+      return reg;
+    }
     const yes = await confirm({
       message: `Update this registration? (agentId: ${reg.agentId}, registry: ${reg.agentRegistry})`,
       default: true,
@@ -44,6 +57,12 @@ export async function promptSelectRegistration(registrations: RegistrationEntry[
       throw new Error("Aborted.");
     }
     return reg;
+  }
+
+  if (!isTTY()) {
+    throw new Error(
+      "No TTY detected. Multiple registrations found in app/erc-8004.ts; cannot select one non-interactively.",
+    );
   }
 
   return select({
@@ -56,6 +75,9 @@ export async function promptSelectRegistration(registrations: RegistrationEntry[
 }
 
 export async function promptRegistryAddress(): Promise<`0x${string}`> {
+  if (!isTTY()) {
+    throw new Error("No TTY detected. Provide --registry to specify the IdentityRegistry contract address.");
+  }
   const value = await input({
     message: "IdentityRegistry contract address (no default for this chain):",
     validate: (v) => (isAddress(v) ? true : "Must be a valid Ethereum address (0x…)"),

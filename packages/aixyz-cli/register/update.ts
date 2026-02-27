@@ -5,7 +5,7 @@ import { signTransaction } from "./wallet/sign";
 import { resolveChainConfigById, validateBrowserRpcConflict, getExplorerUrl, CHAINS } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { promptAgentUrl, promptSelectRegistration, deriveAgentUri } from "./utils/prompt";
+import { promptAgentUrl, promptSelectRegistration, deriveAgentUri, isTTY } from "./utils/prompt";
 import { readRegistrations } from "./utils/erc8004-file";
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
@@ -42,12 +42,14 @@ export async function update(options: UpdateOptions): Promise<void> {
   const agentUrl = options.url ?? (await promptAgentUrl());
   const resolvedUri = deriveAgentUri(agentUrl);
 
-  const yes = await confirm({
-    message: `Will update URI to: ${chalk.cyan(resolvedUri)} — confirm?`,
-    default: true,
-  });
-  if (!yes) {
-    throw new Error("Aborted.");
+  if (isTTY()) {
+    const yes = await confirm({
+      message: `Will update URI to: ${chalk.cyan(resolvedUri)} — confirm?`,
+      default: true,
+    });
+    if (!yes) {
+      throw new Error("Aborted.");
+    }
   }
 
   // Step 5: Encode transaction
