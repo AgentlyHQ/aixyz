@@ -159,8 +159,8 @@ if (!existsSync(templateDir)) {
 mkdirSync(targetDir, { recursive: true });
 cpSync(templateDir, targetDir, { recursive: true });
 
-// Generate a random icon.png (overwrites the static template placeholder)
-await generateIcon(join(targetDir, "app", "icon.png"));
+// Generate a random icon.svg (overwrites the static template placeholder)
+generateIcon(join(targetDir, "app", "icon.svg"));
 
 // Remove erc-8004.ts if user opted out
 if (!includeErc8004) {
