@@ -140,6 +140,44 @@ export default new ToolLoopAgent({
 });
 ```
 
+### 5a. Add sub-agents (`app/agents/<name>.ts`)
+
+Place additional agent files in `app/agents/` to expose multiple independent A2A endpoints from one deployment.
+Each filename becomes a URL prefix:
+
+```
+app/
+  agent.ts           # → /agent  (main)
+  agents/
+    math.ts          # → /math/agent
+    text.ts          # → /text/agent
+```
+
+Each sub-agent file has the same structure as `app/agent.ts`:
+
+```ts
+import { openai } from "@ai-sdk/openai";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import calculate from "../tools/calculate";
+
+export const accepts: Accepts = { scheme: "exact", price: "$0.001" };
+
+export default new ToolLoopAgent({
+  model: openai("gpt-4o-mini"),
+  instructions: "You are a math specialist. Use the calculate tool for arithmetic.",
+  tools: { calculate },
+  stopWhen: stepCountIs(5),
+});
+```
+
+Sub-agents share the same `/mcp` endpoint for tools and each get their own agent card:
+
+- `/math/.well-known/agent-card.json`
+- `/math/agent`
+
+See `examples/agent-with-sub-agents` for a working example with a coordinator + two specialists.
+
 ### 6. Environment variables (`.env` files)
 
 Environment variables are loaded in the same priority order as Next.js:
@@ -234,7 +272,7 @@ vercel deploy
 ## Examples
 
 Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`,
-`examples/agent-byo-facilitator`.
+`examples/agent-byo-facilitator`, `examples/agent-with-sub-agents`.
 
 ## Common Edge Cases
 
