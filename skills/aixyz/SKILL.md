@@ -37,8 +37,11 @@ bunx create-aixyz-app my-agent
 
 # Non-interactive (recommended for AI/CI)
 bunx create-aixyz-app my-agent --yes
-bunx create-aixyz-app my-agent --erc-8004 --openai-api-key sk-... --pay-to 0x... --no-install
+bunx create-aixyz-app my-agent --erc-8004 --pay-to 0x... --no-install
 ```
+
+> `--openai-api-key` is optional. The scaffolded template uses `@ai-sdk/openai` by default, but you can
+> swap it for any [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) (e.g. `@ai-sdk/anthropic`, `@ai-sdk/google`, `@ai-sdk/amazon-bedrock`).
 
 This creates the standard project layout:
 
@@ -133,8 +136,16 @@ Files prefixed with `_` (e.g. `_helpers.ts`) are ignored by the auto-generated s
 
 ### 5. Define the agent (`app/agent.ts`)
 
+The default template uses `@ai-sdk/openai`, but you can use any [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models):
+
 ```ts
+// OpenAI (default in template)
 import { openai } from "@ai-sdk/openai";
+
+// Or swap the model provider — install the adapter and change the import:
+// import { anthropic } from "@ai-sdk/anthropic";
+// import { google } from "@ai-sdk/google";
+
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 import myTool from "./tools/my-tool";
@@ -142,7 +153,7 @@ import myTool from "./tools/my-tool";
 export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
 
 export default new ToolLoopAgent({
-  model: openai("gpt-4o-mini"),
+  model: openai("gpt-4o-mini"), // replace with anthropic("claude-..."), google("gemini-..."), etc.
   instructions: "You are a helpful assistant.",
   tools: { myTool },
   stopWhen: stepCountIs(10),
@@ -245,6 +256,28 @@ vercel deploy
 Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`,
 `examples/agent-byo-facilitator`.
 
+## Common Dependencies
+
+A scaffolded agent project uses these key packages:
+
+| Package           | Purpose                                                          |
+| ----------------- | ---------------------------------------------------------------- |
+| `aixyz`           | Framework core: server, adapters (A2A, MCP), x402 payment gating |
+| `ai`              | Vercel AI SDK v6 — `ToolLoopAgent`, `tool()`, `stepCountIs()`    |
+| `@ai-sdk/openai`  | Default model adapter (swap for any AI SDK provider adapter)     |
+| `zod`             | Schema validation for tool inputs (`z.object`, `z.string`, etc.) |
+| `@aixyz/erc-8004` | ERC-8004 Agent Identity (optional, added with `--erc-8004`)      |
+
+To use a different LLM provider, install its AI SDK adapter and update the import in `app/agent.ts`:
+
+```bash
+bun add @ai-sdk/anthropic   # Anthropic Claude
+bun add @ai-sdk/google      # Google Gemini
+bun add @ai-sdk/amazon-bedrock  # AWS Bedrock
+```
+
+See the [Vercel AI SDK providers](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) for the full list.
+
 ## Common Edge Cases
 
 - **Missing `x402.network`** — always provide `x402.network`; it has no fallback.
@@ -264,14 +297,14 @@ All CLI commands are designed for non-interactive use. When `stdin` is not a TTY
 bunx create-aixyz-app --help
 ```
 
-| Flag                     | Description                             | Default                                      |
-| ------------------------ | --------------------------------------- | -------------------------------------------- |
-| `[name]`                 | Agent name (positional argument)        | `my-agent`                                   |
-| `-y, --yes`              | Use all defaults, skip prompts          |                                              |
-| `--erc-8004`             | Include ERC-8004 Agent Identity support | `false`                                      |
-| `--openai-api-key <key>` | OpenAI API key for `.env.local`         | empty                                        |
-| `--pay-to <address>`     | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
-| `--no-install`           | Skip `bun install`                      |                                              |
+| Flag                     | Description                                | Default                                      |
+| ------------------------ | ------------------------------------------ | -------------------------------------------- |
+| `[name]`                 | Agent name (positional argument)           | `my-agent`                                   |
+| `-y, --yes`              | Use all defaults, skip prompts             |                                              |
+| `--erc-8004`             | Include ERC-8004 Agent Identity support    | `false`                                      |
+| `--openai-api-key <key>` | OpenAI API key for `.env.local` (optional) | empty                                        |
+| `--pay-to <address>`     | x402 payTo Ethereum address                | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
+| `--no-install`           | Skip `bun install`                         |                                              |
 
 ### `aixyz dev` / `aixyz build`
 
