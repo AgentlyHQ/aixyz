@@ -30,7 +30,7 @@ export type { FacilitatorClient };
 
 export { HTTPFacilitatorClient };
 
-const DEFAULT_FACILITATOR_URL = "https://x402.use-agently.com/facilitator";
+export const DEFAULT_FACILITATOR_URL = "https://x402.use-agently.com/facilitator";
 
 /**
  * Create a facilitator client with a custom URL.
