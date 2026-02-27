@@ -129,8 +129,8 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
     default: ToolLoopAgent<never, TOOLS>;
     accepts?: Accepts;
   },
-  taskStore: TaskStore = new InMemoryTaskStore(),
   prefix?: string,
+  taskStore: TaskStore = new InMemoryTaskStore(),
 ): void {
   if (exports.accepts) {
     // TODO(@fuxingloh): validation should be done at build stage

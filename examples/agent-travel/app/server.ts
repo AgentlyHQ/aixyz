@@ -22,7 +22,7 @@ await mcp.connect();
 useERC8004(server, {
   default: erc8004,
   options: {
-    a2a: true,
+    a2a: ["/.well-known/agent-card.json"],
     mcp: true,
   },
 });

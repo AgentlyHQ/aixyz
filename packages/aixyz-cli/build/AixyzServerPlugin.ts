@@ -139,7 +139,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   for (const subAgent of subAgents) {
-    body.push(`useA2A(server, ${subAgent.identifier}, undefined, "${subAgent.name}");`);
+    body.push(`useA2A(server, ${subAgent.identifier}, "${subAgent.name}");`);
   }
   if (tools.length > 0) {
     body.push("const mcp = new AixyzMCP(server);");
@@ -154,8 +154,11 @@ function generateServer(appDir: string, entrypointDir: string): string {
   if (hasErc8004) {
     imports.push('import { useERC8004 } from "aixyz/server/adapters/erc-8004";');
     imports.push(`import * as erc8004 from "${importPrefix}/erc-8004";`);
+    const a2aPaths: string[] = [];
+    if (hasAgent) a2aPaths.push("/.well-known/agent-card.json");
+    for (const subAgent of subAgents) a2aPaths.push(`/${subAgent.name}/.well-known/agent-card.json`);
     body.push(
-      `useERC8004(server, { default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${hasAgent} } });`,
+      `useERC8004(server, { default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } });`,
     );
   }
 
