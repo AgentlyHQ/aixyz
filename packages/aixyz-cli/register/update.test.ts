@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { CHAIN_ID, getIdentityRegistryAddress } from "@aixyz/erc-8004";
-import { deriveAgentUri, isTTY, promptAgentUrl, promptRegistryAddress, promptSupportedTrust } from "./utils/prompt";
+import {
+  deriveAgentUri,
+  isTTY,
+  parseSupportedTrust,
+  promptAgentUrl,
+  promptRegistryAddress,
+  promptSupportedTrust,
+} from "./utils/prompt";
 import { selectChain } from "./utils/chain";
 
 describe("update command chain configuration", () => {
@@ -44,6 +51,42 @@ describe("deriveAgentUri", () => {
     expect(deriveAgentUri("https://example.com/agents/my-agent")).toBe(
       "https://example.com/agents/my-agent/_aixyz/erc-8004.json",
     );
+  });
+});
+
+describe("parseSupportedTrust", () => {
+  test("parses a single value", () => {
+    expect(parseSupportedTrust("reputation")).toStrictEqual(["reputation"]);
+  });
+
+  test("parses multiple comma-separated values", () => {
+    expect(parseSupportedTrust("reputation,tee-attestation")).toStrictEqual(["reputation", "tee-attestation"]);
+  });
+
+  test("trims whitespace around values", () => {
+    expect(parseSupportedTrust("reputation, tee-attestation , social")).toStrictEqual([
+      "reputation",
+      "tee-attestation",
+      "social",
+    ]);
+  });
+
+  test("throws for invalid trust mechanism", () => {
+    expect(() => parseSupportedTrust("reputation,invalid")).toThrow("Invalid trust mechanism(s): invalid");
+  });
+
+  test("throws for empty string", () => {
+    expect(() => parseSupportedTrust("")).toThrow("--supported-trust requires at least one value");
+  });
+
+  test("accepts all valid mechanisms", () => {
+    expect(parseSupportedTrust("reputation,crypto-economic,tee-attestation,social,governance")).toStrictEqual([
+      "reputation",
+      "crypto-economic",
+      "tee-attestation",
+      "social",
+      "governance",
+    ]);
   });
 });
 

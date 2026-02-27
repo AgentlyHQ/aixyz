@@ -28,7 +28,9 @@ export async function promptAgentUrl(): Promise<string> {
 
 export async function promptSupportedTrust(): Promise<string[]> {
   if (!isTTY()) {
-    throw new Error("No TTY detected. Create app/erc-8004.ts manually or run this command in an interactive terminal.");
+    throw new Error(
+      `No TTY detected. Provide --supported-trust to specify trust mechanisms (e.g., --supported-trust "reputation,tee-attestation").`,
+    );
   }
   return checkbox({
     message: "Select supported trust mechanisms:",
@@ -41,6 +43,25 @@ export async function promptSupportedTrust(): Promise<string[]> {
     ],
     required: true,
   });
+}
+
+const VALID_TRUST_MECHANISMS = ["reputation", "crypto-economic", "tee-attestation", "social", "governance"] as const;
+
+export function parseSupportedTrust(value: string): string[] {
+  const items = value
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const invalid = items.filter((i) => !(VALID_TRUST_MECHANISMS as readonly string[]).includes(i));
+  if (invalid.length > 0) {
+    throw new Error(
+      `Invalid trust mechanism(s): ${invalid.join(", ")}. Valid values: ${VALID_TRUST_MECHANISMS.join(", ")}`,
+    );
+  }
+  if (items.length === 0) {
+    throw new Error("--supported-trust requires at least one value.");
+  }
+  return items;
 }
 
 export async function promptSelectRegistration(registrations: RegistrationEntry[]): Promise<RegistrationEntry> {

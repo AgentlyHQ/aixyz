@@ -12,7 +12,14 @@ import {
 } from "./utils/chain";
 import { writeResultJson } from "./utils/result";
 import { label, truncateUri, broadcastAndConfirm, logSignResult } from "./utils/transaction";
-import { promptAgentUrl, promptSupportedTrust, promptRegistryAddress, deriveAgentUri, isTTY } from "./utils/prompt";
+import {
+  promptAgentUrl,
+  promptSupportedTrust,
+  promptRegistryAddress,
+  deriveAgentUri,
+  isTTY,
+  parseSupportedTrust,
+} from "./utils/prompt";
 import { hasErc8004File, createErc8004File, writeRegistrationEntry } from "./utils/erc8004-file";
 import { confirm } from "@inquirer/prompts";
 import chalk from "chalk";
@@ -22,6 +29,7 @@ import type { BaseOptions } from "./index";
 export interface RegisterOptions extends BaseOptions {
   url?: string;
   chainId?: number;
+  supportedTrust?: string;
 }
 
 export async function register(options: RegisterOptions): Promise<void> {
@@ -29,7 +37,9 @@ export async function register(options: RegisterOptions): Promise<void> {
   if (!hasErc8004File()) {
     console.log(chalk.yellow("No app/erc-8004.ts found. Let's create one."));
     console.log("");
-    const supportedTrust = await promptSupportedTrust();
+    const supportedTrust = options.supportedTrust
+      ? parseSupportedTrust(options.supportedTrust)
+      : await promptSupportedTrust();
     createErc8004File(supportedTrust);
     console.log(chalk.green("Created app/erc-8004.ts"));
     console.log("");

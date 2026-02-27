@@ -22,6 +22,10 @@ erc8004Command
   .option("--browser", "Use browser extension wallet (any extension)")
   .option("--broadcast", "Sign and broadcast the transaction (default: dry-run)")
   .option("--out-dir <path>", "Write deployment result as JSON to the given directory")
+  .option(
+    "--supported-trust <values>",
+    'Comma-separated supported trust mechanisms (e.g., "reputation,tee-attestation"). If omitted and app/erc-8004.ts does not exist, you will be prompted interactively.',
+  )
   .addHelpText(
     "after",
     `
@@ -64,6 +68,13 @@ Option Details:
   --out-dir <path>
       Directory to write the deployment result as a JSON file.
 
+  --supported-trust <values>
+      Comma-separated list of trust mechanisms to declare in app/erc-8004.ts
+      when it does not yet exist. Valid values: reputation, crypto-economic,
+      tee-attestation, social, governance.
+      Example: --supported-trust "reputation,tee-attestation"
+      If omitted, you will be prompted to select interactively.
+
 Behavior:
   If app/erc-8004.ts does not exist, you will be prompted to create it
   (selecting supported trust mechanisms). After a successful on-chain
@@ -79,6 +90,9 @@ Examples:
   # Sign and broadcast (known chain)
   $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain-id 84532 --keystore ~/.foundry/keystores/default --broadcast
   $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain-id 84532 --browser --broadcast
+
+  # Non-interactive (CI-friendly)
+  $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain-id 84532 --supported-trust "reputation,tee-attestation" --keystore ~/.foundry/keystores/default --broadcast
 
   # BYO: register on any custom EVM chain
   $ aixyz erc-8004 register --url "https://my-agent.example.com" --chain-id 999999 --rpc-url https://my-rpc.example.com --registry 0xABCD... --broadcast`,
