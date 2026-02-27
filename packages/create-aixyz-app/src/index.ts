@@ -29,7 +29,8 @@ function parseArgs(argv: string[]): { flags: Map<string, string | true>; positio
           flags.set(arg, next);
           i++;
         } else {
-          flags.set(arg, true);
+          console.error(`Error: ${arg} requires a value.`);
+          process.exit(1);
         }
       } else {
         flags.set(arg, true);
@@ -250,7 +251,7 @@ if (existsSync(envLocalSrc)) {
   // Remove the template placeholder (npm strips .env.local from packages)
   rmSync(envLocalSrc);
 }
-// Write .env.local with the API key if provided
+// Always write .env.local — with the key if provided, or empty placeholder for the user to fill in later
 const envContent = openaiApiKey ? `OPENAI_API_KEY=${openaiApiKey}\n` : `OPENAI_API_KEY=\n`;
 writeFileSync(join(targetDir, ".env.local"), envContent);
 
