@@ -64,9 +64,9 @@ class AixyzGlob {
 }
 
 /**
- * Generate server.ts content by scanning the app directory for agent.ts and tools/.
+ * Generate server.ts content by scanning the app directory for agent.ts, agents/, and tools/.
  *
- * @param appDir - The app directory containing agent.ts and tools/
+ * @param appDir - The app directory containing agent.ts, agents/, and tools/
  * @param entrypointDir - Directory where the generated file will live (for computing relative imports).
  */
 function generateServer(appDir: string, entrypointDir: string): string {
@@ -90,6 +90,25 @@ function generateServer(appDir: string, entrypointDir: string): string {
   if (hasAgent) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
     imports.push(`import * as agent from "${importPrefix}/agent";`);
+  }
+
+  const agentsDir = resolve(appDir, "agents");
+  const subAgents: { name: string; identifier: string }[] = [];
+  if (existsSync(agentsDir)) {
+    for (const file of readdirSync(agentsDir)) {
+      if (glob.includes(`agents/${file}`)) {
+        const name = basename(file, ".ts");
+        const identifier = toIdentifier(name);
+        subAgents.push({ name, identifier });
+      }
+    }
+  }
+
+  if (!hasAgent && subAgents.length > 0) {
+    imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
+  }
+  for (const subAgent of subAgents) {
+    imports.push(`import * as ${subAgent.identifier} from "${importPrefix}/agents/${subAgent.name}";`);
   }
 
   const toolsDir = resolve(appDir, "tools");
@@ -119,6 +138,9 @@ function generateServer(appDir: string, entrypointDir: string): string {
     body.push("useA2A(server, agent);");
   }
 
+  for (const subAgent of subAgents) {
+    body.push(`useA2A(server, ${subAgent.identifier}, undefined, "${subAgent.name}");`);
+  }
   if (tools.length > 0) {
     body.push("const mcp = new AixyzMCP(server);");
     for (const tool of tools) {
