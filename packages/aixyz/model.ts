@@ -34,7 +34,7 @@ function lastUserText(prompt: Prompt): string {
  * // custom transform
  * const helloModel = fake((input) => `hello, ${input}`);
  */
-export function fake(transform: (input: string) => string = (input) => input) {
+export function fake(transform: (input: string) => string) {
   return {
     specificationVersion: "v3" as const,
     provider: "aixyz/fake",

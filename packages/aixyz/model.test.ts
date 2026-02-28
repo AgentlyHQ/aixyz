@@ -3,9 +3,11 @@ import { fake } from "./model";
 
 const makeUserPrompt = (text: string) => [{ role: "user", content: [{ type: "text", text }] }];
 
+const identity = (input: string) => input;
+
 describe("fake model", () => {
   test("has correct metadata", () => {
-    const model = fake();
+    const model = fake(identity);
     expect(model.specificationVersion).toBe("v3");
     expect(model.provider).toBe("aixyz/fake");
     expect(model.modelId).toBe("aixyz/fake");
@@ -13,8 +15,8 @@ describe("fake model", () => {
   });
 
   describe("doGenerate", () => {
-    test("echoes back the last user text by default", async () => {
-      const model = fake();
+    test("echoes back the last user text with identity transform", async () => {
+      const model = fake(identity);
       const result = await model.doGenerate({ prompt: makeUserPrompt("hello world") });
       expect(result.content).toEqual([{ type: "text", text: "hello world" }]);
       expect(result.finishReason).toBe("stop");
@@ -39,22 +41,22 @@ describe("fake model", () => {
     });
 
     test("returns zero usage", async () => {
-      const model = fake();
+      const model = fake(identity);
       const result = await model.doGenerate({ prompt: makeUserPrompt("hi") });
       expect(result.usage.inputTokens.total).toBe(0);
       expect(result.usage.outputTokens.total).toBe(0);
     });
 
     test("returns empty string when no user message", async () => {
-      const model = fake();
+      const model = fake(identity);
       const result = await model.doGenerate({ prompt: [] });
       expect(result.content[0].text).toBe("");
     });
   });
 
   describe("doStream", () => {
-    test("streams back the last user text by default", async () => {
-      const model = fake();
+    test("streams back the last user text with identity transform", async () => {
+      const model = fake(identity);
       const { stream } = await model.doStream({ prompt: makeUserPrompt("stream me") });
       const chunks: unknown[] = [];
       for await (const chunk of stream) {
@@ -78,7 +80,7 @@ describe("fake model", () => {
     });
 
     test("stream contains finish chunk with zero usage", async () => {
-      const model = fake();
+      const model = fake(identity);
       const { stream } = await model.doStream({ prompt: makeUserPrompt("hi") });
       const chunks: unknown[] = [];
       for await (const chunk of stream) {
