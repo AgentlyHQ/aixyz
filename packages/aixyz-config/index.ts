@@ -46,18 +46,18 @@ export type AixyzConfig = {
     output?: "standalone" | "vercel" | "executable";
     /**
      * Glob pattern(s) for tool files to include in the build from the `app/tools/` directory.
-     * @default ["**\/*.{js,jsx,ts,tsx}"]
+     * @default ["**\/*.{js,ts}"]
      */
     tools?: string | string[];
     /**
      * Glob pattern(s) for agent files to include in the build.
      * Matched against `agent.ts` and files under the `agents/` directory.
-     * @default ["**\/*.{js,jsx,ts,tsx}"]
+     * @default ["**\/*.{js,ts}"]
      */
     agents?: string | string[];
     /**
      * Glob pattern(s) for files to exclude from the build.
-     * @default ["**\/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"]
+     * @default ["**\/{_*,*.{test,spec,e2e}}.{js,ts}"]
      */
     excludes?: string | string[];
   };
@@ -79,9 +79,9 @@ const NetworkSchema = z.custom<Network>((val) => {
 
 const defaultConfig = {
   build: {
-    tools: ["**/*.{js,jsx,ts,tsx}"],
-    agents: ["**/*.{js,jsx,ts,tsx}"],
-    excludes: ["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"],
+    tools: ["**/*.{js,ts}"],
+    agents: ["**/*.{js,ts}"],
+    excludes: ["**/{_*,*.{test,spec,e2e}}.{js,ts}"],
   },
   vercel: { maxDuration: 60 },
   skills: [],
@@ -118,15 +118,15 @@ const AixyzConfigSchema = z.object({
       output: z.enum(["standalone", "vercel", "executable"]).optional(),
       tools: z
         .union([z.string(), z.array(z.string())])
-        .default(["**/*.{js,jsx,ts,tsx}"])
+        .default(defaultConfig.build.tools)
         .transform((v) => (Array.isArray(v) ? v : [v])),
       agents: z
         .union([z.string(), z.array(z.string())])
-        .default(["**/*.{js,jsx,ts,tsx}"])
+        .default(defaultConfig.build.agents)
         .transform((v) => (Array.isArray(v) ? v : [v])),
       excludes: z
         .union([z.string(), z.array(z.string())])
-        .default(["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"])
+        .default(defaultConfig.build.excludes)
         .transform((v) => (Array.isArray(v) ? v : [v])),
     })
     .default(defaultConfig.build),

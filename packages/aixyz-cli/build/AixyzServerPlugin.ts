@@ -1,6 +1,6 @@
 import type { BunPlugin } from "bun";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
-import { resolve, relative, basename, join } from "path";
+import { resolve, relative, join } from "path";
 import { getAixyzConfig } from "@aixyz/config";
 
 export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone" | "executable"): BunPlugin {
@@ -55,14 +55,38 @@ export function getEntrypointMayGenerate(cwd: string, mode: "dev" | "build"): st
 class AixyzGlob {
   constructor(readonly config = getAixyzConfig()) {}
 
-  includesAgent(file: string): boolean {
+  hasAgent(appDir: string): boolean {
+    return existsSync(resolve(appDir, "agent.ts")) && this.includesAgent("agent.ts");
+  }
+
+  getAgents(agentsDir: string): { name: string; identifier: string }[] {
+    if (!existsSync(agentsDir)) return [];
+    return readdirSync(agentsDir)
+      .filter((file) => this.includesAgent(`agents/${file}`))
+      .map((file) => {
+        const name = file.replace(/\.(js|ts)$/, "");
+        return { name, identifier: toIdentifier(name) };
+      });
+  }
+
+  getTools(toolsDir: string): { name: string; identifier: string }[] {
+    if (!existsSync(toolsDir)) return [];
+    return readdirSync(toolsDir)
+      .filter((file) => this.includesTool(`tools/${file}`))
+      .map((file) => {
+        const name = file.replace(/\.(js|ts)$/, "");
+        return { name, identifier: toIdentifier(name) };
+      });
+  }
+
+  private includesAgent(file: string): boolean {
     const included = this.config.build.agents.some((pattern) => new Bun.Glob(pattern).match(file));
     if (!included) return false;
     const excluded = this.config.build.excludes.some((pattern) => new Bun.Glob(pattern).match(file));
     return !excluded;
   }
 
-  includesTool(file: string): boolean {
+  private includesTool(file: string): boolean {
     const included = this.config.build.tools.some((pattern) => new Bun.Glob(pattern).match(file));
     if (!included) return false;
     const excluded = this.config.build.excludes.some((pattern) => new Bun.Glob(pattern).match(file));
@@ -93,23 +117,14 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { facilitator } from "aixyz/accepts";');
   }
 
-  const hasAgent = existsSync(resolve(appDir, "agent.ts")) && glob.includesAgent("agent.ts");
+  const hasAgent = glob.hasAgent(appDir);
   if (hasAgent) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
     imports.push(`import * as agent from "${importPrefix}/agent";`);
   }
 
   const agentsDir = resolve(appDir, "agents");
-  const subAgents: { name: string; identifier: string }[] = [];
-  if (existsSync(agentsDir)) {
-    for (const file of readdirSync(agentsDir)) {
-      if (glob.includesAgent(`agents/${file}`)) {
-        const name = basename(file, ".ts");
-        const identifier = toIdentifier(name);
-        subAgents.push({ name, identifier });
-      }
-    }
-  }
+  const subAgents = glob.getAgents(agentsDir);
 
   if (!hasAgent && subAgents.length > 0) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
@@ -119,16 +134,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   const toolsDir = resolve(appDir, "tools");
-  const tools: { name: string; identifier: string }[] = [];
-  if (existsSync(toolsDir)) {
-    for (const file of readdirSync(toolsDir)) {
-      if (glob.includesTool(`tools/${file}`)) {
-        const name = basename(file, ".ts");
-        const identifier = toIdentifier(name);
-        tools.push({ name, identifier });
-      }
-    }
-  }
+  const tools = glob.getTools(toolsDir);
 
   if (tools.length > 0) {
     imports.push('import { AixyzMCP } from "aixyz/server/adapters/mcp";');
