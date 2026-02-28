@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fake } from "./model";
+import { fake, type Prompt } from "./model";
 
 const makeUserPrompt = (text: string) => [{ role: "user", content: [{ type: "text", text }] }];
 
@@ -38,6 +38,17 @@ describe("fake model", () => {
       ];
       const result = await model.doGenerate({ prompt });
       expect(result.content[0].text).toBe("hello, you");
+    });
+
+    test("passes full prompt as second argument to transform", async () => {
+      const model = fake((_input: string, prompt: Prompt) => `${prompt.length} turns`);
+      const prompt = [
+        { role: "user", content: [{ type: "text", text: "first" }] },
+        { role: "assistant", content: [{ type: "text", text: "reply" }] },
+        { role: "user", content: [{ type: "text", text: "second" }] },
+      ];
+      const result = await model.doGenerate({ prompt });
+      expect(result.content[0].text).toBe("3 turns");
     });
 
     test("returns zero usage", async () => {

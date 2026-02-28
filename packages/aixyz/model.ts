@@ -1,4 +1,4 @@
-type Prompt = Array<{ role: string; content: Array<{ type: string; text?: string }> }>;
+export type Prompt = Array<{ role: string; content: Array<{ type: string; text?: string }> }>;
 
 /**
  * Returns the text of the last user message in the prompt, or an empty string if none exists.
@@ -22,26 +22,26 @@ function lastUserText(prompt: Prompt): string {
  * Creates a fake language model for testing and development.
  * Conforms to the LanguageModelV2 v3 specification with zero token usage.
  *
- * The `transform` function maps the last user message text to the model output.
- * Defaults to the identity function (echo).
+ * The `transform` function receives the last user message text and the full prompt,
+ * and returns the model output string.
  *
  * @example
  * import { fake } from "aixyz/model";
  *
- * // echo model (default)
- * const echoModel = fake();
- *
- * // custom transform
+ * // custom transform using last message only
  * const helloModel = fake((input) => `hello, ${input}`);
+ *
+ * // custom transform using full prompt context
+ * const contextModel = fake((input, prompt) => `${prompt.length} turns: ${input}`);
  */
-export function fake(transform: (input: string) => string) {
+export function fake(transform: (lastMessage: string, prompt: Prompt) => string) {
   return {
     specificationVersion: "v3" as const,
     provider: "aixyz/fake",
     modelId: "aixyz/fake",
     supportedUrls: {},
     doGenerate(options: { prompt: Prompt }) {
-      const text = transform(lastUserText(options.prompt));
+      const text = transform(lastUserText(options.prompt), options.prompt);
       return Promise.resolve({
         content: [{ type: "text" as const, text }],
         finishReason: "stop" as const,
@@ -53,7 +53,7 @@ export function fake(transform: (input: string) => string) {
       });
     },
     doStream(options: { prompt: Prompt }) {
-      const text = transform(lastUserText(options.prompt));
+      const text = transform(lastUserText(options.prompt), options.prompt);
       const stream = new ReadableStream({
         start(controller) {
           controller.enqueue({ type: "stream-start" as const, warnings: [] });
