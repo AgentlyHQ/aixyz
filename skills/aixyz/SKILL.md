@@ -40,9 +40,10 @@ bunx create-aixyz-app my-agent --yes
 bunx create-aixyz-app my-agent --erc-8004 --pay-to 0x... --no-install
 ```
 
-> `--openai-api-key` is optional — if omitted, set `OPENAI_API_KEY` in `.env.local` before running the agent.
-> The scaffolded template uses `@ai-sdk/openai` by default, but you can swap it for any
-> [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) (e.g. `@ai-sdk/anthropic`, `@ai-sdk/google`, `@ai-sdk/amazon-bedrock`).
+> The scaffolded template uses `@ai-sdk/ollama` with `qwen2.5:1.5b` (a ~2GB local model) by default. Ensure
+> [Ollama](https://ollama.com) is running locally and the model is pulled with `ollama pull qwen2.5:1.5b`. You can swap
+> it for any [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models)
+> (e.g. `@ai-sdk/openai`, `@ai-sdk/anthropic`, `@ai-sdk/google`).
 
 This creates the standard project layout:
 
@@ -215,7 +216,7 @@ Common variables:
 | `X402_PAY_TO`          | Default EVM address to receive payments                                      |
 | `X402_NETWORK`         | Default payment network (e.g. `eip155:8453`)                                 |
 | `X402_FACILITATOR_URL` | Custom facilitator URL (default: `https://x402.use-agently.com/facilitator`) |
-| `OPENAI_API_KEY`       | OpenAI API key                                                               |
+| `OLLAMA_BASE_URL`      | Ollama server base URL (default: `http://127.0.0.1:11434/api`)               |
 
 ### 7. Agent icon (`app/icon.png`)
 
@@ -336,14 +337,14 @@ All CLI commands are designed for non-interactive use. When `stdin` is not a TTY
 bunx create-aixyz-app --help
 ```
 
-| Flag                     | Description                             | Default                                      |
-| ------------------------ | --------------------------------------- | -------------------------------------------- |
-| `[name]`                 | Agent name (positional argument)        | `my-agent`                                   |
-| `-y, --yes`              | Use all defaults, skip prompts          |                                              |
-| `--erc-8004`             | Include ERC-8004 Agent Identity support | `false`                                      |
-| `--openai-api-key <key>` | OpenAI API key for `.env.local`         | empty                                        |
-| `--pay-to <address>`     | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
-| `--no-install`           | Skip `bun install`                      |                                              |
+| Flag                      | Description                             | Default                                      |
+| ------------------------- | --------------------------------------- | -------------------------------------------- |
+| `[name]`                  | Agent name (positional argument)        | `my-agent`                                   |
+| `-y, --yes`               | Use all defaults, skip prompts          |                                              |
+| `--erc-8004`              | Include ERC-8004 Agent Identity support | `false`                                      |
+| `--ollama-base-url <url>` | Ollama base URL for `.env.local`        | `http://127.0.0.1:11434/api`                 |
+| `--pay-to <address>`      | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
+| `--no-install`            | Skip `bun install`                      |                                              |
 
 ### `aixyz dev` / `aixyz build`
 

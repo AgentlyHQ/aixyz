@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { ollama } from "@ai-sdk/ollama";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 
@@ -27,7 +27,7 @@ export const accepts: Accepts = {
 };
 
 export default new ToolLoopAgent({
-  model: openai("gpt-4o-mini"),
+  model: ollama("qwen2.5:1.5b"),
   instructions: instructions,
   tools: { convertLength, convertWeight, convertTemperature },
   stopWhen: stepCountIs(10),

@@ -17,7 +17,7 @@ program
   .argument("[name]", "Agent name", "my-agent")
   .option("-y, --yes", "Use defaults for all prompts (non-interactive)")
   .option("--erc-8004", "Include ERC-8004 Agent Identity support")
-  .option("--openai-api-key <key>", "Set OpenAI API Key in .env.local")
+  .option("--ollama-base-url <url>", "Set Ollama base URL in .env.local", "http://127.0.0.1:11434/api")
   .option("--pay-to <address>", "x402 payTo Ethereum address", DEFAULT_PAY_TO)
   .option("--no-install", "Skip dependency installation")
   .addHelpText(
@@ -25,7 +25,7 @@ program
     `
 Non-interactive example (CI/AI-friendly):
   $ bunx create-aixyz-app my-agent --yes
-  $ bunx create-aixyz-app my-agent --erc-8004 --openai-api-key sk-... --pay-to 0x...
+  $ bunx create-aixyz-app my-agent --erc-8004 --pay-to 0x...
   $ bunx create-aixyz-app my-agent --yes --no-install`,
   );
 
@@ -34,7 +34,7 @@ program.parse();
 const opts = program.opts<{
   yes?: boolean;
   erc8004?: boolean;
-  openaiApiKey?: string;
+  ollamaBaseUrl: string;
   payTo: string;
   install: boolean;
 }>();
@@ -134,23 +134,19 @@ if (!includeErc8004 && !isNonInteractive) {
   includeErc8004 = erc8004;
 }
 
-// Prompt for OPENAI_API_KEY (optional)
-let openaiApiKey = opts.openaiApiKey ?? "";
-if (!openaiApiKey && !isNonInteractive) {
-  const apiKey = await p.text({
-    message: "OpenAI API Key (optional, can be set later in .env.local):",
-    placeholder: "sk-...",
-    validate(value) {
-      if (value && !value.startsWith("sk-")) {
-        return "OpenAI API keys typically start with 'sk-'";
-      }
-    },
+// Prompt for Ollama base URL
+let ollamaBaseUrl = opts.ollamaBaseUrl;
+if (!isNonInteractive) {
+  const urlInput = await p.text({
+    message: "Ollama base URL (press Enter to use default):",
+    placeholder: "http://127.0.0.1:11434/api",
+    defaultValue: "http://127.0.0.1:11434/api",
   });
-  if (p.isCancel(apiKey)) {
+  if (p.isCancel(urlInput)) {
     p.cancel("Operation cancelled.");
     process.exit(0);
   }
-  openaiApiKey = apiKey || "";
+  ollamaBaseUrl = urlInput || "http://127.0.0.1:11434/api";
 }
 
 // Prompt for x402 payTo address (optional, can be skipped)
@@ -208,8 +204,8 @@ if (existsSync(envLocalSrc)) {
   // Remove the template placeholder (npm strips .env.local from packages)
   rmSync(envLocalSrc);
 }
-// Always write .env.local — with the key if provided, or empty placeholder for the user to fill in later
-const envContent = openaiApiKey ? `OPENAI_API_KEY=${openaiApiKey}\n` : `OPENAI_API_KEY=\n`;
+// Always write .env.local — with Ollama base URL
+const envContent = `OLLAMA_BASE_URL=${ollamaBaseUrl}\n`;
 writeFileSync(join(targetDir, ".env.local"), envContent);
 
 // Replace {{AGENT_NAME}} and {{PKG_NAME}} placeholders
@@ -247,10 +243,7 @@ if (packageManager !== "bun" && packageManager !== "unknown") {
   p.log.warn("");
 }
 
-p.note(
-  [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"].filter(Boolean).join("\n"),
-  "Next steps",
-);
+p.note([`cd ${pkgName}`, "Ensure Ollama is running: https://ollama.com", "bun run dev"].join("\n"), "Next steps");
 
 p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 

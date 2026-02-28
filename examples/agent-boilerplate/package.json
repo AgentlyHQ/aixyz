@@ -6,7 +6,7 @@
     "dev": "aixyz dev"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3",
+    "@ai-sdk/ollama": "^1",
     "ai": "^6",
     "aixyz": "^0",
     "zod": "^4"

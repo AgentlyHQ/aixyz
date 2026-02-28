@@ -16,7 +16,7 @@ bunx create-aixyz-app my-agent
 The CLI prompts for:
 
 - **Agent name** — Used in `aixyz.config.ts` and `package.json`
-- **OpenAI API key** — Saved to `.env.local` (optional)
+- **Ollama base URL** — Saved to `.env.local` (defaults to `http://127.0.0.1:11434/api`)
 
 ### Non-Interactive Mode
 
@@ -24,6 +24,12 @@ Skip all prompts with the `-y` flag:
 
 ```bash
 bunx create-aixyz-app my-agent -y
+```
+
+Use `--ollama-base-url` to set a custom Ollama endpoint:
+
+```bash
+bunx create-aixyz-app my-agent --ollama-base-url http://my-ollama-host:11434/api
 ```
 
 ## What Gets Scaffolded
@@ -60,6 +66,8 @@ The generated `package.json` includes:
 ```bash
 cd my-agent
 bun install
+# Ensure Ollama is running: https://ollama.com
+# Pull the model: ollama pull qwen2.5:1.5b
 bun run dev
 ```
 
