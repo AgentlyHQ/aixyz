@@ -1,0 +1,118 @@
+---
+title: "Fake Model Agent"
+description: "Fully deterministic agent testing using the aixyz fake model — no API key required"
+---
+
+<Info>
+  **Source:** [`examples/agent-fake-model`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-fake-model)
+</Info>
+
+## Overview
+
+This template demonstrates how to use `fake()` from `aixyz/model` to build and test an agent with **zero API calls and no API key**. The fake model's transform function deterministically maps each user message to a response, making every test fast, repeatable, and CI-safe.
+
+The example agent checks whether the user's input is a palindrome, or reverses it if not — using both the `lastMessage` and the full `prompt` history from the transform signature.
+
+## Project Structure
+
+```
+agent-fake-model/
+  aixyz.config.ts         # Agent metadata
+  app/
+    agent.ts              # Agent using fake() model
+    agent.test.ts         # Fully deterministic test suite
+  package.json
+  vercel.json
+```
+
+## The Fake Model
+
+Import `fake` from `aixyz/model` and pass a transform function:
+
+```typescript
+import { fake } from "aixyz/model";
+
+export const model = fake((lastMessage, prompt) => {
+  const reversed = [...lastMessage].reverse().join("");
+  const isPalindrome = lastMessage.toLowerCase() === reversed.toLowerCase();
+  const turn = prompt.filter((m) => m.role === "user").length;
+
+  if (isPalindrome) {
+    return `"${lastMessage}" is a palindrome! (turn ${turn})`;
+  }
+  return `"${lastMessage}" reversed is "${reversed}" (turn ${turn})`;
+});
+
+export default new ToolLoopAgent({
+  model,
+  instructions: "You analyze text for palindromes and reverse it when asked.",
+});
+```
+
+The transform receives:
+
+- `lastMessage` — the text content of the last user turn
+- `prompt` — the full conversation history, useful for tracking turn count or extracting prior context
+
+## Test Pattern
+
+Because the fake model is deterministic, every test runs without an API key:
+
+```typescript
+import { describe, expect, test } from "bun:test";
+import { ToolLoopAgent } from "ai";
+import agent, { model } from "./agent";
+
+test("default export is a ToolLoopAgent", () => {
+  expect(agent).toBeInstanceOf(ToolLoopAgent);
+});
+
+describe("palindrome checker (fake model)", () => {
+  test("detects a palindrome", async () => {
+    const result = await model.doGenerate({
+      prompt: [{ role: "user", content: [{ type: "text", text: "racecar" }] }],
+    });
+    expect(result.content[0].text).toContain("is a palindrome");
+  });
+
+  test("tracks turn number from prompt context", async () => {
+    const prompt = [
+      { role: "user", content: [{ type: "text", text: "hi" }] },
+      { role: "assistant", content: [{ type: "text", text: "..." }] },
+      { role: "user", content: [{ type: "text", text: "level" }] },
+    ];
+    const result = await model.doGenerate({ prompt });
+    expect(result.content[0].text).toContain("turn 2");
+  });
+});
+```
+
+## Key Features
+
+- **No API key** — `fake()` never makes network requests
+- **Fully deterministic** — same input always produces the same output
+- **CI-safe** — all tests run in any environment
+- **Full prompt context** — the transform's second argument exposes the entire conversation history
+
+## Running Tests
+
+```bash
+cd examples/agent-fake-model
+bun install
+bun test
+```
+
+## Running the Agent
+
+```bash
+cd examples/agent-fake-model
+bun run dev
+```
+
+Endpoints available at `http://localhost:3000`:
+
+| Endpoint                       | Protocol | Description           |
+| ------------------------------ | -------- | --------------------- |
+| `/.well-known/agent-card.json` | A2A      | Agent discovery card  |
+| `/agent`                       | A2A      | JSON-RPC task handler |
+| `/mcp`                         | MCP      | Tool endpoint         |

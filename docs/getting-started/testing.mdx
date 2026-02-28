@@ -76,6 +76,34 @@ describe("tests needing env vars", () => {
 
 \* Use `test.skipIf(!process.env.OPENAI_API_KEY)` to skip gracefully when no API key is available.
 
+## Fully Offline Tests with `fake()`
+
+Use `fake()` from `aixyz/model` to replace the real LLM with a deterministic transform. Every test becomes CI-safe and runs without an API key:
+
+```typescript
+import { fake } from "aixyz/model";
+import { ToolLoopAgent } from "ai";
+
+export const model = fake((lastMessage) => `You said: ${lastMessage}`);
+
+export default new ToolLoopAgent({ model, instructions: "..." });
+```
+
+Then test the model's output directly:
+
+```typescript
+import { model } from "./agent";
+
+test("echoes back the user message", async () => {
+  const result = await model.doGenerate({
+    prompt: [{ role: "user", content: [{ type: "text", text: "hello" }] }],
+  });
+  expect(result.content[0].text).toBe("You said: hello");
+});
+```
+
+See the [Fake Model Agent template](/templates/advanced/agent-fake-model) for a complete working example.
+
 ## Running Tests
 
 ```bash
@@ -85,5 +113,3 @@ bun test
 # Run a specific test file
 bun test app/agent.test.ts
 ```
-
-See the [Agent with Tests template](/templates/agent-with-tests) for a complete working example.

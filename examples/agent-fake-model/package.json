@@ -1,0 +1,17 @@
+{
+  "name": "@examples/agent-fake-model",
+  "private": true,
+  "scripts": {
+    "build": "aixyz build",
+    "dev": "aixyz dev",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "ai": "^6",
+    "aixyz": "^0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1",
+    "typescript": "^5"
+  }
+}
