@@ -16,8 +16,7 @@ You are a helpful temperature conversion assistant that accurately converts valu
 `.trim();
 
 export const accepts: Accepts = {
-  scheme: "exact",
-  price: "$0.001",
+  scheme: "free",
 };
 
 export default new ToolLoopAgent({

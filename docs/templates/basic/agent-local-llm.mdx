@@ -1,0 +1,69 @@
+---
+title: "Local LLM Agent"
+description: "An agent powered by a local LLM running entirely in-process via WebAssembly — no API key required"
+---
+
+<Info>
+  **Source:** [`examples/agent-local-llm`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-local-llm)
+</Info>
+
+## Overview
+
+The local LLM agent runs a quantized language model entirely in-process using [Transformers.js](https://huggingface.co/docs/transformers.js) (ONNX/WebAssembly). No external server, no base URL, and no API key are required. The model is downloaded from HuggingFace Hub on first run and cached locally.
+
+## Project Structure
+
+```
+agent-local-llm/
+  aixyz.config.ts         # Agent metadata and skills
+  app/
+    agent.ts              # Agent definition with local LLM model
+    agent.test.ts         # Integration test
+    tools/
+      temperature.ts      # Temperature conversion tool
+    icon.png              # Agent icon
+  package.json
+  vercel.json
+```
+
+## Skills
+
+| Skill               | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| Convert Temperature | Convert temperature values between Celsius, Fahrenheit, and Kelvin |
+
+## Agent
+
+```typescript
+import { transformersJS } from "@browser-ai/transformers-js";
+import { stepCountIs, ToolLoopAgent } from "ai";
+
+export default new ToolLoopAgent({
+  model: transformersJS("onnx-community/Qwen2.5-1.5B-Instruct", { dtype: "q4" }),
+  instructions: instructions,
+  tools: { convertTemperature },
+  stopWhen: stepCountIs(10),
+});
+```
+
+The model (`onnx-community/Qwen2.5-1.5B-Instruct`, q4 quantized) is loaded via `@browser-ai/transformers-js`, which is an official [Vercel AI SDK community provider](https://ai-sdk.dev/providers/community-providers/built-in-ai) for Transformers.js.
+
+## Payment
+
+This agent is free (`scheme: "free"`) — no x402 payment is required to call it.
+
+## Running
+
+```bash
+cd examples/agent-local-llm
+bun install
+bun run dev
+```
+
+Endpoints available at `http://localhost:3000`:
+
+| Endpoint                       | Protocol | Description           |
+| ------------------------------ | -------- | --------------------- |
+| `/.well-known/agent-card.json` | A2A      | Agent discovery card  |
+| `/agent`                       | A2A      | JSON-RPC task handler |
+| `/mcp`                         | MCP      | Tool endpoint         |

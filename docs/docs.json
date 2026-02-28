@@ -65,6 +65,7 @@
             "group": "Basic",
             "pages": [
               "templates/basic/agent-boilerplate",
+              "templates/basic/agent-local-llm",
               "templates/basic/agent-chainlink",
               "templates/basic/agent-travel",
               "templates/basic/agent-price-oracle",
