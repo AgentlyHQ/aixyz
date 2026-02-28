@@ -75,6 +75,7 @@ const defaultConfig = {
     includes: ["**/*.{js,jsx,ts,tsx}"],
     excludes: ["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"],
   },
+  vercel: { maxDuration: 60 },
   skills: [],
 };
 
@@ -122,7 +123,7 @@ const AixyzConfigSchema = z.object({
       maxDuration: z.number().int().positive().max(900).optional().default(60),
     })
     .optional()
-    .default({ maxDuration: 60 }),
+    .default(defaultConfig.vercel),
   skills: z
     .array(
       z.object({
