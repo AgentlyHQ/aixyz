@@ -86,6 +86,11 @@
     "global": {
       "anchors": [
         {
+          "anchor": "Agently",
+          "href": "https://use-agently.com",
+          "icon": "globe"
+        },
+        {
           "anchor": "GitHub",
           "href": "https://github.com/AgentlyHQ/aixyz",
           "icon": "github"
