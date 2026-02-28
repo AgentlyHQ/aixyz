@@ -55,8 +55,9 @@ export function getEntrypointMayGenerate(cwd: string, mode: "dev" | "build"): st
 class AixyzGlob {
   constructor(readonly config = getAixyzConfig()) {}
 
-  hasAgent(appDir: string): boolean {
-    return existsSync(resolve(appDir, "agent.ts")) && this.includesAgent("agent.ts");
+  hasRootAgent(appDir: string): { file: string } | undefined {
+    const file = readdirSync(appDir).find((f) => /^agent\.(js|ts)$/.test(f) && this.includesAgent(f));
+    return file ? { file } : undefined;
   }
 
   getAgents(agentsDir: string): { name: string; identifier: string }[] {
@@ -117,8 +118,8 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { facilitator } from "aixyz/accepts";');
   }
 
-  const hasAgent = glob.hasAgent(appDir);
-  if (hasAgent) {
+  const rootAgent = glob.hasRootAgent(appDir);
+  if (rootAgent) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
     imports.push(`import * as agent from "${importPrefix}/agent";`);
   }
@@ -126,7 +127,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const agentsDir = resolve(appDir, "agents");
   const subAgents = glob.getAgents(agentsDir);
 
-  if (!hasAgent && subAgents.length > 0) {
+  if (!rootAgent && subAgents.length > 0) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
   }
   for (const subAgent of subAgents) {
@@ -147,7 +148,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   body.push("await server.initialize();");
   body.push("server.unstable_withIndexPage();");
 
-  if (hasAgent) {
+  if (rootAgent) {
     body.push("useA2A(server, agent);");
   }
 
@@ -168,7 +169,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { useERC8004 } from "aixyz/server/adapters/erc-8004";');
     imports.push(`import * as erc8004 from "${importPrefix}/erc-8004";`);
     const a2aPaths: string[] = [];
-    if (hasAgent) a2aPaths.push("/.well-known/agent-card.json");
+    if (rootAgent) a2aPaths.push("/.well-known/agent-card.json");
     for (const subAgent of subAgents) a2aPaths.push(`/${subAgent.name}/.well-known/agent-card.json`);
     body.push(
       `useERC8004(server, { default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } });`,
