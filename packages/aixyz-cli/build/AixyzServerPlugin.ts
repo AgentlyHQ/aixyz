@@ -55,8 +55,15 @@ export function getEntrypointMayGenerate(cwd: string, mode: "dev" | "build"): st
 class AixyzGlob {
   constructor(readonly config = getAixyzConfig()) {}
 
-  includes(file: string): boolean {
-    const included = this.config.build.includes.some((pattern) => new Bun.Glob(pattern).match(file));
+  includesAgent(file: string): boolean {
+    const included = this.config.build.agents.some((pattern) => new Bun.Glob(pattern).match(file));
+    if (!included) return false;
+    const excluded = this.config.build.excludes.some((pattern) => new Bun.Glob(pattern).match(file));
+    return !excluded;
+  }
+
+  includesTool(file: string): boolean {
+    const included = this.config.build.tools.some((pattern) => new Bun.Glob(pattern).match(file));
     if (!included) return false;
     const excluded = this.config.build.excludes.some((pattern) => new Bun.Glob(pattern).match(file));
     return !excluded;
@@ -86,7 +93,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { facilitator } from "aixyz/accepts";');
   }
 
-  const hasAgent = existsSync(resolve(appDir, "agent.ts")) && glob.includes("agent.ts");
+  const hasAgent = existsSync(resolve(appDir, "agent.ts")) && glob.includesAgent("agent.ts");
   if (hasAgent) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
     imports.push(`import * as agent from "${importPrefix}/agent";`);
@@ -96,7 +103,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const subAgents: { name: string; identifier: string }[] = [];
   if (existsSync(agentsDir)) {
     for (const file of readdirSync(agentsDir)) {
-      if (glob.includes(`agents/${file}`)) {
+      if (glob.includesAgent(`agents/${file}`)) {
         const name = basename(file, ".ts");
         const identifier = toIdentifier(name);
         subAgents.push({ name, identifier });
@@ -115,7 +122,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const tools: { name: string; identifier: string }[] = [];
   if (existsSync(toolsDir)) {
     for (const file of readdirSync(toolsDir)) {
-      if (glob.includes(`tools/${file}`)) {
+      if (glob.includesTool(`tools/${file}`)) {
         const name = basename(file, ".ts");
         const identifier = toIdentifier(name);
         tools.push({ name, identifier });

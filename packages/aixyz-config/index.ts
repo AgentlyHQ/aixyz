@@ -45,10 +45,16 @@ export type AixyzConfig = {
      */
     output?: "standalone" | "vercel" | "executable";
     /**
-     * Glob pattern(s) for files to include in the build from the `app/` directory.
+     * Glob pattern(s) for tool files to include in the build from the `app/tools/` directory.
      * @default ["**\/*.{js,jsx,ts,tsx}"]
      */
-    includes?: string | string[];
+    tools?: string | string[];
+    /**
+     * Glob pattern(s) for agent files to include in the build.
+     * Matched against `agent.ts` and files under the `agents/` directory.
+     * @default ["**\/*.{js,jsx,ts,tsx}"]
+     */
+    agents?: string | string[];
     /**
      * Glob pattern(s) for files to exclude from the build.
      * @default ["**\/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"]
@@ -73,7 +79,8 @@ const NetworkSchema = z.custom<Network>((val) => {
 
 const defaultConfig = {
   build: {
-    includes: ["**/*.{js,jsx,ts,tsx}"],
+    tools: ["**/*.{js,jsx,ts,tsx}"],
+    agents: ["**/*.{js,jsx,ts,tsx}"],
     excludes: ["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"],
   },
   vercel: { maxDuration: 60 },
@@ -109,7 +116,11 @@ const AixyzConfigSchema = z.object({
   build: z
     .object({
       output: z.enum(["standalone", "vercel", "executable"]).optional(),
-      includes: z
+      tools: z
+        .union([z.string(), z.array(z.string())])
+        .default(["**/*.{js,jsx,ts,tsx}"])
+        .transform((v) => (Array.isArray(v) ? v : [v])),
+      agents: z
         .union([z.string(), z.array(z.string())])
         .default(["**/*.{js,jsx,ts,tsx}"])
         .transform((v) => (Array.isArray(v) ? v : [v])),
