@@ -120,7 +120,7 @@ const AixyzConfigSchema = z.object({
     .default(defaultConfig.build),
   vercel: z
     .object({
-      maxDuration: z.number().int().positive().max(900).optional().default(60),
+      maxDuration: z.number().int().positive().max(900).optional().default(defaultConfig.vercel.maxDuration),
     })
     .optional()
     .default(defaultConfig.vercel),
