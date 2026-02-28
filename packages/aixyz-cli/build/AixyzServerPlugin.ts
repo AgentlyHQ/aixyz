@@ -1,6 +1,6 @@
 import type { BunPlugin } from "bun";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
-import { resolve, relative, basename, join } from "path";
+import { resolve, relative, join } from "path";
 import { getAixyzConfig } from "@aixyz/config";
 
 export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone" | "executable"): BunPlugin {
@@ -55,8 +55,40 @@ export function getEntrypointMayGenerate(cwd: string, mode: "dev" | "build"): st
 class AixyzGlob {
   constructor(readonly config = getAixyzConfig()) {}
 
-  includes(file: string): boolean {
-    const included = this.config.build.includes.some((pattern) => new Bun.Glob(pattern).match(file));
+  hasRootAgent(appDir: string): { file: string } | undefined {
+    const file = readdirSync(appDir).find((f) => /^agent\.(js|ts)$/.test(f) && this.includesAgent(f));
+    return file ? { file } : undefined;
+  }
+
+  getAgents(agentsDir: string): { name: string; identifier: string }[] {
+    if (!existsSync(agentsDir)) return [];
+    return readdirSync(agentsDir)
+      .filter((file) => this.includesAgent(`agents/${file}`))
+      .map((file) => {
+        const name = file.replace(/\.(js|ts)$/, "");
+        return { name, identifier: toIdentifier(name) };
+      });
+  }
+
+  getTools(toolsDir: string): { name: string; identifier: string }[] {
+    if (!existsSync(toolsDir)) return [];
+    return readdirSync(toolsDir)
+      .filter((file) => this.includesTool(`tools/${file}`))
+      .map((file) => {
+        const name = file.replace(/\.(js|ts)$/, "");
+        return { name, identifier: toIdentifier(name) };
+      });
+  }
+
+  private includesAgent(file: string): boolean {
+    const included = this.config.build.agents.some((pattern) => new Bun.Glob(pattern).match(file));
+    if (!included) return false;
+    const excluded = this.config.build.excludes.some((pattern) => new Bun.Glob(pattern).match(file));
+    return !excluded;
+  }
+
+  private includesTool(file: string): boolean {
+    const included = this.config.build.tools.some((pattern) => new Bun.Glob(pattern).match(file));
     if (!included) return false;
     const excluded = this.config.build.excludes.some((pattern) => new Bun.Glob(pattern).match(file));
     return !excluded;
@@ -86,25 +118,16 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { facilitator } from "aixyz/accepts";');
   }
 
-  const hasAgent = existsSync(resolve(appDir, "agent.ts")) && glob.includes("agent.ts");
-  if (hasAgent) {
+  const rootAgent = glob.hasRootAgent(appDir);
+  if (rootAgent) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
     imports.push(`import * as agent from "${importPrefix}/agent";`);
   }
 
   const agentsDir = resolve(appDir, "agents");
-  const subAgents: { name: string; identifier: string }[] = [];
-  if (existsSync(agentsDir)) {
-    for (const file of readdirSync(agentsDir)) {
-      if (glob.includes(`agents/${file}`)) {
-        const name = basename(file, ".ts");
-        const identifier = toIdentifier(name);
-        subAgents.push({ name, identifier });
-      }
-    }
-  }
+  const subAgents = glob.getAgents(agentsDir);
 
-  if (!hasAgent && subAgents.length > 0) {
+  if (!rootAgent && subAgents.length > 0) {
     imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
   }
   for (const subAgent of subAgents) {
@@ -112,16 +135,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   const toolsDir = resolve(appDir, "tools");
-  const tools: { name: string; identifier: string }[] = [];
-  if (existsSync(toolsDir)) {
-    for (const file of readdirSync(toolsDir)) {
-      if (glob.includes(`tools/${file}`)) {
-        const name = basename(file, ".ts");
-        const identifier = toIdentifier(name);
-        tools.push({ name, identifier });
-      }
-    }
-  }
+  const tools = glob.getTools(toolsDir);
 
   if (tools.length > 0) {
     imports.push('import { AixyzMCP } from "aixyz/server/adapters/mcp";');
@@ -134,7 +148,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   body.push("await server.initialize();");
   body.push("server.unstable_withIndexPage();");
 
-  if (hasAgent) {
+  if (rootAgent) {
     body.push("useA2A(server, agent);");
   }
 
@@ -155,7 +169,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { useERC8004 } from "aixyz/server/adapters/erc-8004";');
     imports.push(`import * as erc8004 from "${importPrefix}/erc-8004";`);
     const a2aPaths: string[] = [];
-    if (hasAgent) a2aPaths.push("/.well-known/agent-card.json");
+    if (rootAgent) a2aPaths.push("/.well-known/agent-card.json");
     for (const subAgent of subAgents) a2aPaths.push(`/${subAgent.name}/.well-known/agent-card.json`);
     body.push(
       `useERC8004(server, { default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } });`,
