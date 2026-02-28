@@ -166,3 +166,19 @@ aixyz → @aixyz/cli → @aixyz/config
 - Examples use `app/` directory structure (not `src/`)
 - CI runs: build, lint, test, format check (`.github/workflows/ci.yml`)
 - Publishing: triggered by GitHub releases, uses npm OIDC provenance
+
+## CLI non-TTY design (AI/CI-friendly)
+
+Both CLIs (`aixyz` and `create-aixyz-app`) are designed for non-interactive use by AI agents and CI pipelines:
+
+- **Every interactive prompt has a CLI flag equivalent.** If a value is normally prompted in TTY, a `--flag` must exist
+  so the same value can be passed non-interactively.
+- **Non-TTY detection:** When `process.stdin.isTTY` is false, prompts are skipped — the CLI either uses the flag value,
+  falls back to a sensible default, or exits with a clear error message telling the user which flag to provide.
+- **`--help` on every command.** `create-aixyz-app --help`, `aixyz --help`, `aixyz build --help`,
+  `aixyz erc-8004 register --help`, etc. all print full usage with examples.
+- **`create-aixyz-app`**: Supports `--yes`/`-y` for all defaults, plus `--erc-8004`, `--openai-api-key <key>`,
+  `--pay-to <address>`, and `--no-install` for granular control.
+- **`aixyz erc-8004 register`**: All interactive prompts (URL, chain, trust mechanisms, wallet) have CLI flag
+  equivalents. See `aixyz erc-8004 register --help`.
+- **`aixyz erc-8004 update`**: Supports `--agent-id <id>` to select a registration without prompts.

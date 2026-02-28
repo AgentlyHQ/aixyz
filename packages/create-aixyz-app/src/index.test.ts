@@ -89,7 +89,7 @@ describe("create-aixyz-app", () => {
     expect(existsSync(join(projectDir, "aixyz.config.ts"))).toBe(true);
     expect(existsSync(join(projectDir, "app/agent.ts"))).toBe(true);
     expect(existsSync(join(projectDir, "app/tools/temperature.ts"))).toBe(true);
-    expect(existsSync(join(projectDir, "app/icon.png"))).toBe(true);
+    expect(existsSync(join(projectDir, "app/icon.svg"))).toBe(true);
     expect(existsSync(join(projectDir, ".gitignore"))).toBe(true);
     expect(existsSync(join(projectDir, ".env.local"))).toBe(true);
     expect(existsSync(join(projectDir, "vercel.json"))).toBe(true);

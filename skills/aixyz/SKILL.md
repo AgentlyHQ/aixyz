@@ -26,10 +26,23 @@ Use this skill when:
 
 ### 1. Scaffold a new project
 
+All CLI commands support `--help` for full usage details. Use `--help` to discover available options.
+
 ```bash
+# See all options
+bunx create-aixyz-app --help
+
+# Interactive (TTY)
 bunx create-aixyz-app my-agent
-cd my-agent
+
+# Non-interactive (recommended for AI/CI)
+bunx create-aixyz-app my-agent --yes
+bunx create-aixyz-app my-agent --erc-8004 --pay-to 0x... --no-install
 ```
+
+> `--openai-api-key` is optional — if omitted, set `OPENAI_API_KEY` in `.env.local` before running the agent.
+> The scaffolded template uses `@ai-sdk/openai` by default, but you can swap it for any
+> [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) (e.g. `@ai-sdk/anthropic`, `@ai-sdk/google`, `@ai-sdk/amazon-bedrock`).
 
 This creates the standard project layout:
 
@@ -124,8 +137,16 @@ Files prefixed with `_` (e.g. `_helpers.ts`) are ignored by the auto-generated s
 
 ### 5. Define the agent (`app/agent.ts`)
 
+The default template uses `@ai-sdk/openai`, but you can use any [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models):
+
 ```ts
+// OpenAI (default in template)
 import { openai } from "@ai-sdk/openai";
+
+// Or swap the model provider — install the adapter and change the import:
+// import { anthropic } from "@ai-sdk/anthropic";  // set ANTHROPIC_API_KEY
+// import { google } from "@ai-sdk/google";        // set GOOGLE_GENERATIVE_AI_API_KEY
+
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 import myTool from "./tools/my-tool";
@@ -133,7 +154,7 @@ import myTool from "./tools/my-tool";
 export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
 
 export default new ToolLoopAgent({
-  model: openai("gpt-4o-mini"),
+  model: openai("gpt-4o-mini"), // replace with anthropic("claude-..."), google("gemini-..."), etc.
   instructions: "You are a helpful assistant.",
   tools: { myTool },
   stopWhen: stepCountIs(10),
@@ -274,6 +295,28 @@ vercel deploy
 Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-price-oracle`,
 `examples/agent-byo-facilitator`, `examples/agent-with-sub-agents`.
 
+## Common Dependencies
+
+A scaffolded agent project uses these key packages:
+
+| Package           | Purpose                                                          |
+| ----------------- | ---------------------------------------------------------------- |
+| `aixyz`           | Framework core: server, adapters (A2A, MCP), x402 payment gating |
+| `ai`              | Vercel AI SDK v6 — `ToolLoopAgent`, `tool()`, `stepCountIs()`    |
+| `@ai-sdk/openai`  | Default model adapter (swap for any AI SDK provider adapter)     |
+| `zod`             | Schema validation for tool inputs (`z.object`, `z.string`, etc.) |
+| `@aixyz/erc-8004` | ERC-8004 Agent Identity (optional, added with `--erc-8004`)      |
+
+To use a different LLM provider, install its AI SDK adapter and update the import in `app/agent.ts`:
+
+```bash
+bun add @ai-sdk/anthropic   # Anthropic Claude
+bun add @ai-sdk/google      # Google Gemini
+bun add @ai-sdk/amazon-bedrock  # AWS Bedrock
+```
+
+See the [Vercel AI SDK providers](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) for the full list.
+
 ## Common Edge Cases
 
 - **Missing `x402.network`** — always provide `x402.network`; it has no fallback.
@@ -282,3 +325,66 @@ Working examples in the repo: `examples/agent-boilerplate`, `examples/agent-pric
 - **Agent card missing skills** — `skills` defaults to `[]`; add at least one entry to be discoverable.
 - **Free endpoint** — export `accepts: { scheme: "free" }` to expose an endpoint without payment.
 - **Port conflict in dev** — use `aixyz dev -p <port>` to change the default port (3000).
+
+## CLI Reference (Non-TTY / AI-Friendly)
+
+All CLI commands are designed for non-interactive use. When `stdin` is not a TTY, prompts are skipped — values come from CLI flags, environment variables, or sensible defaults. Use `--help` on any command for full usage.
+
+### `create-aixyz-app`
+
+```bash
+bunx create-aixyz-app --help
+```
+
+| Flag                     | Description                             | Default                                      |
+| ------------------------ | --------------------------------------- | -------------------------------------------- |
+| `[name]`                 | Agent name (positional argument)        | `my-agent`                                   |
+| `-y, --yes`              | Use all defaults, skip prompts          |                                              |
+| `--erc-8004`             | Include ERC-8004 Agent Identity support | `false`                                      |
+| `--openai-api-key <key>` | OpenAI API key for `.env.local`         | empty                                        |
+| `--pay-to <address>`     | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
+| `--no-install`           | Skip `bun install`                      |                                              |
+
+### `aixyz dev` / `aixyz build`
+
+```bash
+aixyz dev --help
+aixyz build --help
+```
+
+### `aixyz erc-8004 register`
+
+```bash
+aixyz erc-8004 register --help
+```
+
+| Flag                       | Description                           | Required in non-TTY |
+| -------------------------- | ------------------------------------- | ------------------- |
+| `--url <url>`              | Agent deployment URL                  | Yes                 |
+| `--chain-id <id>`          | Target chain numeric ID               | Yes                 |
+| `--supported-trust <list>` | Comma-separated trust mechanisms      | If no erc-8004.ts   |
+| `--keystore <path>`        | Keystore file path                    | One of keystore,    |
+| `--browser`                | Use browser wallet                    | browser, or         |
+| `PRIVATE_KEY` env          | Private key for signing               | PRIVATE_KEY         |
+| `--broadcast`              | Execute on-chain (default is dry-run) | No                  |
+| `--rpc-url <url>`          | Custom RPC endpoint                   | For custom chains   |
+| `--registry <address>`     | Registry contract address             | For custom chains   |
+| `--out-dir <path>`         | Write result JSON to directory        | No                  |
+
+### `aixyz erc-8004 update`
+
+```bash
+aixyz erc-8004 update --help
+```
+
+| Flag                   | Description                           | Required in non-TTY       |
+| ---------------------- | ------------------------------------- | ------------------------- |
+| `--url <url>`          | New agent deployment URL              | Yes                       |
+| `--agent-id <id>`      | Agent ID to update                    | If multiple registrations |
+| `--keystore <path>`    | Keystore file path                    | One of keystore,          |
+| `--browser`            | Use browser wallet                    | browser, or               |
+| `PRIVATE_KEY` env      | Private key for signing               | PRIVATE_KEY               |
+| `--broadcast`          | Execute on-chain (default is dry-run) | No                        |
+| `--rpc-url <url>`      | Custom RPC endpoint                   | For custom chains         |
+| `--registry <address>` | Registry contract address             | For localhost only        |
+| `--out-dir <path>`     | Write result JSON to directory        | No                        |

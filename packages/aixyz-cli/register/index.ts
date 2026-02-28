@@ -103,6 +103,7 @@ erc8004Command
   .command("update")
   .description("Update the metadata URI of a registered agent")
   .option("--url <url>", "New agent deployment URL (e.g., https://my-agent.example.com)")
+  .option("--agent-id <id>", "Agent ID to update (selects which registration from app/erc-8004.ts)", parseInt)
   .option("--rpc-url <url>", "Custom RPC URL (uses default if not provided)")
   .option("--registry <address>", "Contract address of the IdentityRegistry (required for localhost)")
   .option("--keystore <path>", "Path to Ethereum keystore (V3) JSON file for local signing")
@@ -117,6 +118,11 @@ Option Details:
       New agent deployment URL (e.g., https://my-agent.example.com).
       The URI will be derived as <url>/_aixyz/erc-8004.json.
       If omitted, you will be prompted to enter the URL interactively.
+
+  --agent-id <id>
+      Agent ID (numeric) to select which registration from app/erc-8004.ts
+      to update. Required in non-interactive (non-TTY) mode when multiple
+      registrations exist.
 
   --rpc-url <url>
       Custom RPC endpoint URL. Overrides the default RPC for the selected
@@ -155,6 +161,9 @@ Examples:
 
   # Sign and broadcast
   $ aixyz erc-8004 update --url "https://new-domain.example.com" --keystore ~/.foundry/keystores/default --broadcast
-  $ aixyz erc-8004 update --url "https://new-domain.example.com" --browser --broadcast`,
+  $ aixyz erc-8004 update --url "https://new-domain.example.com" --browser --broadcast
+
+  # Non-interactive (CI-friendly)
+  $ aixyz erc-8004 update --url "https://new-domain.example.com" --agent-id 42 --keystore ~/.foundry/keystores/default --broadcast`,
   )
   .action(update);

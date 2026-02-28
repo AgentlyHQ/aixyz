@@ -1,17 +1,43 @@
 #!/usr/bin/env node
 
 import * as p from "@clack/prompts";
+import { Command } from "commander";
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { generateIcon } from "./generate-icon.js";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const args = process.argv.slice(2);
-const flags = new Set(args.filter((a) => a.startsWith("-")));
-const positional = args.filter((a) => !a.startsWith("-"));
+const DEFAULT_PAY_TO = "0x0799872E07EA7a63c79357694504FE66EDfE4a0A";
 
-const useDefaults = flags.has("--yes") || flags.has("-y");
+const program = new Command();
+program
+  .name("create-aixyz-app")
+  .description("Scaffold a new aixyz agent project")
+  .argument("[name]", "Agent name", "my-agent")
+  .option("-y, --yes", "Use defaults for all prompts (non-interactive)")
+  .option("--erc-8004", "Include ERC-8004 Agent Identity support")
+  .option("--openai-api-key <key>", "Set OpenAI API Key in .env.local")
+  .option("--pay-to <address>", "x402 payTo Ethereum address", DEFAULT_PAY_TO)
+  .option("--no-install", "Skip dependency installation")
+  .addHelpText(
+    "after",
+    `
+Non-interactive example (CI/AI-friendly):
+  $ bunx create-aixyz-app my-agent --yes
+  $ bunx create-aixyz-app my-agent --erc-8004 --openai-api-key sk-... --pay-to 0x...
+  $ bunx create-aixyz-app my-agent --yes --no-install`,
+  );
+
+program.parse();
+
+const opts = program.opts<{
+  yes?: boolean;
+  erc8004?: boolean;
+  openaiApiKey?: string;
+  payTo: string;
+  install: boolean;
+}>();
 
 // Check if Bun is installed
 function checkBunInstalled(): boolean {
@@ -57,10 +83,12 @@ if (!hasBun) {
   process.exit(1);
 }
 
-let agentName = positional[0];
+const isNonInteractive = opts.yes || !process.stdin.isTTY;
+
+let agentName = program.args[0];
 
 if (!agentName) {
-  if (useDefaults) {
+  if (isNonInteractive) {
     agentName = "my-agent";
   } else {
     const name = await p.text({
@@ -93,8 +121,8 @@ if (existsSync(targetDir)) {
 }
 
 // Prompt for ERC-8004 Agent Identity support
-let includeErc8004 = false;
-if (!useDefaults) {
+let includeErc8004 = opts.erc8004 ?? false;
+if (!includeErc8004 && !isNonInteractive) {
   const erc8004 = await p.confirm({
     message: "Support ERC-8004 Agent Identity?",
     initialValue: false,
@@ -107,8 +135,8 @@ if (!useDefaults) {
 }
 
 // Prompt for OPENAI_API_KEY (optional)
-let openaiApiKey = "";
-if (!useDefaults) {
+let openaiApiKey = opts.openaiApiKey ?? "";
+if (!openaiApiKey && !isNonInteractive) {
   const apiKey = await p.text({
     message: "OpenAI API Key (optional, can be set later in .env.local):",
     placeholder: "sk-...",
@@ -126,9 +154,8 @@ if (!useDefaults) {
 }
 
 // Prompt for x402 payTo address (optional, can be skipped)
-const DEFAULT_PAY_TO = "0x0799872E07EA7a63c79357694504FE66EDfE4a0A";
-let payTo = DEFAULT_PAY_TO;
-if (!useDefaults) {
+let payTo = opts.payTo;
+if (payTo === DEFAULT_PAY_TO && !isNonInteractive) {
   const payToInput = await p.text({
     message: "x402 payTo address (Ethereum address to receive payments, press Enter to skip):",
     placeholder: DEFAULT_PAY_TO,
@@ -178,14 +205,12 @@ if (existsSync(gitignoreSrc)) {
 
 const envLocalSrc = join(targetDir, "env.local");
 if (existsSync(envLocalSrc)) {
-  // Update .env.local with the API key if provided
-  const envContent = openaiApiKey ? `OPENAI_API_KEY=${openaiApiKey}\n` : `OPENAI_API_KEY=\n`;
-  writeFileSync(join(targetDir, ".env.local"), envContent);
-  // Remove the template file after writing the new one
-  if (envLocalSrc !== join(targetDir, ".env.local")) {
-    renameSync(envLocalSrc, join(targetDir, ".env.local"));
-  }
+  // Remove the template placeholder (npm strips .env.local from packages)
+  rmSync(envLocalSrc);
 }
+// Always write .env.local — with the key if provided, or empty placeholder for the user to fill in later
+const envContent = openaiApiKey ? `OPENAI_API_KEY=${openaiApiKey}\n` : `OPENAI_API_KEY=\n`;
+writeFileSync(join(targetDir, ".env.local"), envContent);
 
 // Replace {{AGENT_NAME}} and {{PKG_NAME}} placeholders
 const filesToReplace = ["package.json", "aixyz.config.ts"];
@@ -201,13 +226,17 @@ for (const file of filesToReplace) {
 }
 
 // Install dependencies with Bun (always, regardless of which PM invoked this CLI)
-const s = p.spinner();
-s.start("Installing dependencies...");
-try {
-  execSync("bun install", { cwd: targetDir, stdio: "ignore" });
-  s.stop("Dependencies installed.");
-} catch {
-  s.stop("Failed to install dependencies. You can run `bun install` manually.");
+if (!opts.install) {
+  p.log.info("Skipping dependency installation (--no-install).");
+} else {
+  const s = p.spinner();
+  s.start("Installing dependencies...");
+  try {
+    execSync("bun install", { cwd: targetDir, stdio: "ignore" });
+    s.stop("Dependencies installed.");
+  } catch {
+    s.stop("Failed to install dependencies. You can run `bun install` manually.");
+  }
 }
 
 // Show warning if not using Bun
