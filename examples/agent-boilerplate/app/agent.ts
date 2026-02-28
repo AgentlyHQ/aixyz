@@ -27,7 +27,7 @@ export const accepts: Accepts = {
 };
 
 export default new ToolLoopAgent({
-  model: transformersJS("HuggingFaceTB/SmolLM2-1.7B-Instruct"),
+  model: transformersJS("onnx-community/Qwen2.5-1.5B-Instruct", { dtype: "q4" }),
   instructions: instructions,
   tools: { convertLength, convertWeight, convertTemperature },
   stopWhen: stepCountIs(10),

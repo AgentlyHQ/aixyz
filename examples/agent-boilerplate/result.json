@@ -1,0 +1,250 @@
+{
+  "steps": [
+    {
+      "stepNumber": 0,
+      "model": {
+        "provider": "transformers-js",
+        "modelId": "onnx-community/Qwen2.5-1.5B-Instruct"
+      },
+      "content": [
+        {
+          "type": "tool-call",
+          "toolCallId": "call_1772271114671_1tg5x32",
+          "toolName": "convertTemperature",
+          "input": {
+            "value": 100,
+            "from": "celsius",
+            "to": "fahrenheit"
+          }
+        },
+        {
+          "type": "tool-result",
+          "toolCallId": "call_1772271114671_1tg5x32",
+          "toolName": "convertTemperature",
+          "input": {
+            "value": 100,
+            "from": "celsius",
+            "to": "fahrenheit"
+          },
+          "output": {
+            "input": {
+              "value": 100,
+              "unit": "celsius"
+            },
+            "output": {
+              "value": 212,
+              "unit": "fahrenheit"
+            }
+          },
+          "dynamic": false
+        }
+      ],
+      "finishReason": "tool-calls",
+      "rawFinishReason": "tool-calls",
+      "usage": {
+        "inputTokens": 804,
+        "inputTokenDetails": {},
+        "outputTokens": 11,
+        "outputTokenDetails": {},
+        "totalTokens": 815
+      },
+      "warnings": [
+        {
+          "type": "unsupported",
+          "feature": "toolChoice",
+          "details": "toolChoice is not supported by TransformersJS"
+        }
+      ],
+      "request": {
+        "body": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "# Unit Conversion Agent\n\nYou are a helpful unit conversion assistant that accurately converts values between different measurement systems.\n\n## Guidelines\n\n- Use the appropriate tool based on the type of conversion requested.\n- Use `convertLength` for distances and lengths (meters, feet, miles, km, etc.).\n- Use `convertWeight` for mass and weight (kilograms, pounds, ounces, etc.).\n- Use `convertTemperature` for temperature (Celsius, Fahrenheit, Kelvin).\n- Always show both the original value with its unit and the converted result.\n- If the unit type is ambiguous, ask the user to clarify."
+            },
+            {
+              "role": "user",
+              "content": "convert 100 degrees celsius to fahrenheit"
+            }
+          ],
+          "max_new_tokens": 32768,
+          "temperature": 0.7,
+          "do_sample": false
+        }
+      },
+      "response": {
+        "id": "aitxt-rY9Tua3pnD8AAiFiVzwfl6oz",
+        "timestamp": "2026-02-28T09:31:54.671Z",
+        "modelId": "onnx-community/Qwen2.5-1.5B-Instruct",
+        "messages": [
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "toolCallId": "call_1772271114671_1tg5x32",
+                "toolName": "convertTemperature",
+                "input": {
+                  "value": 100,
+                  "from": "celsius",
+                  "to": "fahrenheit"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "content": [
+              {
+                "type": "tool-result",
+                "toolCallId": "call_1772271114671_1tg5x32",
+                "toolName": "convertTemperature",
+                "output": {
+                  "type": "json",
+                  "value": {
+                    "input": {
+                      "value": 100,
+                      "unit": "celsius"
+                    },
+                    "output": {
+                      "value": 212,
+                      "unit": "fahrenheit"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 1,
+      "model": {
+        "provider": "transformers-js",
+        "modelId": "onnx-community/Qwen2.5-1.5B-Instruct"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "100 degrees Celsius is equal to 212 degrees Fahrenheit."
+        }
+      ],
+      "finishReason": "stop",
+      "rawFinishReason": "stop",
+      "usage": {
+        "inputTokens": 881,
+        "inputTokenDetails": {},
+        "outputTokens": 9,
+        "outputTokenDetails": {},
+        "totalTokens": 890
+      },
+      "warnings": [
+        {
+          "type": "unsupported",
+          "feature": "toolChoice",
+          "details": "toolChoice is not supported by TransformersJS"
+        }
+      ],
+      "request": {
+        "body": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "# Unit Conversion Agent\n\nYou are a helpful unit conversion assistant that accurately converts values between different measurement systems.\n\n## Guidelines\n\n- Use the appropriate tool based on the type of conversion requested.\n- Use `convertLength` for distances and lengths (meters, feet, miles, km, etc.).\n- Use `convertWeight` for mass and weight (kilograms, pounds, ounces, etc.).\n- Use `convertTemperature` for temperature (Celsius, Fahrenheit, Kelvin).\n- Always show both the original value with its unit and the converted result.\n- If the unit type is ambiguous, ask the user to clarify."
+            },
+            {
+              "role": "user",
+              "content": "convert 100 degrees celsius to fahrenheit"
+            },
+            {
+              "role": "assistant",
+              "content": null,
+              "tool_calls": [
+                {
+                  "id": "call_1772271114671_1tg5x32",
+                  "type": "function",
+                  "function": {
+                    "name": "convertTemperature",
+                    "arguments": "{\"value\":100,\"from\":\"celsius\",\"to\":\"fahrenheit\"}"
+                  }
+                }
+              ]
+            },
+            {
+              "role": "tool",
+              "tool_call_id": "call_1772271114671_1tg5x32",
+              "name": "convertTemperature",
+              "content": "{\"input\":{\"value\":100,\"unit\":\"celsius\"},\"output\":{\"value\":212,\"unit\":\"fahrenheit\"}}"
+            }
+          ],
+          "max_new_tokens": 32768,
+          "temperature": 0.7,
+          "do_sample": false
+        }
+      },
+      "response": {
+        "id": "aitxt-edRP6ArR1uv132VzL32djXfI",
+        "timestamp": "2026-02-28T09:32:09.540Z",
+        "modelId": "onnx-community/Qwen2.5-1.5B-Instruct",
+        "messages": [
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "toolCallId": "call_1772271114671_1tg5x32",
+                "toolName": "convertTemperature",
+                "input": {
+                  "value": 100,
+                  "from": "celsius",
+                  "to": "fahrenheit"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "content": [
+              {
+                "type": "tool-result",
+                "toolCallId": "call_1772271114671_1tg5x32",
+                "toolName": "convertTemperature",
+                "output": {
+                  "type": "json",
+                  "value": {
+                    "input": {
+                      "value": 100,
+                      "unit": "celsius"
+                    },
+                    "output": {
+                      "value": 212,
+                      "unit": "fahrenheit"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "100 degrees Celsius is equal to 212 degrees Fahrenheit."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "_output": "100 degrees Celsius is equal to 212 degrees Fahrenheit.",
+  "totalUsage": {
+    "inputTokens": 1685,
+    "inputTokenDetails": {},
+    "outputTokens": 20,
+    "outputTokenDetails": {},
+    "totalTokens": 1705
+  }
+}
