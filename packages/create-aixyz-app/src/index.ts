@@ -4,7 +4,8 @@ import * as p from "@clack/prompts";
 import { Command } from "commander";
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { generateIcon } from "./generate-icon.js";
+import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_PAY_TO = "0x0799872E07EA7a63c79357694504FE66EDfE4a0A";
@@ -184,6 +185,9 @@ if (!existsSync(templateDir)) {
 // Copy template files
 mkdirSync(targetDir, { recursive: true });
 cpSync(templateDir, targetDir, { recursive: true });
+
+// Generate a random icon.svg (overwrites the static template placeholder)
+generateIcon(join(targetDir, "app", "icon.svg"));
 
 // Remove erc-8004.ts if user opted out
 if (!includeErc8004) {

@@ -40,9 +40,10 @@ export type AixyzConfig = {
      * Output format for `aixyz build`.
      * - `"standalone"`: Bundles into a single executable file (default).
      * - `"vercel"`: Generates Vercel Build Output API v3 structure.
+     * - `"executable"`: Compiles into a self-contained binary (no Bun runtime required).
      * Overrides the `VERCEL=1` environment variable, but is overridden by the `--output` CLI flag.
      */
-    output?: "standalone" | "vercel";
+    output?: "standalone" | "vercel" | "executable";
     /**
      * Glob pattern(s) for files to include in the build from the `app/` directory.
      * @default ["**\/*.{js,jsx,ts,tsx}"]
@@ -53,6 +54,15 @@ export type AixyzConfig = {
      * @default ["**\/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"]
      */
     excludes?: string | string[];
+  };
+  vercel?: {
+    /**
+     * Maximum execution duration for the Vercel serverless function in seconds.
+     * Vercel Hobby plan supports up to 60s, Pro up to 300s, Enterprise up to 900s.
+     * AI agents typically need more than the Vercel default of 10s.
+     * @default 300
+     */
+    maxDuration?: number;
   };
   skills?: InferredAixyzConfig["skills"];
 };
@@ -97,7 +107,7 @@ const AixyzConfigSchema = z.object({
   }),
   build: z
     .object({
-      output: z.enum(["standalone", "vercel"]).optional(),
+      output: z.enum(["standalone", "vercel", "executable"]).optional(),
       includes: z
         .union([z.string(), z.array(z.string())])
         .default(["**/*.{js,jsx,ts,tsx}"])
@@ -108,6 +118,12 @@ const AixyzConfigSchema = z.object({
         .transform((v) => (Array.isArray(v) ? v : [v])),
     })
     .default(defaultConfig.build),
+  vercel: z
+    .object({
+      maxDuration: z.number().int().positive().max(900).optional().default(300),
+    })
+    .optional()
+    .default({ maxDuration: 300 }),
   skills: z
     .array(
       z.object({
