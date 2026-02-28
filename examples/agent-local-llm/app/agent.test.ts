@@ -20,7 +20,6 @@ test(
       prompt: "convert 100 degrees celsius to fahrenheit",
     });
     expect(result.text).toContain("212");
-    await Bun.write("result.json", JSON.stringify(result, null, 2));
   },
   { timeout: 60_000 },
 );

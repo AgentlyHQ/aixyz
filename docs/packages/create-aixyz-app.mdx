@@ -16,8 +16,7 @@ bunx create-aixyz-app my-agent
 The CLI prompts for:
 
 - **Agent name** — Used in `aixyz.config.ts` and `package.json`
-
-The boilerplate uses [`@browser-ai/transformers-js`](https://github.com/jakobhoeg/browser-ai) with [`@huggingface/transformers`](https://huggingface.co/docs/transformers.js/en/index) (Transformers.js v3) to run `HuggingFaceTB/SmolLM2-1.7B-Instruct` entirely in-process via WebAssembly — no external server or API key required.
+- **OpenAI API key** — Saved to `.env.local` (optional)
 
 ### Non-Interactive Mode
 
@@ -63,8 +62,6 @@ cd my-agent
 bun install
 bun run dev
 ```
-
-The model (`HuggingFaceTB/SmolLM2-1.7B-Instruct`) is downloaded automatically from HuggingFace Hub on first run and cached locally. No external server is required.
 
 Your agent starts at `http://localhost:3000` with A2A, MCP, and x402 support ready to go.
 

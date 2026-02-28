@@ -6,8 +6,7 @@
     "dev": "aixyz dev"
   },
   "dependencies": {
-    "@browser-ai/transformers-js": "^2",
-    "@huggingface/transformers": "^3",
+    "@ai-sdk/openai": "^3",
     "ai": "^6",
     "aixyz": "workspace:*",
     "zod": "^4"

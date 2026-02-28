@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { transformersJS } from "@browser-ai/transformers-js";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 
@@ -6,7 +6,6 @@ import convertLength from "./tools/length";
 import convertTemperature from "./tools/temperature";
 import convertWeight from "./tools/weight";
 
-// language=Markdown
 const instructions = `
 # Unit Conversion Agent
 
@@ -28,7 +27,7 @@ export const accepts: Accepts = {
 };
 
 export default new ToolLoopAgent({
-  model: openai("gpt-4o-mini"),
+  model: transformersJS("onnx-community/Qwen2.5-1.5B-Instruct", { dtype: "q4" }),
   instructions: instructions,
   tools: { convertLength, convertWeight, convertTemperature },
   stopWhen: stepCountIs(10),

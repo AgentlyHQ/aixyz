@@ -30,8 +30,7 @@
     "commander": "^14.0.3"
   },
   "devDependencies": {
-    "@browser-ai/transformers-js": "^2",
-    "@huggingface/transformers": "^3",
+    "@ai-sdk/openai": "^3",
     "@types/bun": "^1.3.9",
     "@types/node": "^22",
     "ai": "^6",

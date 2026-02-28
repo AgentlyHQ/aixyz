@@ -1,4 +1,4 @@
-import { transformersJS } from "@browser-ai/transformers-js";
+import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 
@@ -27,7 +27,7 @@ export const accepts: Accepts = {
 };
 
 export default new ToolLoopAgent({
-  model: transformersJS("onnx-community/Qwen2.5-1.5B-Instruct", { dtype: "q4" }),
+  model: openai("gpt-4o-mini"),
   instructions: instructions,
   tools: { convertLength, convertWeight, convertTemperature },
   stopWhen: stepCountIs(10),

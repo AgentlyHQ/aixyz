@@ -177,7 +177,7 @@ Both CLIs (`aixyz` and `create-aixyz-app`) are designed for non-interactive use 
   falls back to a sensible default, or exits with a clear error message telling the user which flag to provide.
 - **`--help` on every command.** `create-aixyz-app --help`, `aixyz --help`, `aixyz build --help`,
   `aixyz erc-8004 register --help`, etc. all print full usage with examples.
-- **`create-aixyz-app`**: Supports `--yes`/`-y` for all defaults, plus `--erc-8004`,
+- **`create-aixyz-app`**: Supports `--yes`/`-y` for all defaults, plus `--erc-8004`, `--openai-api-key <key>`,
   `--pay-to <address>`, and `--no-install` for granular control.
 - **`aixyz erc-8004 register`**: All interactive prompts (URL, chain, trust mechanisms, wallet) have CLI flag
   equivalents. See `aixyz erc-8004 register --help`.

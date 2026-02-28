@@ -40,11 +40,9 @@ bunx create-aixyz-app my-agent --yes
 bunx create-aixyz-app my-agent --erc-8004 --pay-to 0x... --no-install
 ```
 
-> The scaffolded template uses `@browser-ai/transformers-js` with `HuggingFaceTB/SmolLM2-1.7B-Instruct` (~1.7B parameters,
-> runs via WebAssembly in-process — no external server or API key required). The model is downloaded automatically from
-> HuggingFace Hub on first run. You can swap it for any
-> [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models)
-> (e.g. `@ai-sdk/openai`, `@ai-sdk/anthropic`, `@ai-sdk/google`).
+> `--openai-api-key` is optional — if omitted, set `OPENAI_API_KEY` in `.env.local` before running the agent.
+> The scaffolded template uses `@ai-sdk/openai` by default, but you can swap it for any
+> [Vercel AI SDK provider adapter](https://ai-sdk.dev/docs/ai-sdk-core/providers-and-models) (e.g. `@ai-sdk/anthropic`, `@ai-sdk/google`, `@ai-sdk/amazon-bedrock`).
 
 This creates the standard project layout:
 
@@ -217,6 +215,7 @@ Common variables:
 | `X402_PAY_TO`          | Default EVM address to receive payments                                      |
 | `X402_NETWORK`         | Default payment network (e.g. `eip155:8453`)                                 |
 | `X402_FACILITATOR_URL` | Custom facilitator URL (default: `https://x402.use-agently.com/facilitator`) |
+| `OPENAI_API_KEY`       | OpenAI API key                                                               |
 
 ### 7. Agent icon (`app/icon.png`)
 
@@ -337,13 +336,14 @@ All CLI commands are designed for non-interactive use. When `stdin` is not a TTY
 bunx create-aixyz-app --help
 ```
 
-| Flag                 | Description                             | Default                                      |
-| -------------------- | --------------------------------------- | -------------------------------------------- |
-| `[name]`             | Agent name (positional argument)        | `my-agent`                                   |
-| `-y, --yes`          | Use all defaults, skip prompts          |                                              |
-| `--erc-8004`         | Include ERC-8004 Agent Identity support | `false`                                      |
-| `--pay-to <address>` | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
-| `--no-install`       | Skip `bun install`                      |                                              |
+| Flag                     | Description                             | Default                                      |
+| ------------------------ | --------------------------------------- | -------------------------------------------- |
+| `[name]`                 | Agent name (positional argument)        | `my-agent`                                   |
+| `-y, --yes`              | Use all defaults, skip prompts          |                                              |
+| `--erc-8004`             | Include ERC-8004 Agent Identity support | `false`                                      |
+| `--openai-api-key <key>` | OpenAI API key for `.env.local`         | empty                                        |
+| `--pay-to <address>`     | x402 payTo Ethereum address             | `0x0799872E07EA7a63c79357694504FE66EDfE4a0A` |
+| `--no-install`           | Skip `bun install`                      |                                              |
 
 ### `aixyz dev` / `aixyz build`
 
