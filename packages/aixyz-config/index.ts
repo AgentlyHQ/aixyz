@@ -60,7 +60,7 @@ export type AixyzConfig = {
      * Maximum execution duration for the Vercel serverless function in seconds.
      * Vercel Hobby plan supports up to 60s, Pro up to 300s, Enterprise up to 900s.
      * AI agents typically need more than the Vercel default of 10s.
-     * @default 300
+     * @default 60
      */
     maxDuration?: number;
   };
@@ -76,6 +76,7 @@ const defaultConfig = {
     includes: ["**/*.{js,jsx,ts,tsx}"],
     excludes: ["**/{_*,*.{test,spec,e2e}}.{js,jsx,ts,tsx}"],
   },
+  vercel: { maxDuration: 60 },
   skills: [],
 };
 
@@ -120,10 +121,10 @@ const AixyzConfigSchema = z.object({
     .default(defaultConfig.build),
   vercel: z
     .object({
-      maxDuration: z.number().int().positive().max(900).optional().default(300),
+      maxDuration: z.number().int().positive().max(900).optional().default(defaultConfig.vercel.maxDuration),
     })
     .optional()
-    .default({ maxDuration: 300 }),
+    .default(defaultConfig.vercel),
   skills: z
     .array(
       z.object({
