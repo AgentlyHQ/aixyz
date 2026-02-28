@@ -6,7 +6,8 @@
     "dev": "aixyz dev"
   },
   "dependencies": {
-    "@ai-sdk/ollama": "^1",
+    "@browser-ai/transformers-js": "^2",
+    "@huggingface/transformers": "^3",
     "ai": "^6",
     "aixyz": "workspace:*",
     "zod": "^4"

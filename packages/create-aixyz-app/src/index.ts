@@ -17,7 +17,6 @@ program
   .argument("[name]", "Agent name", "my-agent")
   .option("-y, --yes", "Use defaults for all prompts (non-interactive)")
   .option("--erc-8004", "Include ERC-8004 Agent Identity support")
-  .option("--ollama-base-url <url>", "Set Ollama base URL in .env.local", "http://127.0.0.1:11434/api")
   .option("--pay-to <address>", "x402 payTo Ethereum address", DEFAULT_PAY_TO)
   .option("--no-install", "Skip dependency installation")
   .addHelpText(
@@ -34,7 +33,6 @@ program.parse();
 const opts = program.opts<{
   yes?: boolean;
   erc8004?: boolean;
-  ollamaBaseUrl: string;
   payTo: string;
   install: boolean;
 }>();
@@ -134,21 +132,6 @@ if (!includeErc8004 && !isNonInteractive) {
   includeErc8004 = erc8004;
 }
 
-// Prompt for Ollama base URL
-let ollamaBaseUrl = opts.ollamaBaseUrl;
-if (!isNonInteractive) {
-  const urlInput = await p.text({
-    message: "Ollama base URL (press Enter to use default):",
-    placeholder: "http://127.0.0.1:11434/api",
-    defaultValue: "http://127.0.0.1:11434/api",
-  });
-  if (p.isCancel(urlInput)) {
-    p.cancel("Operation cancelled.");
-    process.exit(0);
-  }
-  ollamaBaseUrl = urlInput || "http://127.0.0.1:11434/api";
-}
-
 // Prompt for x402 payTo address (optional, can be skipped)
 let payTo = opts.payTo;
 if (payTo === DEFAULT_PAY_TO && !isNonInteractive) {
@@ -204,9 +187,8 @@ if (existsSync(envLocalSrc)) {
   // Remove the template placeholder (npm strips .env.local from packages)
   rmSync(envLocalSrc);
 }
-// Always write .env.local — with Ollama base URL
-const envContent = `OLLAMA_BASE_URL=${ollamaBaseUrl}\n`;
-writeFileSync(join(targetDir, ".env.local"), envContent);
+// Always write an empty .env.local (model runs in-process, no server URL needed)
+writeFileSync(join(targetDir, ".env.local"), "");
 
 // Replace {{AGENT_NAME}} and {{PKG_NAME}} placeholders
 const filesToReplace = ["package.json", "aixyz.config.ts"];
@@ -243,7 +225,7 @@ if (packageManager !== "bun" && packageManager !== "unknown") {
   p.log.warn("");
 }
 
-p.note([`cd ${pkgName}`, "Ensure Ollama is running: https://ollama.com", "bun run dev"].join("\n"), "Next steps");
+p.note([`cd ${pkgName}`, "bun run dev"].join("\n"), "Next steps");
 
 p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 

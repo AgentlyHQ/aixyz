@@ -1,4 +1,4 @@
-import { ollama } from "@ai-sdk/ollama";
+import { transformersJS } from "@browser-ai/transformers-js";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
 
@@ -28,7 +28,7 @@ export const accepts: Accepts = {
 };
 
 export default new ToolLoopAgent({
-  model: ollama("qwen2.5:1.5b"),
+  model: transformersJS("HuggingFaceTB/SmolLM2-1.7B-Instruct"),
   instructions: instructions,
   tools: { convertLength, convertWeight, convertTemperature },
   stopWhen: stepCountIs(10),

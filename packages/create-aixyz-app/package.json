@@ -30,7 +30,8 @@
     "commander": "^14.0.3"
   },
   "devDependencies": {
-    "@ai-sdk/ollama": "^1",
+    "@browser-ai/transformers-js": "^2",
+    "@huggingface/transformers": "^3",
     "@types/bun": "^1.3.9",
     "@types/node": "^22",
     "ai": "^6",

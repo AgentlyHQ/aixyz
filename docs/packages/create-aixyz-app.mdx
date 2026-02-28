@@ -16,7 +16,8 @@ bunx create-aixyz-app my-agent
 The CLI prompts for:
 
 - **Agent name** — Used in `aixyz.config.ts` and `package.json`
-- **Ollama base URL** — Saved to `.env.local` (defaults to `http://127.0.0.1:11434/api`)
+
+The boilerplate uses [`@browser-ai/transformers-js`](https://github.com/jakobhoeg/browser-ai) with [`@huggingface/transformers`](https://huggingface.co/docs/transformers.js/en/index) (Transformers.js v3) to run `HuggingFaceTB/SmolLM2-1.7B-Instruct` entirely in-process via WebAssembly — no external server or API key required.
 
 ### Non-Interactive Mode
 
@@ -24,12 +25,6 @@ Skip all prompts with the `-y` flag:
 
 ```bash
 bunx create-aixyz-app my-agent -y
-```
-
-Use `--ollama-base-url` to set a custom Ollama endpoint:
-
-```bash
-bunx create-aixyz-app my-agent --ollama-base-url http://my-ollama-host:11434/api
 ```
 
 ## What Gets Scaffolded
@@ -66,10 +61,10 @@ The generated `package.json` includes:
 ```bash
 cd my-agent
 bun install
-# Ensure Ollama is running: https://ollama.com
-# Pull the model: ollama pull qwen2.5:1.5b
 bun run dev
 ```
+
+The model (`HuggingFaceTB/SmolLM2-1.7B-Instruct`) is downloaded automatically from HuggingFace Hub on first run and cached locally. No external server is required.
 
 Your agent starts at `http://localhost:3000` with A2A, MCP, and x402 support ready to go.
 
