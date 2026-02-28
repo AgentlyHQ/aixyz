@@ -1,17 +1,27 @@
 ---
 title: "Introduction"
-description: "Build and deploy AI agents with A2A, MCP, x402 payments, and ERC-8004 identity built in."
+description: "Payment-native SDK for AI Agents. Build an agent, get paid today."
 ---
 
-**aixyz** is a framework for building and deploying AI agents with built-in support for [A2A](/protocols/a2a), [MCP](/protocols/mcp), [x402 payments](/protocols/x402), and [ERC-8004 identity](/protocols/erc-8004).
+**aixyz** is the payment-native SDK for AI agents. Build agents and tools with your favorite framework, and get paid instantly through web3 payment rails — no payment integration work required.
 
-Write your agent logic and tools. aixyz handles protocol wiring, payment gating, and deployment.
+> Build an agent and get paid today.
+
+Every agent you deploy with aixyz comes with [x402 payments](/protocols/x402) embedded. When another agent or user calls yours, settlement happens on-chain automatically. You set a price, deploy, and start earning.
 
 ## How It Works
 
-1. **Define your agent** — Use [Vercel AI SDK](https://ai-sdk.dev) (`ai@^6`) to create agents with tools
-2. **Configure identity and payments** — Set up `aixyz.config.ts` with agent metadata and x402 payment settings
-3. **Deploy** — Run `aixyz build` and deploy to Vercel, Docker, or any Bun-compatible host
+1. **Build your agent** — Use [Vercel AI SDK](https://ai-sdk.dev) (`ai@^6`) or any framework to create agents with tools
+2. **Set your price** — Export an `accepts` object to gate endpoints with instant micropayments
+3. **Deploy and earn** — Run `aixyz build` and deploy. Payments settle on-chain via [x402](https://www.x402.org/)
+
+```typescript
+// app/agent.ts — set your price and start earning
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.01",
+};
+```
 
 aixyz auto-generates a server that exposes:
 
@@ -21,7 +31,7 @@ aixyz auto-generates a server that exposes:
 | `/agent`                       | A2A      | JSON-RPC endpoint with x402 payment gate |
 | `/mcp`                         | MCP      | Tool sharing with MCP clients            |
 
-## Quick Example
+## Quick Start
 
 ```bash
 bunx create-aixyz-app my-agent
@@ -29,17 +39,17 @@ cd my-agent
 bun run dev
 ```
 
-Your agent is running at `http://localhost:3000` with A2A, MCP, and x402 payment support out of the box.
+Your agent is running at `http://localhost:3000` with payments, [A2A](/protocols/a2a), and [MCP](/protocols/mcp) out of the box.
 
 <CardGroup cols={2}>
   <Card title="Installation" icon="rocket" href="/getting-started/installation">
     Create and run your first agent in under a minute.
   </Card>
+  <Card title="Payments" icon="credit-card" href="/getting-started/payments">
+    Set prices for your agent and tools with x402.
+  </Card>
   <Card title="Agent and Tools" icon="folder-tree" href="/getting-started/agent-and-tools">
     Define agents and tools with Vercel AI SDK.
-  </Card>
-  <Card title="Protocols" icon="diagram-project" href="/protocols/a2a">
-    Learn about A2A, MCP, x402, and ERC-8004.
   </Card>
   <Card title="Templates" icon="copy" href="/templates/overview">
     Working agent templates to start from.
