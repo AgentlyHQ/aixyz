@@ -15,16 +15,16 @@ Price Gecky is a cryptocurrency market data agent that uses the CoinGecko Pro AP
 
 ```
 agent-price-oracle/
-  aixyz.config.ts                 # Agent metadata and skills
-  app/
-    agent.ts                      # Agent with three market data tools
-    tools/
-      getTokenPrice.ts            # Token price lookup
-      getNewListedTokens.ts       # Newly listed token discovery
-      getTopGainersLosers.ts      # Top gainers and losers
-    icon.png                      # Agent icon
-  package.json
-  vercel.json
+├── aixyz.config.ts                 # Agent metadata and skills
+├── app/
+│   ├── agent.ts                    # Agent with three market data tools
+│   ├── tools/
+│   │   ├── getTokenPrice.ts        # Token price lookup
+│   │   ├── getNewListedTokens.ts   # Newly listed token discovery
+│   │   └── getTopGainersLosers.ts  # Top gainers and losers
+│   └── icon.png                    # Agent icon
+├── package.json
+└── vercel.json
 ```
 
 ## Skills
