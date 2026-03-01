@@ -15,17 +15,17 @@ The local LLM agent runs a quantized language model entirely in-process using [T
 
 ```
 agent-local-llm/
-  aixyz.config.ts         # Agent metadata and skills (standalone output)
-  app/
-    agent.ts              # Agent definition with local LLM model
-    agent.test.ts         # Integration test
-    tools/
-      temperature.ts      # Temperature conversion tool
-    icon.png              # Agent icon
-  prewarm.ts              # Model prewarming script (used by Docker)
-  Dockerfile              # Multi-stage Docker image with prewarmed model
-  .dockerignore
-  package.json
+├── aixyz.config.ts         # Agent metadata and skills (standalone output)
+├── app/
+│   ├── agent.ts            # Agent definition with local LLM model
+│   ├── agent.test.ts       # Integration test
+│   ├── tools/
+│   │   └── temperature.ts  # Temperature conversion tool
+│   └── icon.png            # Agent icon
+├── prewarm.ts              # Model prewarming script (used by Docker)
+├── Dockerfile              # Multi-stage Docker image with prewarmed model
+├── .dockerignore
+└── package.json
 ```
 
 ## Skills

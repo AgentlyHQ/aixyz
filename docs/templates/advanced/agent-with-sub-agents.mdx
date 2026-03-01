@@ -22,18 +22,18 @@ The example has three agents and two tools:
 
 ```
 agent-with-sub-agents/
-  aixyz.config.ts           # Agent metadata and skills
-  app/
-    agent.ts                # Coordinator agent → /agent
-    agents/
-      math.ts               # Math sub-agent → /math/agent
-      text.ts               # Text sub-agent → /text/agent
-    tools/
-      calculate.ts          # Arithmetic tool (add/subtract/multiply/divide)
-      word-count.ts         # Text analysis tool (words/characters/sentences)
-    icon.png
-  package.json
-  vercel.json
+├── aixyz.config.ts           # Agent metadata and skills
+├── app/
+│   ├── agent.ts              # Coordinator agent → /agent
+│   ├── agents/
+│   │   ├── math.ts           # Math sub-agent → /math/agent
+│   │   └── text.ts           # Text sub-agent → /text/agent
+│   ├── tools/
+│   │   ├── calculate.ts      # Arithmetic tool (add/subtract/multiply/divide)
+│   │   └── word-count.ts     # Text analysis tool (words/characters/sentences)
+│   └── icon.png
+├── package.json
+└── vercel.json
 ```
 
 ## Endpoints
