@@ -2,6 +2,9 @@ import type { AixyzConfig } from "aixyz/config";
 
 const config: AixyzConfig = {
   name: "Temperature Conversion Agent (Local LLM)",
+  build: {
+    output: "standalone",
+  },
   description:
     "AI agent that converts temperature values between Celsius, Fahrenheit, and Kelvin — powered by a local LLM running in-process via WebAssembly (no API key required).",
   version: "0.1.0",
