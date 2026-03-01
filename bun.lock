@@ -54,6 +54,17 @@
         "typescript": "^5",
       },
     },
+    "examples/agent-fake-model": {
+      "name": "@examples/agent-fake-model",
+      "dependencies": {
+        "ai": "^6",
+        "aixyz": "^0",
+      },
+      "devDependencies": {
+        "@types/bun": "^1",
+        "typescript": "^5",
+      },
+    },
     "examples/agent-job-hunter": {
       "name": "@examples/agent-job-hunter",
       "dependencies": {
@@ -269,6 +280,8 @@
     "@examples/agent-byo-facilitator": ["@examples/agent-byo-facilitator@workspace:examples/agent-byo-facilitator"],
 
     "@examples/agent-chainlink": ["@examples/agent-chainlink@workspace:examples/agent-chainlink"],
+
+    "@examples/agent-fake-model": ["@examples/agent-fake-model@workspace:examples/agent-fake-model"],
 
     "@examples/agent-job-hunter": ["@examples/agent-job-hunter@workspace:examples/agent-job-hunter"],
 

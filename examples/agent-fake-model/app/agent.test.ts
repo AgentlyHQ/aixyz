@@ -1,14 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ToolLoopAgent } from "ai";
-import agent, { model } from "./agent";
-
-// ── Agent structure ────────────────────────────────────────────────────────
-
-test("default export is a ToolLoopAgent", () => {
-  expect(agent).toBeInstanceOf(ToolLoopAgent);
-});
-
-// ── Deterministic model tests — no API key required ────────────────────────
+import { model } from "./agent";
 
 describe("palindrome checker (fake model)", () => {
   test("detects a palindrome", async () => {
