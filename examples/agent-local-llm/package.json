@@ -4,6 +4,8 @@
   "scripts": {
     "build": "aixyz build",
     "dev": "aixyz dev",
+    "docker:build": "docker build -t agent-local-llm .",
+    "docker:run": "docker run -p 3000:3000 agent-local-llm",
     "test": "bun test"
   },
   "dependencies": {
