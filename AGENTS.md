@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **When working on a new feature, always consult [`skills/aixyz/SKILL.md`](./skills/aixyz/SKILL.md) first.**
+> It is the canonical reference for how the project is designed and what conventions to follow.
+> Available externally at [`skills.sh/agentlyhq/aixyz`](https://skills.sh/agentlyhq/aixyz).
+
 ## Project overview
 
 Monorepo for aixyz — a framework for bundling AI agents from any framework into deployable services with A2A, MCP, x402 payments, and ERC-8004 identity protocols. Managed with Bun workspaces and Turbo. Runtime: Bun 1.3.9+.
