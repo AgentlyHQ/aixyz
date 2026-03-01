@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **When working on a new feature, always consult [`skills/SKILL.md`](./skills/SKILL.md) first.**
+> **When working on a new feature, always consult [`skills/aixyz/SKILL.md`](./skills/aixyz/SKILL.md) first.**
 > It is the canonical reference for how the project is designed and what conventions to follow.
 > Available externally at [`skills.sh/agentlyhq/aixyz`](https://skills.sh/agentlyhq/aixyz).
 
