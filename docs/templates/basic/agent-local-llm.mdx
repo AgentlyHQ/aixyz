@@ -19,10 +19,10 @@ agent-local-llm/
   app/
     agent.ts              # Agent definition with local LLM model
     agent.test.ts         # Integration test
-    prewarm.ts            # Model prewarming script (used by Docker)
     tools/
       temperature.ts      # Temperature conversion tool
     icon.png              # Agent icon
+  prewarm.ts              # Model prewarming script (used by Docker)
   Dockerfile              # Multi-stage Docker image with prewarmed model
   .dockerignore
   package.json

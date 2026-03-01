@@ -14,8 +14,8 @@ COPY . .
 RUN bun run build
 
 # Prewarm: download and cache the model weights into the image layer
-ENV HF_HOME=/app/.cache/huggingface
-RUN bun app/prewarm.ts
+ENV HF_HOME=/app/.aixyz/model/huggingface/cache
+RUN bun prewarm.ts
 
 # ---- runtime ----
 FROM oven/bun:1-slim
@@ -26,9 +26,9 @@ WORKDIR /app
 COPY --from=builder /app/.aixyz/output ./
 
 # Copy the prewarmed model cache so the server starts instantly
-COPY --from=builder /app/.cache /app/.cache
+COPY --from=builder /app/.aixyz/model /app/.aixyz/model
 
-ENV HF_HOME=/app/.cache/huggingface
+ENV HF_HOME=/app/.aixyz/model/huggingface/cache
 ENV NODE_ENV=production
 
 EXPOSE 3000

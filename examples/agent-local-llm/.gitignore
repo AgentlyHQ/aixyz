@@ -8,8 +8,5 @@ pnpm-lock.yaml
 # aixyz
 .aixyz
 
-# model cache
-.cache
-
 # local env files
 .env.local
