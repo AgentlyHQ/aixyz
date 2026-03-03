@@ -119,16 +119,25 @@ Use these if your agent needs to hold state between requests or run background j
 
 For all three: push your repo, connect the platform, set your LLM provider API key (e.g., `OPENAI_API_KEY`) as an environment variable, and follow their deploy wizard. They all detect Bun automatically.
 
-### Option C — Expose a Local Port (advanced, not recommended for production)
+### Option C — Cloud Platform Ingress or Local Tunnel (advanced)
 
-If you want to expose your local machine directly (e.g., for quick testing), use a tunnel tool:
+**If you are already running OpenClaw on a cloud platform** (AWS, GCP, Azure, DigitalOcean, etc.), the simplest path is to expose the agent through that same platform:
+
+- **AWS** — use an Application Load Balancer or API Gateway in front of the process
+- **GCP** — use Cloud Run (zero-config container deploy) or a load balancer
+- **Azure** — use Azure Container Apps or App Service
+- **DigitalOcean** — use App Platform or a Droplet with nginx as a reverse proxy
+
+> 🔒 **Least-privilege rule:** When exposing the agent process, only open the port the agent listens on (default `3000`). Do **not** grant the process broader network, IAM, or filesystem access than it needs to serve HTTP requests.
+
+**If you just need a quick tunnel for local testing**, use ngrok:
 
 ```bash
 # ngrok — creates a public HTTPS URL that forwards to localhost:3000
 npx ngrok http 3000
 ```
 
-> ⚠️ **Security warning:** Exposing your local machine is fine for short-lived testing but should **never** be used for a production agent. Anyone who discovers your tunnel URL can send requests to your computer. Always use a proper hosting provider for a live agent.
+> ⚠️ **Security warning:** Local tunnels are fine for short-lived testing but should **never** be used for a production agent. Anyone who discovers the URL can send requests to your machine. Always use a proper hosting provider for live traffic.
 
 ---
 
@@ -177,7 +186,7 @@ Registering on ERC-8004 costs a small gas fee (a fraction of a dollar). You need
 | Base             | ETH         | [Coinbase](https://coinbase.com) (Base is a Coinbase L2)                                       |
 | Polygon          | POL         | [Coinbase](https://coinbase.com), [Binance](https://binance.com)                               |
 
-**Cheapest option:** Base or Polygon have very low gas fees — registration typically costs a few cents or less. Ethereum mainnet gas varies widely (check [etherscan.io/gastracker](https://etherscan.io/gastracker) before transacting). Gas prices on all networks can fluctuate significantly; the amounts above are rough guides only.
+**Recommended network: Base.** The x402 payment facilitator is primarily deployed on Base, so your agent will receive payments most reliably there. Base also has very low gas fees — registration typically costs a few cents. Ethereum mainnet gas varies widely and is usually not worth it for getting started. Gas prices on all networks can fluctuate; the amounts above are rough guides only.
 
 **Steps to fund your wallet:**
 
