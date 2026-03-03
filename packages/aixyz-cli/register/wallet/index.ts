@@ -4,6 +4,7 @@ import { select, input, password } from "@inquirer/prompts";
 import { withTTY } from "../utils/prompt";
 import { createPrivateKeyWallet } from "./privatekey";
 import { createKeystoreWallet } from "./keystore";
+import { hasLocalWallet, getLocalWalletPrivateKey } from "./local";
 
 export interface WalletOptions {
   keystore?: string;
@@ -33,15 +34,25 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
     return { type: "privatekey", resolveKey: () => Promise.resolve(envPrivateKey) };
   }
 
+  // Auto-detect local wallet (.aixyz/wallet.json)
+  if (hasLocalWallet()) {
+    console.log("Using local wallet from .aixyz/wallet.json");
+    return { type: "privatekey", resolveKey: () => Promise.resolve(getLocalWalletPrivateKey()) };
+  }
+
   // Interactive: prompt user to choose
   return withTTY(async () => {
+    const localWalletExists = hasLocalWallet();
+    const choices = [
+      { name: "Keystore file", value: "keystore" },
+      { name: "Browser wallet (any EIP-6963 compatible wallets)", value: "browser" },
+      { name: "Private key (not recommended)", value: "privatekey" },
+      ...(localWalletExists ? [{ name: "Local wallet (.aixyz/wallet.json)", value: "local" }] : []),
+    ];
+
     const method = await select({
       message: "Select signing method:",
-      choices: [
-        { name: "Keystore file", value: "keystore" },
-        { name: "Browser wallet (any EIP-6963 compatible wallets)", value: "browser" },
-        { name: "Private key (not recommended)", value: "privatekey" },
-      ],
+      choices,
     });
 
     switch (method) {
@@ -54,6 +65,8 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
       }
       case "browser":
         return { type: "browser" };
+      case "local":
+        return { type: "privatekey", resolveKey: () => Promise.resolve(getLocalWalletPrivateKey()) };
       case "privatekey": {
         const key = await password({
           message: "Enter private key:",
@@ -65,7 +78,7 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
       default:
         throw new Error("No wallet method selected");
     }
-  }, "No TTY detected. Provide --keystore, --browser, or PRIVATE_KEY environment variable to specify a signing method.");
+  }, "No TTY detected. Provide --keystore, --browser, PRIVATE_KEY environment variable, or run `aixyz wallet generate` to create a local wallet.");
 }
 
 export async function createWalletFromMethod(
