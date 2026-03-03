@@ -1,5 +1,5 @@
 ---
-name: aixyz for openclaw
+name: aixyz-on-openclaw
 description: >-
   Step-by-step guide for openclaw users to build, deploy, and monetise an AI agent with aixyz.
   Covers everything from zero: installing Bun, scaffolding an agent, choosing a deployment option,
@@ -33,7 +33,7 @@ An **AI agent** that:
 
 ## Step 1 — Install Bun
 
-aixyz requires **Bun** (not Node). If you already have Bun ≥ 1.3.9, skip this step.
+aixyz requires **Bun** (not Node). If you already have Bun ≥ 1.3, skip this step.
 
 ```bash
 # macOS / Linux
@@ -46,10 +46,10 @@ powershell -c "irm bun.sh/install.ps1 | iex"
 Verify:
 
 ```bash
-bun --version   # should print 1.3.9 or higher
+bun --version   # should print 1.3 or higher
 ```
 
-> **Why Bun?** The aixyz build pipeline uses Bun's native build API and plugin system — this is a hard architectural requirement, not a preference. The CLI (`@aixyz/cli`) cannot run on Node. Bun also includes a built-in test runner, which means no extra test framework is needed.
+> **Why Bun?** The aixyz build pipeline uses Bun's native build API and plugin system — this is a hard architectural requirement, not a preference. The CLI (`@aixyz/cli`) cannot run on Node. Bun also includes a built-in test runner, which means no extra test framework is needed. Curious about the full rationale? Read [Why Bun](https://aixyz.sh/getting-started/why-bun).
 
 ---
 
@@ -74,11 +74,13 @@ my-agent/
   .env.local        ← API keys (never commit this file)
 ```
 
-Open `.env.local` and add your OpenAI API key:
+Open `.env.local` and add your LLM provider's API key. The default scaffold uses `@ai-sdk/openai`, so add:
 
 ```
 OPENAI_API_KEY=sk-...
 ```
+
+If you prefer a different provider (Anthropic, Google, Amazon Bedrock, etc.), swap the `@ai-sdk/*` adapter in `package.json` and `app/agent.ts`, then set the corresponding env var instead. See [ai-sdk.dev](https://ai-sdk.dev) for the full list of providers.
 
 Run locally to test:
 
@@ -91,7 +93,7 @@ bun run dev
 
 ## Step 3 — Deploy to the Internet
 
-Your agent needs a **public HTTPS URL** so other agents and clients can reach it. Choose the option that fits your situation.
+Your agent needs a **public HTTPS URL** so other agents and clients can reach it. If you already have a preferred hosting platform, use it. If you are starting fresh, here are our recommendations.
 
 ### Option A — Vercel (recommended, no server knowledge needed)
 
@@ -100,7 +102,7 @@ Vercel gives you a free HTTPS URL with zero configuration. It is the easiest pat
 1. Push your project to a GitHub repository
 2. Go to [vercel.com](https://vercel.com) → **Add New Project** → import your repo
 3. Set the **Build Command** to `bun run build` and the **Output Directory** to `.vercel/output`
-4. Add your `OPENAI_API_KEY` environment variable in the Vercel dashboard under **Settings → Environment Variables**
+4. Add your LLM provider API key (e.g., `OPENAI_API_KEY`) in the Vercel dashboard under **Settings → Environment Variables**
 5. Click **Deploy** — Vercel gives you a URL like `https://my-agent.vercel.app`
 
 Vercel auto-deploys on every push. Your agent is serverless and scales automatically.
@@ -115,7 +117,7 @@ Use these if your agent needs to hold state between requests or run background j
 | [Render](https://render.com)   | Generous free tier | Sleeps after inactivity              |
 | [Fly.io](https://fly.io)       | Free allowance     | More control, steeper learning curve |
 
-For all three: push your repo, connect the platform, set `OPENAI_API_KEY` as an environment variable, and follow their deploy wizard. They all detect Bun automatically.
+For all three: push your repo, connect the platform, set your LLM provider API key (e.g., `OPENAI_API_KEY`) as an environment variable, and follow their deploy wizard. They all detect Bun automatically.
 
 ### Option C — Expose a Local Port (advanced, not recommended for production)
 
@@ -264,7 +266,7 @@ Before announcing your agent, verify:
 
 - [ ] `bun run dev` works locally and the agent responds correctly
 - [ ] Agent is deployed to a public URL (Vercel or similar)
-- [ ] `OPENAI_API_KEY` (and any other secrets) are set as environment variables on the platform, **not** committed to your repo
+- [ ] LLM provider API key (e.g., `OPENAI_API_KEY`) and any other secrets are set as environment variables on the platform, **not** committed to your repo
 - [ ] `aixyz.config.ts` has the correct `name`, `description`, and `payTo` address
 - [ ] ERC-8004 registration is complete and the registry shows your agent URL
 - [ ] `accepts` export is set so your agent earns from requests
@@ -307,9 +309,9 @@ Before announcing your agent, verify:
 
 Restart your terminal after installing Bun, or run `source ~/.bashrc` (Linux) / `source ~/.zshrc` (macOS).
 
-### "OPENAI_API_KEY is not set"
+### "API key is not set" / "OPENAI_API_KEY is not set"
 
-Add it to `.env.local` (local dev) or to your platform's environment variable settings (production).
+Add your LLM provider's API key to `.env.local` (local dev) or to your platform's environment variable settings (production).
 
 ### "Transaction failed" during ERC-8004 registration
 
