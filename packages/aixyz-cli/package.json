@@ -24,6 +24,7 @@
     "build",
     "dev",
     "register",
+    "wallet",
     "bin.ts"
   ],
   "dependencies": {
