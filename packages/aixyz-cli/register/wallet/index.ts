@@ -34,12 +34,6 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
     return { type: "privatekey", resolveKey: () => Promise.resolve(envPrivateKey) };
   }
 
-  // Auto-detect local wallet (.aixyz/wallet.json)
-  if (hasLocalWallet()) {
-    console.log("Using local wallet from .aixyz/wallet.json");
-    return { type: "privatekey", resolveKey: () => Promise.resolve(getLocalWalletPrivateKey()) };
-  }
-
   // Interactive: prompt user to choose
   return withTTY(async () => {
     const localWalletExists = hasLocalWallet();
