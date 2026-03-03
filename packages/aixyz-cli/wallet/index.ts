@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { existsSync } from "node:fs";
+import { existsSync, copyFileSync } from "node:fs";
 import { generateLocalWallet, getLocalWalletPath } from "../register/wallet/local";
 import chalk from "chalk";
 import boxen from "boxen";
@@ -32,6 +32,12 @@ Examples:
       console.error(chalk.red(`Wallet already exists at ${walletPath}`));
       console.error(chalk.dim("Use --force to overwrite."));
       process.exit(1);
+    }
+
+    if (existsSync(walletPath) && options.force) {
+      const backupPath = `${walletPath}.${Date.now()}.bak`;
+      copyFileSync(walletPath, backupPath);
+      console.log(chalk.dim(`Backed up existing wallet to ${backupPath}`));
     }
 
     let wallet;

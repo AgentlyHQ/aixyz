@@ -32,16 +32,16 @@ describe("generateLocalWallet", () => {
     expect(content.address).toBe(wallet.address);
   });
 
-  test("creates .aixyz/.gitignore protecting wallet.json", () => {
+  test("creates .aixyz/.gitignore ignoring everything", () => {
     const gitignorePath = join(testDir, ".aixyz", ".gitignore");
     expect(existsSync(gitignorePath)).toBe(true);
-    expect(readFileSync(gitignorePath, "utf-8")).toContain("wallet.json");
+    expect(readFileSync(gitignorePath, "utf-8").trim()).toBe("*");
   });
 
-  test("creates .aixyz/.aiignore protecting wallet.json", () => {
+  test("creates .aixyz/.aiignore ignoring everything", () => {
     const aiignorePath = join(testDir, ".aixyz", ".aiignore");
     expect(existsSync(aiignorePath)).toBe(true);
-    expect(readFileSync(aiignorePath, "utf-8")).toContain("wallet.json");
+    expect(readFileSync(aiignorePath, "utf-8").trim()).toBe("*");
   });
 
   test("mnemonic is 12 words", () => {

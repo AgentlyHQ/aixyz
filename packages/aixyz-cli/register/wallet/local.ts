@@ -5,8 +5,8 @@ import { bytesToHex } from "viem";
 
 const WALLET_DIR = ".aixyz";
 const WALLET_FILE = "wallet.json";
-const GITIGNORE_CONTENT = "wallet.json\n";
-const AIIGNORE_CONTENT = "wallet.json\n";
+const GITIGNORE_CONTENT = "*\n";
+const AIIGNORE_CONTENT = "*\n";
 
 export interface LocalWallet {
   mnemonic: string;
