@@ -239,14 +239,6 @@ if (!opts.install) {
   }
 }
 
-// Show warning if not using Bun
-if (packageManager !== "bun" && packageManager !== "unknown") {
-  p.log.warn("");
-  p.log.error(`⚠️  You are using ${packageManager}, but this project requires Bun.`);
-  p.log.error("   Please use Bun for this project: https://bun.sh");
-  p.log.warn("");
-}
-
 p.note(
   [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"].filter(Boolean).join("\n"),
   "Next steps",
@@ -255,3 +247,11 @@ p.note(
 p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 
 p.outro(`Success! Created ${agentName} at ./${pkgName}`);
+
+// Show warning if not using Bun (last, so it's loud and clear)
+if (packageManager !== "bun" && packageManager !== "unknown") {
+  p.log.warn("");
+  p.log.error(`⚠️  You are using ${packageManager}, but this project requires Bun.`);
+  p.log.error("   Please use Bun for this project: https://bun.sh");
+  p.log.warn("");
+}
