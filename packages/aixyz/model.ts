@@ -1,4 +1,5 @@
-import type { LanguageModelV3, LanguageModelV3CallOptions, LanguageModelV3Prompt } from "@ai-sdk/provider";
+import { MockLanguageModelV3 } from "ai/test";
+import type { LanguageModelV3CallOptions, LanguageModelV3Prompt } from "@ai-sdk/provider";
 
 export type Prompt = LanguageModelV3Prompt;
 
@@ -22,11 +23,13 @@ function lastUserText(prompt: Prompt): string {
 }
 
 /**
- * Creates a fake language model for testing and development.
+ * Creates a fake language model for testing and development, backed by `MockLanguageModelV3`.
  * Conforms to the LanguageModelV3 specification with zero token usage.
  *
  * The `transform` function receives the last user message text and the full prompt,
  * and returns the model output string.
+ *
+ * All calls are recorded in `.doGenerateCalls` and `.doStreamCalls` for test assertions.
  *
  * @example
  * import { fake } from "aixyz/model";
@@ -34,18 +37,20 @@ function lastUserText(prompt: Prompt): string {
  * // custom transform using last message only
  * const helloModel = fake((input) => `hello, ${input}`);
  *
+ * // inspect recorded calls after use
+ * await helloModel.doGenerate({ prompt });
+ * console.log(helloModel.doGenerateCalls.length); // 1
+ *
  * // custom transform using full prompt context
  * const contextModel = fake((input, prompt) => `${prompt.length} turns: ${input}`);
  */
-export function fake(transform: (lastMessage: string, prompt: Prompt) => string): LanguageModelV3 {
-  return {
-    specificationVersion: "v3" as const,
+export function fake(transform: (lastMessage: string, prompt: Prompt) => string): MockLanguageModelV3 {
+  return new MockLanguageModelV3({
     provider: "aixyz/fake",
     modelId: "aixyz/fake",
-    supportedUrls: {},
-    doGenerate(options: LanguageModelV3CallOptions) {
+    doGenerate: async (options: LanguageModelV3CallOptions) => {
       const text = transform(lastUserText(options.prompt), options.prompt);
-      return Promise.resolve({
+      return {
         content: [{ type: "text" as const, text }],
         finishReason: { unified: "stop" as const, raw: undefined },
         usage: {
@@ -53,9 +58,9 @@ export function fake(transform: (lastMessage: string, prompt: Prompt) => string)
           outputTokens: { total: 0, text: 0, reasoning: 0 },
         },
         warnings: [],
-      });
+      };
     },
-    doStream(options: LanguageModelV3CallOptions) {
+    doStream: async (options: LanguageModelV3CallOptions) => {
       const text = transform(lastUserText(options.prompt), options.prompt);
       const stream = new ReadableStream({
         start(controller) {
@@ -74,7 +79,7 @@ export function fake(transform: (lastMessage: string, prompt: Prompt) => string)
           controller.close();
         },
       });
-      return Promise.resolve({ stream });
+      return { stream };
     },
-  };
+  });
 }
