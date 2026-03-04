@@ -89,6 +89,16 @@ bun run dev
 # Agent is now live at http://localhost:3000
 ```
 
+> **Testing with an AI agent client?** Install the `use-agently` skill so your AI agent can call your local agent in dev mode:
+>
+> ```bash
+> npx skills add https://github.com/agentlyhq/use-agently --skill use-agently
+> ```
+>
+> This skill lets any AI agent discover and call your locally running agent at `http://localhost:3000`.
+> While testing locally, set `"scheme": "free"` so callers are not charged (see [Step 7](#step-7--set-up-payments)).
+> Before going to production, switch to `"scheme": "exact"` so your agent earns from every request.
+
 ---
 
 ## Step 3 — Deploy to the Internet
@@ -243,9 +253,15 @@ Add an `accepts` export to `app/agent.ts` so callers are charged per request:
 ```ts
 import type { Accepts } from "aixyz/accepts";
 
-// Gate the /agent endpoint — callers pay $0.005 per request
-export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
+// During local testing — callers are not charged
+export const accepts: Accepts = { scheme: "free" };
+
+// Production — callers pay $0.005 per request
+// export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
 ```
+
+> **Testing tip:** Use `"scheme": "free"` while developing and testing locally (install the [`use-agently`](#step-2--scaffold-your-agent) skill to call your local agent from an AI client).
+> **Before going to production**, switch to `"scheme": "exact"` with a `price` so your agent earns from every request.
 
 Set the wallet address that receives payments in `aixyz.config.ts`:
 
