@@ -6,12 +6,12 @@ const makeUserPrompt = (text: string): Prompt => [{ role: "user", content: [{ ty
 const identity = (input: string) => input;
 
 describe("fake model", () => {
-  test("has correct metadata", () => {
+  test("has correct metadata", async () => {
     const model = fake(identity);
     expect(model.specificationVersion).toBe("v3");
     expect(model.provider).toBe("aixyz/fake");
     expect(model.modelId).toBe("aixyz/fake");
-    expect(model.supportedUrls).toEqual({});
+    expect(await model.supportedUrls).toEqual({});
   });
 
   describe("doGenerate", () => {
@@ -105,6 +105,31 @@ describe("fake model", () => {
       const finish = chunks[4] as { type: string; usage: { inputTokens: { total: number } } };
       expect(finish.type).toBe("finish");
       expect(finish.usage.inputTokens.total).toBe(0);
+    });
+  });
+
+  describe("call recording", () => {
+    test("records doGenerate calls", async () => {
+      const model = fake(identity);
+      const prompt = makeUserPrompt("hi");
+      await model.doGenerate({ prompt });
+      expect(model.doGenerateCalls).toHaveLength(1);
+      expect(model.doGenerateCalls[0].prompt).toEqual(prompt);
+    });
+
+    test("records multiple doGenerate calls", async () => {
+      const model = fake(identity);
+      await model.doGenerate({ prompt: makeUserPrompt("first") });
+      await model.doGenerate({ prompt: makeUserPrompt("second") });
+      expect(model.doGenerateCalls).toHaveLength(2);
+    });
+
+    test("records doStream calls", async () => {
+      const model = fake(identity);
+      const prompt = makeUserPrompt("stream me");
+      await model.doStream({ prompt });
+      expect(model.doStreamCalls).toHaveLength(1);
+      expect(model.doStreamCalls[0].prompt).toEqual(prompt);
     });
   });
 });

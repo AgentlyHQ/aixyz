@@ -38,6 +38,6 @@ describe("palindrome checker (fake model)", () => {
     const result = await model.doGenerate({
       prompt: [{ role: "user", content: [{ type: "text", text: "madam" }] }],
     });
-    expect(result.finishReason).toBe("stop");
+    expect(result.finishReason).toEqual({ unified: "stop", raw: undefined });
   });
 });
