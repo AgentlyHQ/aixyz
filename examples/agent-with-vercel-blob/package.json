@@ -3,10 +3,10 @@
   "private": true,
   "scripts": {
     "build": "aixyz build",
-    "dev": "aixyz dev"
+    "dev": "aixyz dev",
+    "test": "bun test"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3",
     "@vercel/blob": "^2",
     "ai": "^6",
     "aixyz": "^0",

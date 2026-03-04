@@ -1,31 +1,30 @@
-import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
+import { fake } from "aixyz/model";
 
 import deleteBlob from "./tools/deleteBlob";
 import listBlobs from "./tools/listBlobs";
 import uploadBlob from "./tools/uploadBlob";
 
-// language=Markdown
-const instructions = `
-# Vercel Blob Agent
-
-You are a helpful file storage assistant that manages files using Vercel Blob storage.
-
-## Capabilities
-
-- **Upload**: Store text content as a file and receive a public URL using \`uploadBlob\`.
-- **List**: Show all stored files with their URLs and metadata using \`listBlobs\`.
-- **Delete**: Remove a file from storage by its URL using \`deleteBlob\`.
-
-## Guidelines
-
-- When uploading, choose a descriptive pathname (e.g. \`notes/my-note.txt\`, \`reports/summary.md\`).
-- When listing, present results in a clear table with URL, pathname, size, and upload date.
-- Before deleting, confirm the exact URL with the user if there is any ambiguity.
-- Always present URLs as clickable links when sharing them.
-- File content is stored as plain text — do not attempt to handle binary files.
-`.trim();
+/**
+ * A fake model that points to the appropriate Vercel Blob tool call
+ * based on the user's request — no API key required.
+ */
+export const model = fake((lastMessage) => {
+  const msg = lastMessage.toLowerCase();
+  if (msg.includes("upload") || msg.includes("store") || msg.includes("save")) {
+    return `uploadBlob(pathname="notes/example.txt", content=<user content>)`;
+  }
+  if (msg.includes("list") || msg.includes("show") || msg.includes("files")) {
+    return `listBlobs()`;
+  }
+  const urlMatch = lastMessage.match(/https?:\/\/\S+/);
+  if (msg.includes("delete") || msg.includes("remove")) {
+    const url = urlMatch ? urlMatch[0] : "<blob-url>";
+    return `deleteBlob(url="${url}")`;
+  }
+  return `I can upload, list, or delete files in Vercel Blob. Try: "upload my note", "list files", or "delete a file".`;
+});
 
 export const accepts: Accepts = {
   scheme: "exact",
@@ -33,8 +32,8 @@ export const accepts: Accepts = {
 };
 
 export default new ToolLoopAgent({
-  model: openai("gpt-4o-mini"),
-  instructions: instructions,
+  model,
+  instructions: "You are a file storage assistant that manages files using Vercel Blob storage.",
   tools: { uploadBlob, listBlobs, deleteBlob },
   stopWhen: stepCountIs(10),
 });
