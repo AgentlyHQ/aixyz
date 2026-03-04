@@ -213,7 +213,7 @@ const envContent = openaiApiKey ? `OPENAI_API_KEY=${openaiApiKey}\n` : `OPENAI_A
 writeFileSync(join(targetDir, ".env.local"), envContent);
 
 // Replace {{AGENT_NAME}} and {{PKG_NAME}} placeholders
-const filesToReplace = ["package.json", "aixyz.config.ts"];
+const filesToReplace = ["package.json", "aixyz.config.ts", "README.md"];
 for (const file of filesToReplace) {
   const filePath = join(targetDir, file);
   if (existsSync(filePath)) {

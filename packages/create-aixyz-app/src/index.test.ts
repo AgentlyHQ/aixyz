@@ -87,6 +87,7 @@ describe("create-aixyz-app", () => {
   test("scaffolded project has correct files", () => {
     expect(existsSync(join(projectDir, "package.json"))).toBe(true);
     expect(existsSync(join(projectDir, "aixyz.config.ts"))).toBe(true);
+    expect(existsSync(join(projectDir, "README.md"))).toBe(true);
     expect(existsSync(join(projectDir, "app/agent.ts"))).toBe(true);
     expect(existsSync(join(projectDir, "app/tools/temperature.ts"))).toBe(true);
     expect(existsSync(join(projectDir, "app/icon.svg"))).toBe(true);
@@ -106,6 +107,10 @@ describe("create-aixyz-app", () => {
 
     const pkg = JSON.parse(readFileSync(join(projectDir, "package.json"), "utf8"));
     expect(pkg.name).toBe("test-agent");
+
+    const readme = readFileSync(join(projectDir, "README.md"), "utf8");
+    expect(readme).not.toContain("{{AGENT_NAME}}");
+    expect(readme).toContain("test-agent");
   });
 
   test("build succeeds", () => {
