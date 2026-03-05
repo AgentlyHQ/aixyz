@@ -13,10 +13,9 @@ function getFreePort() {
 }
 
 export function experimental_withAixyz(nextConfig: NextConfig = {}, options?: WithAixyzOptions): NextConfig {
-  const isDev = process.env.NODE_ENV === "development";
   const dir = options?.dir ?? "aixyz";
 
-  if (isDev) {
+  if (process.env.NODE_ENV === "development") {
     const aixyzPort = getFreePort();
     devAction({ port: String(aixyzPort), appDir: dir });
 
@@ -49,6 +48,9 @@ export function experimental_withAixyz(nextConfig: NextConfig = {}, options?: Wi
         };
       },
     };
+  }
+
+  if (process.env.NODE_ENV === "production") {
   }
 
   return nextConfig;
