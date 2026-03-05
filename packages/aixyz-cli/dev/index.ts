@@ -3,6 +3,7 @@ import { existsSync, watch } from "fs";
 import { loadEnvConfig } from "@next/env";
 import { Command } from "commander";
 import { getEntrypointMayGenerate } from "../build/AixyzServerPlugin";
+import chalk from "chalk";
 import pkg from "../package.json";
 
 export const devCommand = new Command("dev")
@@ -10,7 +11,13 @@ export const devCommand = new Command("dev")
   .option("-p, --port <port>", "Port to listen on", "3000")
   .action(action);
 
-async function action(options: { port?: string }): Promise<void> {
+type DevOptions = {
+  port?: string;
+  // Internal option, not exposed to CLI
+  appDir?: string;
+};
+
+export async function action(options: DevOptions): Promise<void> {
   const cwd = process.cwd();
 
   // Load environment config
@@ -20,15 +27,15 @@ async function action(options: { port?: string }): Promise<void> {
   const envFileNames = loadedEnvFiles.map((f) => relative(cwd, f.path));
 
   const port = options.port || process.env.PORT || "3000";
+  const appDir = options.appDir || "app";
   const baseUrl = `http://localhost:${port}`;
 
   console.log("");
-  console.log(`⟡ aixyz.sh v${pkg.version}`);
-  console.log("");
-  console.log(`- A2A:          ${baseUrl}/.well-known/agent-card.json`);
-  console.log(`- MCP:          ${baseUrl}/mcp`);
+  console.log(chalk.blueBright(`➫ aixyz.sh v${pkg.version}`));
+  console.log(`- A2A:           ${baseUrl}/.well-known/agent-card.json`);
+  console.log(`- MCP:           ${baseUrl}/mcp`);
   if (envFileNames.length > 0) {
-    console.log(`- Environments: ${envFileNames.join(", ")}`);
+    console.log(`- Environments:  ${envFileNames.join(", ")}`);
   }
   console.log("");
 
@@ -38,7 +45,7 @@ async function action(options: { port?: string }): Promise<void> {
   let restarting = false;
 
   function startServer() {
-    const endpoint = getEntrypointMayGenerate(cwd, "dev");
+    const endpoint = getEntrypointMayGenerate(cwd, appDir, "dev");
     child = Bun.spawn(["bun", workerPath, endpoint, port], {
       cwd,
       stdout: "inherit",
@@ -76,7 +83,7 @@ async function action(options: { port?: string }): Promise<void> {
     }, 100);
   }
 
-  watch(resolve(cwd, "app"), { recursive: true }, (_event, filename) => {
+  watch(resolve(cwd, appDir), { recursive: true }, (_event, filename) => {
     scheduleRestart(filename ? `${filename} changed` : "file changed");
   });
 

@@ -1,3 +1,5 @@
+import chalk from "chalk";
+
 async function main() {
   const entrypoint = process.argv[2];
   const port = parseInt(process.argv[3], 10);
@@ -18,7 +20,7 @@ async function main() {
 
   app.express.listen(port, () => {
     const duration = Math.round(performance.now() - startTime);
-    console.log(`Ready in ${duration}ms`);
+    console.log(chalk.blueBright("✓") + ` Ready in ${duration}ms`);
     console.log("");
   });
 }

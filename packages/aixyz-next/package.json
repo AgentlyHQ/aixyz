@@ -1,0 +1,33 @@
+{
+  "name": "@aixyz/next",
+  "version": "0.0.0",
+  "description": "Next.js integration for aixyz",
+  "keywords": [
+    "ai",
+    "payments",
+    "agent",
+    "aixyz",
+    "next"
+  ],
+  "homepage": "https://aixyz.sh",
+  "bugs": "https://github.com/AgentlyHQ/aixyz/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentlyHQ/aixyz.git"
+  },
+  "license": "MIT",
+  "author": "AgentlyHQ",
+  "type": "module",
+  "files": [
+    "**/*.ts"
+  ],
+  "dependencies": {
+    "@aixyz/cli": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "next": "^16"
+  }
+}

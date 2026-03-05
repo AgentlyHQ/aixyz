@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "start": "next start"
+    "build": "bun --bun next build",
+    "dev": "bun --bun next dev",
+    "start": "bun --bun next start"
   },
   "dependencies": {
     "@aixyz/next": "^0",
