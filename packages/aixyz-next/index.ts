@@ -12,7 +12,7 @@ function getFreePort() {
   return port;
 }
 
-export function withAixyz(nextConfig: NextConfig = {}, options?: WithAixyzOptions): NextConfig {
+export function experimental_withAixyz(nextConfig: NextConfig = {}, options?: WithAixyzOptions): NextConfig {
   const isDev = process.env.NODE_ENV === "development";
   const dir = options?.dir ?? "aixyz";
 
@@ -25,7 +25,14 @@ export function withAixyz(nextConfig: NextConfig = {}, options?: WithAixyzOption
       rewrites: async () => {
         const existing = await nextConfig.rewrites?.();
 
-        const aixyzRewrites = [{ source: "/_aixyz/:path*", destination: `http://localhost:${aixyzPort}/:path*` }];
+        const aixyzRewrites = [
+          {
+            source: "/.well-known/erc-8004.json",
+            destination: `http://localhost:${aixyzPort}/.well-known/erc-8004.json`,
+          },
+          { source: "/_aixyz/erc-8004.json", destination: `http://localhost:${aixyzPort}/_aixyz/erc-8004.json` },
+          { source: "/_aixyz/:path*", destination: `http://localhost:${aixyzPort}/:path*` },
+        ];
 
         if (!existing) {
           return aixyzRewrites;

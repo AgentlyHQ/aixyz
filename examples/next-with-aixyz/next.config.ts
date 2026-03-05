@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
-import { withAixyz } from "@aixyz/next";
+import { experimental_withAixyz } from "@aixyz/next";
 
 const nextConfig: NextConfig = {};
 
-export default withAixyz(nextConfig);
+export default experimental_withAixyz(nextConfig);
