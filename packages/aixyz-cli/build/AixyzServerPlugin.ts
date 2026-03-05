@@ -38,8 +38,8 @@ if (import.meta.main) {
   };
 }
 
-export function getEntrypointMayGenerate(cwd: string, mode: "dev" | "build"): string {
-  const appDir = resolve(cwd, "app");
+export function getEntrypointMayGenerate(cwd: string, appDirName: string, mode: "dev" | "build"): string {
+  const appDir = resolve(cwd, appDirName);
 
   if (existsSync(resolve(appDir, "server.ts"))) {
     return resolve(appDir, "server.ts");

@@ -8,10 +8,6 @@ import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
 import chalk from "chalk";
 
-interface BuildOptions {
-  output?: string;
-}
-
 export const buildCommand = new Command("build")
   .description("Build the aixyz agent")
   .option("--output <type>", "Output format: 'standalone', 'vercel', or 'executable'")
@@ -51,16 +47,23 @@ Examples:
   )
   .action(action);
 
-async function action(options: BuildOptions = {}): Promise<void> {
+type BuildOptions = {
+  output?: string;
+  // Internal option, not exposed to CLI
+  appDir?: string;
+};
+
+export async function action(options: BuildOptions = {}): Promise<void> {
   const cwd = process.cwd();
   loadEnvConfig(cwd, false);
   process.env.NODE_ENV = "production";
   process.env.AIXYZ_ENV = "production";
-  const entrypoint = getEntrypointMayGenerate(cwd, "build");
 
   // Determine output target: explicit CLI flag takes precedence, then config file, then auto-detect VERCEL env
   const config = getAixyzConfig();
   const target = options.output ?? config.build?.output ?? (process.env.VERCEL === "1" ? "vercel" : "standalone");
+  const appDir = options.appDir || "app";
+  const entrypoint = getEntrypointMayGenerate(cwd, appDir, "build");
 
   if (target === "vercel") {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Vercel") + "...");
