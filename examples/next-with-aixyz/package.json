@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "build": "bun --bun next build",
-    "dev": "bun --bun next dev",
-    "start": "bun --bun next start"
+    "dev": "bun --bun next dev"
   },
   "dependencies": {
     "@aixyz/next": "^0",
