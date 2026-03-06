@@ -98,15 +98,7 @@ export async function update(options: UpdateOptions): Promise<void> {
     if (options.browser) rerunParts.push("--browser");
     if (options.outDir) rerunParts.push(`--out-dir ${sq(options.outDir)}`);
     rerunParts.push("--broadcast");
-    console.log(
-      boxen(rerunParts.join(" "), {
-        padding: { left: 1, right: 1, top: 0, bottom: 0 },
-        borderStyle: "round",
-        borderColor: "cyan",
-        title: "Re-run with --broadcast",
-        titleAlignment: "left",
-      }),
-    );
+    console.log(rerunParts.join(" "));
     return;
   }
 

@@ -100,15 +100,7 @@ export async function register(options: RegisterOptions): Promise<void> {
     if (options.outDir) rerunParts.push(`--out-dir ${sq(options.outDir)}`);
     if (options.supportedTrust) rerunParts.push(`--supported-trust ${sq(options.supportedTrust)}`);
     rerunParts.push("--broadcast");
-    console.log(
-      boxen(rerunParts.join(" "), {
-        padding: { left: 1, right: 1, top: 0, bottom: 0 },
-        borderStyle: "round",
-        borderColor: "cyan",
-        title: "Re-run with --broadcast",
-        titleAlignment: "left",
-      }),
-    );
+    console.log(rerunParts.join(" "));
     return;
   }
 
