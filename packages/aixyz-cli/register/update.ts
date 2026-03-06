@@ -91,6 +91,22 @@ export async function update(options: UpdateOptions): Promise<void> {
     }
     printTxDetails("Transaction details (dry-run)");
     console.log("Dry-run complete. To sign and broadcast, re-run with --broadcast.");
+    const sq = (v: string) => `'${v.replace(/'/g, `'\\''`)}'`;
+    const rerunParts = [`aixyz erc-8004 update`, `--url ${sq(agentUrl)}`, `--agent-id ${selected.agentId}`];
+    if (options.rpcUrl) rerunParts.push(`--rpc-url ${sq(options.rpcUrl)}`);
+    if (options.keystore) rerunParts.push(`--keystore ${sq(options.keystore)}`);
+    if (options.browser) rerunParts.push("--browser");
+    if (options.outDir) rerunParts.push(`--out-dir ${sq(options.outDir)}`);
+    rerunParts.push("--broadcast");
+    console.log(
+      boxen(rerunParts.join(" "), {
+        padding: { left: 1, right: 1, top: 0, bottom: 0 },
+        borderStyle: "round",
+        borderColor: "cyan",
+        title: "Re-run with --broadcast",
+        titleAlignment: "left",
+      }),
+    );
     return;
   }
 

@@ -91,6 +91,24 @@ export async function register(options: RegisterOptions): Promise<void> {
     }
     printTxDetails("Transaction details (dry-run)");
     console.log("Dry-run complete. To sign and broadcast, re-run with --broadcast.");
+    const sq = (v: string) => `'${v.replace(/'/g, `'\\''`)}'`;
+    const rerunParts = [`aixyz erc-8004 register`, `--url ${sq(agentUrl)}`, `--chain-id ${chainId}`];
+    if (options.rpcUrl) rerunParts.push(`--rpc-url ${sq(options.rpcUrl)}`);
+    rerunParts.push(`--registry ${sq(registryAddress)}`);
+    if (options.keystore) rerunParts.push(`--keystore ${sq(options.keystore)}`);
+    if (options.browser) rerunParts.push("--browser");
+    if (options.outDir) rerunParts.push(`--out-dir ${sq(options.outDir)}`);
+    if (options.supportedTrust) rerunParts.push(`--supported-trust ${sq(options.supportedTrust)}`);
+    rerunParts.push("--broadcast");
+    console.log(
+      boxen(rerunParts.join(" "), {
+        padding: { left: 1, right: 1, top: 0, bottom: 0 },
+        borderStyle: "round",
+        borderColor: "cyan",
+        title: "Re-run with --broadcast",
+        titleAlignment: "left",
+      }),
+    );
     return;
   }
 
