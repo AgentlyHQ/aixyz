@@ -38,8 +38,8 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
   return withTTY(async () => {
     const localWalletExists = hasLocalWallet();
     const choices = [
-      { name: "Keystore file", value: "keystore" },
       { name: "Browser wallet (any EIP-6963 compatible wallets)", value: "browser" },
+      { name: "Keystore file", value: "keystore" },
       { name: "Private key (not recommended)", value: "privatekey" },
       ...(localWalletExists ? [{ name: "Local wallet (.aixyz/wallet.json)", value: "local" }] : []),
     ];
@@ -47,6 +47,7 @@ export async function selectWalletMethod(options: WalletOptions): Promise<Wallet
     const method = await select({
       message: "Select signing method:",
       choices,
+      default: "browser",
     });
 
     switch (method) {
