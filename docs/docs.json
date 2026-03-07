@@ -70,7 +70,8 @@
               "templates/basic/agent-chainlink",
               "templates/basic/agent-travel",
               "templates/basic/agent-price-oracle",
-              "templates/basic/agent-job-hunter"
+              "templates/basic/agent-job-hunter",
+              "templates/basic/agent-with-vercel-blob"
             ]
           },
           {
