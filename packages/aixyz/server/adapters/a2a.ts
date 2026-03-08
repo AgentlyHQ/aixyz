@@ -187,6 +187,7 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
     if (result !== null && typeof result === "object" && Symbol.asyncIterator in result) {
       // SSE streaming response
       const encoder = new TextEncoder();
+      const requestId = (body as { id?: unknown }).id ?? null;
       const stream = new ReadableStream({
         async start(controller) {
           try {
@@ -196,7 +197,7 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
           } catch (err) {
             const errorEvent = {
               jsonrpc: "2.0",
-              id: (body as any)?.id ?? null,
+              id: requestId,
               error: { code: -32603, message: err instanceof Error ? err.message : "Streaming error" },
             };
             controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify(errorEvent)}\n\n`));

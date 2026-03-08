@@ -147,15 +147,15 @@ export class AixyzServer extends x402ResourceServer {
           declaredExtensions,
         );
         if (settleResult.success) {
-          const settled = new Response(response.body, {
+          const headers = new Headers(response.headers);
+          for (const [key, value] of Object.entries(settleResult.headers)) {
+            headers.set(key, value);
+          }
+          return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,
-            headers: response.headers,
+            headers,
           });
-          for (const [key, value] of Object.entries(settleResult.headers)) {
-            settled.headers.set(key, value);
-          }
-          return settled;
         }
         return response;
       }
@@ -225,7 +225,11 @@ export class AixyzServer extends x402ResourceServer {
         description: `A2A Payment: ${this.config.description}`,
       },
     });
-    const [method, path] = route.split(" ") as [string, string];
+    // The route template literal type `${"GET" | "POST"} /${string}` already enforces the format,
+    // but we split robustly by taking only the first space as the method/path separator.
+    const spaceIndex = route.indexOf(" ");
+    const method = route.slice(0, spaceIndex);
+    const path = route.slice(spaceIndex + 1);
     this._x402Servers.set(`${method} ${path}`, httpServer);
   }
 

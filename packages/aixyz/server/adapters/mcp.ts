@@ -38,10 +38,11 @@ export class AixyzMCP {
       // Wrap the response body in a TransformStream to clean up on completion
       if (response.body) {
         const { readable, writable } = new TransformStream();
-        response.body.pipeTo(writable).finally(() => {
+        const cleanup = () => {
           transport.close();
           server.close();
-        });
+        };
+        response.body.pipeTo(writable).then(cleanup, cleanup);
         return new Response(readable, {
           status: response.status,
           headers: response.headers,
