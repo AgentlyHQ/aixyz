@@ -60,12 +60,8 @@ export function useERC8004(
   const file = getAgentRegistrationFile(exports.default, exports.options);
 
   // GET /_aixyz/erc-8004.json
-  server.express.get("/_aixyz/erc-8004.json", (_req, res) => {
-    res.json(file);
-  });
+  server.on("GET", "/_aixyz/erc-8004.json", async () => Response.json(file));
 
   // GET /.well-known/erc-8004.json
-  server.express.get("/.well-known/erc-8004.json", (_req, res) => {
-    res.json(file);
-  });
+  server.on("GET", "/.well-known/erc-8004.json", async () => Response.json(file));
 }

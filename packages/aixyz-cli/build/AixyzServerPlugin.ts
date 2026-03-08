@@ -13,22 +13,24 @@ export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalo
         const source = await Bun.file(args.path).text();
 
         if (mode === "vercel") {
-          // For Vercel, export server.express for serverless function
-          const transformed = source.replace(/export\s+default\s+(\w+)\s*;/, "export default $1.express;");
-          return { contents: transformed, loader: "ts" };
-        } else {
-          // For standalone and executable, keep the server export but add startup code
-          // TODO(@fuxingloh): use Bun.serve later.
+          // For Vercel (bun1.x runtime with launcherType "Bun"), export a web-standard fetch handler.
+          // Vercel's Bun runtime detects the `fetch` property on the default export and uses it directly.
           const transformed = source.replace(
             /export\s+default\s+(\w+)\s*;/,
-            `export default $1;
-
-// Auto-start server when run directly
+            `export default { fetch: $1.fetch.bind($1) };`,
+          );
+          return { contents: transformed, loader: "ts" };
+        } else {
+          // For standalone and executable, use Bun.serve with the web-standard fetch handler.
+          // Remove the default export to prevent Bun from auto-detecting the fetch method
+          // and starting a second server instance.
+          const transformed = source.replace(
+            /export\s+default\s+(\w+)\s*;/,
+            `// Auto-start server when run directly
 if (import.meta.main) {
   const port = parseInt(process.env.PORT || "3000", 10);
-  $1.express.listen(port, () => {
-    console.log(\`Server listening on port \${port}\`);
-  });
+  Bun.serve({ port, fetch: $1.fetch.bind($1) });
+  console.log(\`Server listening on port \${port}\`);
 }`,
           );
           return { contents: transformed, loader: "ts" };

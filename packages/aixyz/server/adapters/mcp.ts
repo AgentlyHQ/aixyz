@@ -1,8 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { Tool } from "ai";
-import express from "express";
-import type { IncomingMessage, ServerResponse } from "node:http";
 import { AixyzServer } from "../index";
 import { createPaymentWrapper } from "@x402/mcp";
 import { Accepts, AcceptsScheme, AcceptsX402 } from "../../accepts";
@@ -28,21 +26,31 @@ export class AixyzMCP {
   }
 
   public async connect() {
-    this.app.express.post("/mcp", express.json(), async (req, res) => {
+    this.app.on("POST", "/mcp", async (req) => {
       const server = this.createServer();
-      const transport = new StreamableHTTPServerTransport({
+      const transport = new WebStandardStreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
       });
 
       await server.connect(transport);
-      await transport.handleRequest(req as unknown as IncomingMessage, res as unknown as ServerResponse, req.body);
+      const response = await transport.handleRequest(req);
 
-      const cleanup = () => {
-        transport.close();
-        server.close();
-      };
-      res.on("finish", cleanup);
-      res.on("close", cleanup);
+      // Wrap the response body in a TransformStream to clean up on completion
+      if (response.body) {
+        const { readable, writable } = new TransformStream();
+        response.body.pipeTo(writable).finally(() => {
+          transport.close();
+          server.close();
+        });
+        return new Response(readable, {
+          status: response.status,
+          headers: response.headers,
+        });
+      }
+
+      transport.close();
+      server.close();
+      return response;
     });
   }
 

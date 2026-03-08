@@ -233,7 +233,7 @@ async function buildVercel(entrypoint: string, config: ReturnType<typeof getAixy
         runtime: "bun1.x",
         launcherType: "Bun",
         maxDuration: config.vercel.maxDuration,
-        shouldAddHelpers: true,
+        shouldAddHelpers: false,
         shouldAddSourcemapSupport: true,
       },
       null,

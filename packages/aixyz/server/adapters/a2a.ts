@@ -4,15 +4,24 @@ import {
   DefaultRequestHandler,
   ExecutionEventBus,
   InMemoryTaskStore,
+  JsonRpcTransportHandler,
   RequestContext,
+  ServerCallContext,
   TaskStore,
+  UnauthenticatedUser,
 } from "@a2a-js/sdk/server";
 import { AgentCard, Message, Task, TaskArtifactUpdateEvent, TaskStatusUpdateEvent, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
 import { getAixyzConfigRuntime } from "../../config";
 import { AixyzServer } from "../index";
-import { agentCardHandler, jsonRpcHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import { Accepts, AcceptsScheme } from "../../accepts";
+
+const SSE_HEADERS = {
+  "Content-Type": "text/event-stream",
+  "Cache-Control": "no-cache",
+  Connection: "keep-alive",
+  "X-Accel-Buffering": "no",
+};
 
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
   constructor(private agent: ToolLoopAgent<never, TOOLS>) {}
@@ -148,23 +157,57 @@ export function useA2A<TOOLS extends ToolSet = ToolSet>(
 
   const agentExecutor = new ToolLoopAgentExecutor(exports.default);
   const requestHandler = new DefaultRequestHandler(getAgentCard(agentPath), taskStore, agentExecutor);
+  const jsonRpcTransportHandler = new JsonRpcTransportHandler(requestHandler);
 
-  app.express.use(
-    wellKnownPath,
-    agentCardHandler({
-      agentCardProvider: requestHandler,
-    }),
-  );
+  // GET /.well-known/agent-card.json – agent discovery
+  app.on("GET", wellKnownPath, async () => {
+    const card = await requestHandler.getAgentCard();
+    return Response.json(card);
+  });
 
   if (exports.accepts.scheme === "exact") {
     app.withX402Exact(`POST ${agentPath}`, exports.accepts);
   }
 
-  app.express.use(
-    agentPath,
-    jsonRpcHandler({
-      requestHandler,
-      userBuilder: UserBuilder.noAuthentication,
-    }),
-  );
+  // POST /agent – JSON-RPC endpoint (supports both non-streaming and SSE streaming)
+  app.on("POST", agentPath, async (req) => {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const context = new ServerCallContext(undefined, new UnauthenticatedUser());
+    const result = await jsonRpcTransportHandler.handle(body, context);
+
+    if (result !== null && typeof result === "object" && Symbol.asyncIterator in result) {
+      // SSE streaming response
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const event of result as AsyncGenerator<unknown>) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+            }
+          } catch (err) {
+            const errorEvent = {
+              jsonrpc: "2.0",
+              id: (body as any)?.id ?? null,
+              error: { code: -32603, message: err instanceof Error ? err.message : "Streaming error" },
+            };
+            controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify(errorEvent)}\n\n`));
+          } finally {
+            controller.close();
+          }
+        },
+      });
+      return new Response(stream, { headers: SSE_HEADERS });
+    }
+
+    return Response.json(result);
+  });
 }

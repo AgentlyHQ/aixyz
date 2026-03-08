@@ -13,16 +13,19 @@ async function main() {
   const mod = await import(entrypoint);
   const app = mod.default;
 
-  if (!app || typeof app.express?.listen !== "function") {
-    console.error("Error: Entrypoint must default-export an AixyzApp");
+  if (!app || typeof app.fetch !== "function") {
+    console.error("Error: Entrypoint must default-export an AixyzServer");
     process.exit(1);
   }
 
-  app.express.listen(port, () => {
-    const duration = Math.round(performance.now() - startTime);
-    console.log(chalk.blueBright("✓") + ` Ready in ${duration}ms`);
-    console.log("");
+  Bun.serve({
+    port,
+    fetch: app.fetch.bind(app),
   });
+
+  const duration = Math.round(performance.now() - startTime);
+  console.log(chalk.blueBright("✓") + ` Ready in ${duration}ms`);
+  console.log("");
 }
 
 main();

@@ -1,20 +1,165 @@
 import { getAixyzConfig, Network } from "@aixyz/config";
-import initExpress from "express";
 import { FacilitatorClient, x402ResourceServer } from "@x402/core/server";
-import { paymentMiddleware, PaymentRequirements } from "@x402/express";
+import { x402HTTPResourceServer, HTTPAdapter, HTTPRequestContext } from "@x402/core/http";
+import type { PaymentRequirements } from "@x402/core/types";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { z } from "zod";
 import { type AcceptsX402, facilitator as defaultFacilitator } from "../accepts";
 
+type RouteHandler = (req: Request) => Promise<Response>;
+
+/**
+ * Web-standard adapter implementing HTTPAdapter for x402 payment processing.
+ */
+class WebRequestAdapter implements HTTPAdapter {
+  constructor(private req: Request) {}
+
+  getHeader(name: string): string | undefined {
+    return this.req.headers.get(name) ?? undefined;
+  }
+
+  getMethod(): string {
+    return this.req.method;
+  }
+
+  getPath(): string {
+    return new URL(this.req.url).pathname;
+  }
+
+  getUrl(): string {
+    return this.req.url;
+  }
+
+  getAcceptHeader(): string {
+    return this.req.headers.get("Accept") ?? "";
+  }
+
+  getUserAgent(): string {
+    return this.req.headers.get("User-Agent") ?? "";
+  }
+
+  getQueryParams(): Record<string, string | string[]> {
+    const params: Record<string, string | string[]> = {};
+    for (const [key, value] of new URL(this.req.url).searchParams) {
+      const existing = params[key];
+      if (existing !== undefined) {
+        params[key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+      } else {
+        params[key] = value;
+      }
+    }
+    return params;
+  }
+
+  getQueryParam(name: string): string | string[] | undefined {
+    return this.getQueryParams()[name];
+  }
+}
+
 // TODO(@fuxingloh): rename to unstable_AixyzApp?
 export class AixyzServer extends x402ResourceServer {
+  private _routes = new Map<string, RouteHandler>();
+  private _x402Servers = new Map<string, x402HTTPResourceServer>();
+
   constructor(
     facilitator: FacilitatorClient = defaultFacilitator,
     public config = getAixyzConfig(),
-    public express: initExpress.Express = initExpress(),
   ) {
     super(facilitator);
     this.register(config.x402.network as any, new ExactEvmScheme());
+  }
+
+  /**
+   * Register a web-standard route handler.
+   * @param method HTTP method (e.g. "GET", "POST") or "*" for any method
+   * @param path URL path starting with "/"
+   * @param handler Function accepting a Request and returning a Promise<Response>
+   */
+  on(method: string, path: string, handler: RouteHandler): void {
+    this._routes.set(`${method} ${path}`, handler);
+  }
+
+  /**
+   * Web-standard fetch handler – dispatch an incoming Request to the registered route.
+   */
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const method = request.method;
+
+    const key = `${method} ${path}`;
+    let handler = this._routes.get(key);
+    if (!handler) handler = this._routes.get(`* ${path}`);
+
+    if (!handler) {
+      return new Response("Not Found", { status: 404 });
+    }
+
+    const x402Server = this._x402Servers.get(key);
+    if (x402Server) {
+      return this._withX402(request, x402Server, handler);
+    }
+
+    return handler(request);
+  }
+
+  private async _withX402(
+    request: Request,
+    httpServer: x402HTTPResourceServer,
+    handler: RouteHandler,
+  ): Promise<Response> {
+    const adapter = new WebRequestAdapter(request);
+    const context: HTTPRequestContext = {
+      adapter,
+      path: adapter.getPath(),
+      method: adapter.getMethod(),
+      paymentHeader: adapter.getHeader("payment-signature") ?? adapter.getHeader("x-payment"),
+    };
+
+    if (!httpServer.requiresPayment(context)) {
+      return handler(request);
+    }
+
+    const result = await httpServer.processHTTPRequest(context);
+
+    switch (result.type) {
+      case "no-payment-required":
+        return handler(request);
+
+      case "payment-error": {
+        const { response } = result;
+        const headers = new Headers(response.headers);
+        if (response.isHtml) {
+          headers.set("Content-Type", "text/html");
+          return new Response(response.body as string, { status: response.status, headers });
+        }
+        headers.set("Content-Type", "application/json");
+        return new Response(JSON.stringify(response.body), { status: response.status, headers });
+      }
+
+      case "payment-verified": {
+        const { paymentPayload, paymentRequirements, declaredExtensions } = result;
+        const response = await handler(request);
+
+        const settleResult = await httpServer.processSettlement(
+          paymentPayload,
+          paymentRequirements,
+          declaredExtensions,
+        );
+        if (settleResult.success) {
+          const settled = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
+          for (const [key, value] of Object.entries(settleResult.headers)) {
+            settled.headers.set(key, value);
+          }
+          return settled;
+        }
+        return response;
+      }
+    }
   }
 
   public unstable_withIndexPage(path = "/") {
@@ -22,8 +167,7 @@ export class AixyzServer extends x402ResourceServer {
       throw new Error(`Invalid path: ${path}. Path must be a string starting with "/"`);
     }
 
-    // Simple human interface at root
-    this.express.get(path, (_req, res) => {
+    this.on("GET", path, async () => {
       const { name, description, version, skills } = this.config;
 
       let text = `${name}\n`;
@@ -49,7 +193,7 @@ export class AixyzServer extends x402ResourceServer {
         });
       }
 
-      res.type("text/plain").send(text);
+      return new Response(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
     });
 
     return this;
@@ -73,21 +217,16 @@ export class AixyzServer extends x402ResourceServer {
   }
 
   withX402Exact(route: `${"GET" | "POST"} /${string}`, accepts: AcceptsX402) {
-    this.express.use(
-      paymentMiddleware(
-        {
-          [route]: {
-            accepts: this.withSchemeExact(accepts),
-            mimeType: "application/json",
-            description: `A2A Payment: ${this.config.description}`,
-          },
-        },
-        this,
-        undefined,
-        undefined,
-        false,
-      ),
-    );
+    const parsed = this.withSchemeExact(accepts);
+    const httpServer = new x402HTTPResourceServer(this, {
+      [route]: {
+        accepts: parsed,
+        mimeType: "application/json",
+        description: `A2A Payment: ${this.config.description}`,
+      },
+    });
+    const [method, path] = route.split(" ") as [string, string];
+    this._x402Servers.set(`${method} ${path}`, httpServer);
   }
 
   async withPaymentRequirements(accepts: AcceptsX402): Promise<PaymentRequirements[]> {
