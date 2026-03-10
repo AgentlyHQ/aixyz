@@ -246,12 +246,10 @@ p.note(
 
 p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 
-p.outro(`Success! Created ${agentName} at ./${pkgName}`);
-
-// Show warning if not using Bun (last, so it's loud and clear)
-if (packageManager !== "bun" && packageManager !== "unknown") {
-  p.log.warn("");
-  p.log.error(`⚠️  You are using ${packageManager}, but this project requires Bun.`);
-  p.log.error("   Please use Bun for this project: https://bun.sh");
-  p.log.warn("");
+const notBun = packageManager !== "bun" && packageManager !== "unknown";
+if (notBun) {
+  p.log.info(`Success! Created ${agentName} at ./${pkgName}`);
+  p.outro(`⚠ This project requires Bun — you ran this with ${packageManager}.\nInstall Bun: https://bun.sh`);
+} else {
+  p.outro(`Success! Created ${agentName} at ./${pkgName}`);
 }
