@@ -239,12 +239,6 @@ if (!opts.install) {
   }
 }
 
-// Warn if not using Bun — shown before the outro so the flow ends cleanly
-if (packageManager !== "bun" && packageManager !== "unknown") {
-  p.log.warn(`You ran this with ${packageManager}, but this project requires Bun.`);
-  p.log.warn("Use Bun going forward: https://bun.sh");
-}
-
 p.note(
   [`cd ${pkgName}`, openaiApiKey ? "" : "Set OPENAI_API_KEY in .env.local", "bun run dev"].filter(Boolean).join("\n"),
   "Next steps",
@@ -252,4 +246,9 @@ p.note(
 
 p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 
-p.outro(`Success! Created ${agentName} at ./${pkgName}`);
+const notBun = packageManager !== "bun" && packageManager !== "unknown";
+if (notBun) {
+  p.outro(`⚠ This project requires Bun — you ran this with ${packageManager}.\nInstall Bun: https://bun.sh`);
+} else {
+  p.outro(`Success! Created ${agentName} at ./${pkgName}`);
+}
