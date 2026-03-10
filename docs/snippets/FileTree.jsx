@@ -1,4 +1,4 @@
-export const FileTree = ({ structure, title, maxDepth = 10, showIcons = true, commentPrefix = "# " }) => {
+export const FileTree = ({ structure = [], title, maxDepth = 10, showIcons = true, commentPrefix = "# " }) => {
   const lineColor = "rgba(156, 163, 175, 0.25)";
 
   const badgeColors = {
@@ -20,6 +20,8 @@ export const FileTree = ({ structure, title, maxDepth = 10, showIcons = true, co
       strokeLinecap="round"
       strokeLinejoin="round"
       style={{ flexShrink: 0, color: "#94a3b8" }}
+      aria-hidden="true"
+      focusable="false"
     >
       <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" />
     </svg>
@@ -36,6 +38,8 @@ export const FileTree = ({ structure, title, maxDepth = 10, showIcons = true, co
       strokeLinecap="round"
       strokeLinejoin="round"
       style={{ flexShrink: 0, color: "#94a3b8" }}
+      aria-hidden="true"
+      focusable="false"
     >
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
       <path d="M14 2v4a2 2 0 0 0 2 2h4" />

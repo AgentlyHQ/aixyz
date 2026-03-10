@@ -28,12 +28,12 @@ An aixyz agent is defined by a small set of files in a standard layout. Run `aix
             {
               name: "server.ts",
               description: "Custom server override",
-              badge: { text: "auto-generated", color: "purple" },
+              badge: { text: "optional override", color: "purple" },
             },
             {
               name: "accepts.ts",
               description: "Custom x402 facilitator",
-              badge: { text: "auto-generated", color: "purple" },
+              badge: { text: "optional override", color: "purple" },
             },
             {
               name: "erc-8004.ts",
@@ -57,7 +57,7 @@ An aixyz agent is defined by a small set of files in a standard layout. Run `aix
               ],
             },
             {
-              name: "icon.png",
+              name: "icon.svg",
               description: "Agent icon (served as static asset)",
             },
           ],
@@ -110,9 +110,9 @@ An aixyz agent is defined by a small set of files in a standard layout. Run `aix
         border: "1px solid rgba(168,85,247,0.2)",
       }}
     >
-      auto-generated
+      optional override
     </code>
-    Provide to override the default
+    Provide to override auto-generated behavior
   </span>
 </div>
 
@@ -128,7 +128,7 @@ An aixyz agent is defined by a small set of files in a standard layout. Run `aix
 | `app/accepts.ts`    | No       | [Custom x402 facilitator](/api-reference/accepts) for payment verification        |
 | `app/erc-8004.ts`   | No       | ERC-8004 identity registration and trust config                                   |
 | `app/agent.test.ts` | No       | Agent tests using `bun:test`                                                      |
-| `app/icon.png`      | No       | Agent icon served as a static asset                                               |
+| `app/icon.svg`      | No       | Agent icon served as a static asset                                               |
 | `vercel.json`       | No       | Vercel deployment configuration                                                   |
 
 \* Required if no `app/server.ts` is provided.

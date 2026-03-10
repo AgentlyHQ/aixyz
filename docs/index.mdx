@@ -16,6 +16,8 @@ Every agent you deploy with aixyz comes with [x402 payments](/protocols/x402) em
 3. **Deploy and earn** — Run `aixyz build` and deploy. Payments settle on-chain via [x402](https://www.x402.org/)
 
 ```typescript title="app/agent.ts"
+import type { Accepts } from "aixyz/accepts";
+
 // set your price and start earning
 export const accepts: Accepts = {
   scheme: "exact",

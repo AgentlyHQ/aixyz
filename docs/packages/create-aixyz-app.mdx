@@ -40,8 +40,15 @@ bunx create-aixyz-app my-agent -y
           name: "app/",
           children: [
             { name: "agent.ts", description: "Agent definition using Vercel AI SDK" },
-            { name: "tools/", children: [{ name: "weather.ts", description: "Example tool" }] },
-            { name: "icon.png", description: "Agent icon" },
+            {
+              name: "tools/",
+              children: [
+                { name: "temperature.ts", description: "Example tool" },
+                { name: "weight.ts", description: "Example tool" },
+                { name: "length.ts", description: "Example tool" },
+              ],
+            },
+            { name: "icon.svg", description: "Agent icon" },
           ],
         },
         { name: "package.json", description: "Dependencies and scripts" },
