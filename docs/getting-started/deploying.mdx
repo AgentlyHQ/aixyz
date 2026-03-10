@@ -18,7 +18,7 @@ The build automatically detects the Vercel environment via `VERCEL=1` and output
 
 Every aixyz project includes a `vercel.json`:
 
-```json
+```json title="vercel.json"
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
@@ -56,7 +56,7 @@ bun .aixyz/output/server.js
 
 Using the standalone build:
 
-```dockerfile
+```dockerfile title="Dockerfile"
 FROM oven/bun:1.3.9
 WORKDIR /app
 COPY . .

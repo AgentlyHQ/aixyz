@@ -3,6 +3,8 @@ title: "Testing"
 description: "Test your agent with bun:test and aixyz/test utilities"
 ---
 
+import { FileTree } from "/snippets/FileTree.jsx";
+
 ## Overview
 
 aixyz provides a `loadEnv` utility from `aixyz/test` for loading environment variables during tests. Combined with Bun's built-in test runner, you can write both deterministic and non-deterministic agent tests.
@@ -11,17 +13,22 @@ aixyz provides a `loadEnv` utility from `aixyz/test` for loading environment var
 
 Place your test file alongside your agent:
 
-```
-app/
-  agent.ts
-  agent.test.ts    # Tests for the agent
-  tools/
-    weather.ts
-```
+<FileTree
+  structure={[
+    {
+      name: "app/",
+      children: [
+        { name: "agent.ts" },
+        { name: "agent.test.ts", description: "Tests for the agent" },
+        { name: "tools/", children: [{ name: "weather.ts" }] },
+      ],
+    },
+  ]}
+/>
 
 ## Writing Tests
 
-```typescript
+```typescript title="app/agent.test.ts"
 import { describe, expect, test } from "bun:test";
 import { ToolLoopAgent } from "ai";
 import { loadEnv } from "aixyz/test";
@@ -80,7 +87,7 @@ describe("tests needing env vars", () => {
 
 Use `fake()` from `aixyz/model` to replace the real LLM with a deterministic transform. It returns a `LanguageModelV3` that works with `ToolLoopAgent` — no API key, no network calls:
 
-```typescript
+```typescript title="app/agent.ts"
 import { fake } from "aixyz/model";
 import { ToolLoopAgent } from "ai";
 
@@ -91,7 +98,7 @@ export default new ToolLoopAgent({ model, instructions: "..." });
 
 Then test the model's output directly:
 
-```typescript
+```typescript title="app/agent.test.ts"
 import type { Prompt } from "aixyz/model";
 import { model } from "./agent";
 

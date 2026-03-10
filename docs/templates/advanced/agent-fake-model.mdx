@@ -29,7 +29,7 @@ agent-fake-model/
 
 Import `fake` from `aixyz/model` and pass a transform function:
 
-```typescript
+```typescript title="app/agent.ts"
 import { fake } from "aixyz/model";
 
 export const model = fake((lastMessage, prompt) => {
@@ -58,7 +58,7 @@ The transform receives:
 
 Because the fake model is deterministic, every test runs without an API key:
 
-```typescript
+```typescript title="app/agent.test.ts"
 import { describe, expect, test } from "bun:test";
 import type { Prompt } from "aixyz/model";
 import { model } from "./agent";

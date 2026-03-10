@@ -80,7 +80,7 @@ Payment verification is handled by a facilitator service:
 
 Create `app/accepts.ts` to provide a custom facilitator:
 
-```typescript
+```typescript title="app/accepts.ts"
 import { HTTPFacilitatorClient } from "aixyz/accepts";
 
 export const facilitator = new HTTPFacilitatorClient({

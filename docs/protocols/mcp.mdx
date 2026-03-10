@@ -38,7 +38,7 @@ When using the standard `app/` directory structure, all tools in `app/tools/*.ts
 
 If you're using a custom server, wire up MCP manually with the `AixyzMCP` class:
 
-```typescript
+```typescript title="app/server.ts"
 import { AixyzMCP } from "aixyz/server/adapters/mcp";
 import * as lookup from "./tools/lookup";
 

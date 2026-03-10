@@ -60,7 +60,7 @@ const model = fake((input, prompt) => {
 
 Wiring into an agent:
 
-```typescript
+```typescript title="app/agent.ts"
 import { fake } from "aixyz/model";
 import { ToolLoopAgent } from "ai";
 
@@ -94,8 +94,7 @@ const model = fake((_input: string, prompt: Prompt) => {
 
 The fake model makes every test deterministic and CI-safe. Export the model from your agent file so tests can call `doGenerate()` directly:
 
-```typescript
-// app/agent.test.ts
+```typescript title="app/agent.test.ts"
 import { describe, expect, test } from "bun:test";
 import { model } from "./agent";
 import type { Prompt } from "aixyz/model";

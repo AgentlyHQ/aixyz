@@ -5,7 +5,7 @@ description: "Auto-discovered tool definitions for A2A and MCP"
 
 Each `.ts` file in `app/tools/` is auto-discovered and registered as a tool on both A2A and MCP endpoints.
 
-```typescript
+```typescript title="app/tools/weather.ts"
 import { tool } from "ai";
 import { z } from "zod";
 import type { Accepts } from "aixyz/accepts";

@@ -48,7 +48,7 @@ Bun compiles projects into [single-file executables](https://bun.com/docs/bundle
 
 For aixyz agents deploying to serverless platforms like Vercel, Bun's cold starts are fast enough that your agent responds quickly even on first invocation:
 
-```json
+```json title="vercel.json"
 {
   "buildCommand": "bun run build",
   "bunVersion": "1.x"
@@ -59,7 +59,7 @@ For aixyz agents deploying to serverless platforms like Vercel, Bun's cold start
 
 Bun includes a Jest-compatible test runner with near-instant startup. aixyz uses `bun:test` for agent testing:
 
-```typescript
+```typescript title="app/agent.test.ts"
 import { describe, expect, test } from "bun:test";
 import { ToolLoopAgent } from "ai";
 import agent from "./agent";

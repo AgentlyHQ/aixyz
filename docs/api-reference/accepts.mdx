@@ -86,8 +86,7 @@ AcceptsScheme.parse({ scheme: "exact", price: "$0.005" });
 
 Agents and tools declare an `accepts` export to control x402 payment gating. Endpoints without `accepts` are **not registered**.
 
-```typescript
-// app/agent.ts
+```typescript title="app/agent.ts"
 import type { Accepts } from "aixyz/accepts";
 
 export const accepts: Accepts = {
@@ -96,8 +95,7 @@ export const accepts: Accepts = {
 };
 ```
 
-```typescript
-// app/tools/lookup.ts
+```typescript title="app/tools/lookup.ts"
 import type { Accepts } from "aixyz/accepts";
 
 export const accepts: Accepts = {
@@ -109,8 +107,7 @@ export const accepts: Accepts = {
 
 Create `app/accepts.ts` to override the default facilitator:
 
-```typescript
-// app/accepts.ts
+```typescript title="app/accepts.ts"
 import { HTTPFacilitatorClient } from "aixyz/accepts";
 
 export const facilitator = new HTTPFacilitatorClient({

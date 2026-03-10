@@ -5,7 +5,7 @@ description: "Define your agent with Vercel AI SDK"
 
 The agent definition file. Must export a default `ToolLoopAgent` and optionally an `accepts` for payment gating.
 
-```typescript
+```typescript title="app/agent.ts"
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";

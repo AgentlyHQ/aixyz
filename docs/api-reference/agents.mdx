@@ -5,7 +5,7 @@ description: "Auto-discovered sub-agent definitions for multiple A2A endpoints"
 
 Each `.ts` file in `app/agents/` is auto-discovered and registered as a sub-agent on its own A2A endpoint.
 
-```typescript
+```typescript title="app/agents/research.ts"
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";

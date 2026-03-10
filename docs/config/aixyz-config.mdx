@@ -7,7 +7,7 @@ Every aixyz project requires an `aixyz.config.ts` at the project root. This file
 
 ## Full Example
 
-```typescript
+```typescript title="aixyz.config.ts"
 import type { AixyzConfig } from "aixyz/config";
 
 const config: AixyzConfig = {
@@ -76,7 +76,7 @@ If `url` is omitted, it is auto-detected in the following order:
 
 Switch networks per environment:
 
-```typescript
+```typescript title="aixyz.config.ts"
 x402: {
   payTo: "0x...",
   network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",

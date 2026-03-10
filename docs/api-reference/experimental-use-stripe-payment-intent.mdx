@@ -67,7 +67,7 @@ After calling `experimental_useStripePaymentIntent`, the server checks incoming 
 
 Use in a [custom server](/api-reference/agent) (`app/server.ts`):
 
-```typescript
+```typescript title="app/server.ts"
 import { AixyzServer } from "aixyz/server";
 import { useA2A } from "aixyz/server/adapters/a2a";
 import { experimental_useStripePaymentIntent } from "@aixyz/stripe";

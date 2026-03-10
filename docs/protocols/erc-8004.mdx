@@ -19,7 +19,7 @@ aixyz supports ERC-8004 through the `@aixyz/erc-8004` package (contract ABIs, de
 
 Every agent that uses ERC-8004 identity declares an `app/erc-8004.ts` file. This file defines the agent's supported trust mechanisms and tracks on-chain registrations:
 
-```typescript
+```typescript title="app/erc-8004.ts"
 import type { ERC8004Registration } from "aixyz/erc-8004";
 
 const metadata: ERC8004Registration = {
@@ -55,7 +55,7 @@ The command walks you through an interactive flow:
 
 After registration, your `app/erc-8004.ts` will contain the on-chain reference:
 
-```typescript
+```typescript title="app/erc-8004.ts"
 const metadata: ERC8004Registration = {
   registrations: [{ agentId: 42, agentRegistry: "eip155:84532:0x8004A818BFB912233c491871b3d84c89A494BD9e" }],
   supportedTrust: ["reputation"],

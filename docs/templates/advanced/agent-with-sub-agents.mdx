@@ -54,8 +54,7 @@ A single deployment exposes three independent A2A endpoints:
 
 Each file in `app/agents/` follows the same pattern as `app/agent.ts`:
 
-```typescript
-// app/agents/math.ts
+```typescript title="app/agents/math.ts"
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";

@@ -3,11 +3,13 @@ title: "Agent and Tools"
 description: "Define agents with Vercel AI SDK and create tools for A2A and MCP"
 ---
 
+import { FileTree } from "/snippets/FileTree.jsx";
+
 ## Agent (`app/agent.ts`)
 
 Your agent is defined using [Vercel AI SDK](https://ai-sdk.dev) (`ai@^6`). The file exports a default `ToolLoopAgent` and an optional `accepts` for payment pricing.
 
-```typescript
+```typescript title="app/agent.ts"
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
@@ -45,8 +47,8 @@ The optional `accepts` named export controls [x402 payment](/getting-started/pay
 
 Place additional agent files in `app/agents/` to expose multiple A2A endpoints from a single deployment. Each file follows the same format as `app/agent.ts` and is automatically registered on its own path.
 
-```typescript
-// app/agents/research.ts → /research/agent
+```typescript title="app/agents/research.ts"
+// → /research/agent
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
@@ -65,13 +67,23 @@ export default new ToolLoopAgent({
 
 With the layout below, the build auto-generates three independent A2A endpoints:
 
-```
-app/
-  agent.ts           # → /agent
-  agents/
-    research.ts      # → /research/agent
-    implement.ts     # → /implement/agent
-```
+<FileTree
+  structure={[
+    {
+      name: "app/",
+      children: [
+        { name: "agent.ts", description: "→ /agent" },
+        {
+          name: "agents/",
+          children: [
+            { name: "research.ts", description: "→ /research/agent" },
+            { name: "implement.ts", description: "→ /implement/agent" },
+          ],
+        },
+      ],
+    },
+  ]}
+/>
 
 <Note>
   Files starting with `_` (e.g., `_helpers.ts`) are ignored by the build pipeline. Use this convention for shared
@@ -82,7 +94,7 @@ app/
 
 Each `.ts` file in `app/tools/` exports a Vercel AI SDK `tool` and an optional `accepts` for MCP payment gating. Tools are automatically discovered and registered on both A2A and MCP endpoints.
 
-```typescript
+```typescript title="app/tools/weather.ts"
 import { tool } from "ai";
 import { z } from "zod";
 import type { Accepts } from "aixyz/accepts";
@@ -133,7 +145,7 @@ export default tool({ ... });
 
 For full control over endpoint registration and middleware, create `app/server.ts`. This overrides auto-generation entirely:
 
-```typescript
+```typescript title="app/server.ts"
 import { AixyzServer } from "aixyz/server";
 import { useA2A } from "aixyz/server/adapters/a2a";
 import { AixyzMCP } from "aixyz/server/adapters/mcp";
