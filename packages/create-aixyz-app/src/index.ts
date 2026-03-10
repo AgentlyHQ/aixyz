@@ -248,6 +248,7 @@ p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 
 const notBun = packageManager !== "bun" && packageManager !== "unknown";
 if (notBun) {
+  p.log.info(`Success! Created ${agentName} at ./${pkgName}`);
   p.outro(`⚠ This project requires Bun — you ran this with ${packageManager}.\nInstall Bun: https://bun.sh`);
 } else {
   p.outro(`Success! Created ${agentName} at ./${pkgName}`);
