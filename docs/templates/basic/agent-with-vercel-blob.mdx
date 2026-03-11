@@ -1,0 +1,115 @@
+---
+title: "Vercel Blob Agent"
+description: "Template demonstrating file storage and retrieval using Vercel Blob with upload, list, and delete tools"
+---
+
+<Info>
+  **Source:**
+  [`examples/agent-with-vercel-blob`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-with-vercel-blob)
+</Info>
+
+## Overview
+
+This template shows how to integrate [Vercel Blob](https://vercel.com/docs/vercel-blob) storage into an aixyz agent. The agent can upload text content, list stored files, and delete blobs — all via natural language requests gated behind x402 micropayments.
+
+## Project Structure
+
+```
+agent-with-vercel-blob/
+├── aixyz.config.ts         # Agent metadata and skills
+├── app/
+│   ├── agent.ts            # Agent definition with blob storage tools
+│   ├── tools/
+│   │   ├── uploadBlob.ts   # Upload text content to Vercel Blob
+│   │   ├── listBlobs.ts    # List stored blobs with metadata
+│   │   └── deleteBlob.ts   # Delete a blob by URL
+│   └── icon.png
+├── .env.example            # Required environment variables
+├── package.json
+└── vercel.json
+```
+
+## Skills
+
+| Skill       | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| Upload File | Upload text content to Vercel Blob and receive a URL     |
+| List Files  | List all stored blobs with URLs, sizes, and upload dates |
+| Delete File | Remove a blob from storage by its URL                    |
+
+## Configuration
+
+```typescript
+const config: AixyzConfig = {
+  name: "Vercel Blob Agent",
+  description: "An AI agent that stores, retrieves, and manages files using Vercel Blob storage.",
+  version: "0.1.0",
+  x402: {
+    payTo: "0x...",
+    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+  },
+  skills: [
+    { id: "upload-blob", name: "Upload File", ... },
+    { id: "list-blobs",  name: "List Files",  ... },
+    { id: "delete-blob", name: "Delete File", ... },
+  ],
+};
+```
+
+## Tool Pattern
+
+Each tool imports directly from `@vercel/blob`. The token is read automatically from the `BLOB_READ_WRITE_TOKEN` environment variable.
+
+```typescript
+// app/tools/uploadBlob.ts
+import { put } from "@vercel/blob";
+import { tool } from "ai";
+import { z } from "zod";
+
+export default tool({
+  description: "Upload text content to Vercel Blob storage. Returns the public URL of the stored file.",
+  inputSchema: z.object({
+    pathname: z.string().min(1).describe("The filename/path for the blob, e.g. 'notes/hello.txt'."),
+    content: z.string().min(1).describe("The text content to upload."),
+  }),
+  execute: async ({ pathname, content }) => {
+    const blob = await put(pathname, content, { access: "public", addRandomSuffix: true });
+    return { url: blob.url, pathname: blob.pathname, contentType: blob.contentType, size: blob.size };
+  },
+});
+```
+
+## Setting Up Vercel Blob
+
+1. Go to your [Vercel dashboard](https://vercel.com/dashboard)
+2. Navigate to **Storage** → **Create** → **Blob**
+3. Copy the `BLOB_READ_WRITE_TOKEN` from the `.env.local` tab into your local `.env.local`
+
+When deploying to Vercel, link the Blob store to your project so the token is automatically injected.
+
+## Environment Variables
+
+| Variable                | Description                                          |
+| ----------------------- | ---------------------------------------------------- |
+| `OPENAI_API_KEY`        | OpenAI API key                                       |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob read/write token (from Vercel dashboard) |
+
+## Payment
+
+The agent charges `$0.001` per request via x402 on Base (mainnet in production, Base Sepolia in development).
+
+## Running
+
+```bash
+cd examples/agent-with-vercel-blob
+bun install
+bun run dev
+```
+
+Endpoints available at `http://localhost:3000`:
+
+| Endpoint                       | Protocol | Description           |
+| ------------------------------ | -------- | --------------------- |
+| `/.well-known/agent-card.json` | A2A      | Agent discovery card  |
+| `/agent`                       | A2A      | JSON-RPC task handler |
+| `/mcp`                         | MCP      | Tool endpoint         |
