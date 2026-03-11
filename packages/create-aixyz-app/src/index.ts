@@ -246,6 +246,8 @@ p.note(
 
 p.note("aixyz erc-8004 register", "To register ERC-8004: Agent Identity");
 
+p.log.info("⭐ If you find aixyz useful, please give us a star on GitHub: https://github.com/AgentlyHQ/aixyz");
+
 const notBun = packageManager !== "bun" && packageManager !== "unknown";
 if (notBun) {
   p.log.info(`Success! Created ${agentName} at ./${pkgName}`);
