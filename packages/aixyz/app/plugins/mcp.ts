@@ -64,11 +64,41 @@ export class MCPPlugin extends BasePlugin {
     // stateless transport reuse (_hasHandledRequest guard in webStandardStreamableHttp.js:139).
     // Once the SDK ships v2.0 (which removes this guard), hoist both server and transport to
     // avoid per-request McpServer + Ajv instantiation.
-    const handler = async (request: Request) => {
+    const mcpHandler = async (request: Request) => {
       const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
       const server = this.createMcpServer();
       await server.connect(transport);
       return transport.handleRequest(request);
+    };
+
+    // Build a set of paid tool names for fast lookup.
+    const paidToolNames = new Set(this.registeredTools.filter((t) => t.accepts.scheme === "exact").map((t) => t.name));
+
+    // Register per-tool routes with payment config. The app's fetch() handles x402 verification.
+    for (const { name, accepts } of this.registeredTools) {
+      if (accepts.scheme === "exact") {
+        app.route("POST", `/mcp/tools/${name}`, mcpHandler, { payment: accepts });
+      }
+    }
+
+    // Main /mcp handler — dispatches tools/call for paid tools through per-tool routes.
+    const handler = async (request: Request) => {
+      if (request.method === "POST" && paidToolNames.size > 0) {
+        const clone = request.clone();
+        try {
+          const body = await clone.json();
+          if (body.method === "tools/call" && paidToolNames.has(body.params?.name)) {
+            const syntheticRequest = new Request(
+              new URL(`/mcp/tools/${body.params.name}`, new URL(request.url).origin),
+              { method: "POST", headers: request.headers, body: JSON.stringify(body) },
+            );
+            return app.fetch(syntheticRequest);
+          }
+        } catch {
+          // Body parse failures are handled by the MCP SDK below.
+        }
+      }
+      return mcpHandler(request);
     };
 
     app.route("POST", "/mcp", handler);
