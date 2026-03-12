@@ -6,6 +6,7 @@ export type Accepts = AcceptsX402 | AcceptsFree;
 export type AcceptsX402 = {
   scheme: "exact";
   price: string;
+  // TODO(kevin): update type to Network (`string:string`)
   network?: string;
   payTo?: string;
 };

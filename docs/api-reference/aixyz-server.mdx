@@ -25,7 +25,7 @@ new AixyzServer(
 | `config`      | `AixyzConfig`       | Loaded from `aixyz.config.ts` | Agent configuration          |
 | `express`     | `Express`           | New Express 5 app             | Express instance to use      |
 
-After constructing, call `await server.initialize()` before registering any routes.
+After constructing, register plugins with `await server.withPlugin(...)`, then call `await server.initialize()` to start the server.
 
 ## Properties
 
@@ -69,15 +69,16 @@ const requirements = await server.withPaymentRequirements({
 
 ```typescript title="app/server.ts"
 import { AixyzServer } from "aixyz/server";
-import { useA2A } from "aixyz/server/adapters/a2a";
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
 import * as agent from "./agent";
 
 const server = new AixyzServer();
-await server.initialize();
-server.unstable_withIndexPage();
 
-useA2A(server, agent);
+await server.withPlugin(new IndexPagePlugin());
+await server.withPlugin(new A2APlugin(agent));
+
+await server.initialize();
 
 export default server;
 ```

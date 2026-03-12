@@ -5,7 +5,7 @@ description: "Model Context Protocol support for sharing tools with MCP clients"
 
 ## Overview
 
-The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) allows AI clients to discover and invoke tools exposed by your agent. aixyz implements MCP via the `AixyzMCP` class, serving tools at `/mcp` over a stateless `StreamableHTTPServerTransport`.
+The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) allows AI clients to discover and invoke tools exposed by your agent. aixyz implements MCP via the `MCPPlugin`, serving tools at `/mcp` over a stateless `StreamableHTTPServerTransport`.
 
 ## Endpoint
 
@@ -36,22 +36,22 @@ When using the standard `app/` directory structure, all tools in `app/tools/*.ts
 
 ## Manual Setup
 
-If you're using a custom server, wire up MCP manually with the `AixyzMCP` class:
+If you're using a custom server, wire up MCP manually with the `MCPPlugin`:
 
 ```typescript title="app/server.ts"
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
 import * as lookup from "./tools/lookup";
 
-const mcp = new AixyzMCP(server);
-
-// Register tools — each gets a name and its exports
-await mcp.register("lookup", {
-  default: lookup.default,
-  accepts: { scheme: "exact", price: "$0.001" },
-});
-
-// Mount the /mcp endpoint
-await mcp.connect();
+// Register tools and mount the /mcp endpoint
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "lookup",
+      default: lookup.default,
+      accepts: { scheme: "exact", price: "$0.001" },
+    },
+  ]),
+);
 ```
 
 ## Payment-Gated Tools
@@ -60,10 +60,15 @@ Tools with `accepts.scheme === "exact"` require [x402 payment](/protocols/x402) 
 
 ```typescript
 // This tool requires $0.001 per invocation
-await mcp.register("premiumSearch", {
-  default: searchTool,
-  accepts: { scheme: "exact", price: "$0.001" },
-});
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "premiumSearch",
+      default: searchTool,
+      accepts: { scheme: "exact", price: "$0.001" },
+    },
+  ]),
+);
 ```
 
 <CardGroup cols={2}>

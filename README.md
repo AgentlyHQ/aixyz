@@ -118,25 +118,33 @@ For full control, create `app/server.ts` instead. This takes precedence over aut
 
 ```ts
 import { AixyzServer } from "aixyz/server";
-import { useA2A } from "aixyz/server/adapters/a2a";
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
 
 import * as agent from "./agent";
 import lookup from "./tools/lookup";
 
 const server = new AixyzServer();
-await server.initialize();
+
+// Index page: human-readable agent info
+await server.withPlugin(new IndexPagePlugin());
 
 // A2A: agent discovery + JSON-RPC endpoint
-useA2A(server, agent);
+await server.withPlugin(new A2APlugin(agent));
 
 // MCP: expose tools to MCP clients
-const mcp = new AixyzMCP(server);
-await mcp.register("lookup", {
-  default: lookup,
-  accepts: { scheme: "exact", price: "$0.001" },
-});
-await mcp.connect();
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "lookup",
+      default: lookup,
+      accepts: { scheme: "exact", price: "$0.001" },
+    },
+  ]),
+);
+
+await server.initialize();
 
 export default server;
 ```

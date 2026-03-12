@@ -1,0 +1,78 @@
+import { type Tool } from "ai";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { BasePlugin } from "../plugin";
+import type { AixyzApp } from "../index";
+import type { Accepts } from "../../accepts";
+import { AcceptsScheme } from "../../accepts";
+
+/**
+ * MCP (Model Context Protocol) plugin. Collects tools and exposes them
+ * via a Streamable HTTP endpoint at `/mcp` using the official MCP SDK.
+ */
+export class MCPPlugin extends BasePlugin {
+  readonly name = "mcp";
+  readonly registeredTools: Array<{ name: string; tool: Tool; accepts: Accepts }> = [];
+
+  constructor(private tools: Array<{ name: string; exports: { default: Tool; accepts?: Accepts } }>) {
+    super();
+  }
+
+  private createMcpServer(): McpServer {
+    const mcpServer = new McpServer(
+      { name: "aixyz-mcp", version: "1.0.0" },
+      { capabilities: { tools: { listChanged: false } } },
+    );
+
+    for (const { name, tool } of this.registeredTools) {
+      mcpServer.registerTool(
+        name,
+        { description: tool.description, inputSchema: tool.inputSchema as any },
+        async (args: Record<string, unknown>) => {
+          try {
+            const result = await tool.execute!(args, { toolCallId: name, messages: [] });
+            const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+            return { content: [{ type: "text" as const, text }] };
+          } catch (error) {
+            const text = error instanceof Error ? error.message : "Unknown error";
+            return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
+          }
+        },
+      );
+    }
+
+    return mcpServer;
+  }
+
+  async register(app: AixyzApp): Promise<void> {
+    for (const t of this.tools) {
+      if (t.exports.accepts) {
+        AcceptsScheme.parse(t.exports.accepts);
+      } else {
+        continue;
+      }
+
+      const tool = t.exports.default;
+      if (!tool.execute) {
+        throw new Error(`Tool "${t.name}" has no execute function`);
+      }
+
+      this.registeredTools.push({ name: t.name, tool, accepts: t.exports.accepts });
+    }
+
+    // TODO: The MCP SDK (v1.27.1) enforces a 1:1 server-to-transport relationship and prevents
+    // stateless transport reuse (_hasHandledRequest guard in webStandardStreamableHttp.js:139).
+    // Once the SDK ships v2.0 (which removes this guard), hoist both server and transport to
+    // avoid per-request McpServer + Ajv instantiation.
+    const handler = async (request: Request) => {
+      const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
+      const server = this.createMcpServer();
+      await server.connect(transport);
+      return transport.handleRequest(request);
+    };
+
+    app.route("POST", "/mcp", handler);
+    app.route("GET", "/mcp", handler);
+    app.route("DELETE", "/mcp", handler);
+  }
+}

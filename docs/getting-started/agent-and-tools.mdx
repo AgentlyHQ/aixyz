@@ -147,24 +147,28 @@ For full control over endpoint registration and middleware, create `app/server.t
 
 ```typescript title="app/server.ts"
 import { AixyzServer } from "aixyz/server";
-import { useA2A } from "aixyz/server/adapters/a2a";
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
 
 import * as agent from "./agent";
 import * as lookup from "./tools/lookup";
 
 const server = new AixyzServer();
+
+await server.withPlugin(new IndexPagePlugin());
+await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "lookup",
+      default: lookup.default,
+      accepts: { scheme: "exact", price: "$0.001" },
+    },
+  ]),
+);
+
 await server.initialize();
-server.unstable_withIndexPage();
-
-useA2A(server, agent);
-
-const mcp = new AixyzMCP(server);
-await mcp.register("lookup", {
-  default: lookup.default,
-  accepts: { scheme: "exact", price: "$0.001" },
-});
-await mcp.connect();
 
 export default server;
 ```

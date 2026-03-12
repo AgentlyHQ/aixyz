@@ -4,10 +4,11 @@
   "exclude": ["node_modules", "**/*.test.*"],
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
+    "module": "esnext",
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["bun"]
   }
 }

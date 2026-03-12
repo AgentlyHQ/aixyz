@@ -9,20 +9,23 @@ async function main() {
     process.exit(1);
   }
 
+  // Expose port so config.url fallback picks it up
+  process.env.PORT = String(port);
+
   const startTime = performance.now();
   const mod = await import(entrypoint);
   const app = mod.default;
 
-  if (!app || typeof app.express?.listen !== "function") {
+  if (!app || typeof app.fetch !== "function") {
     console.error("Error: Entrypoint must default-export an AixyzApp");
     process.exit(1);
   }
 
-  app.express.listen(port, () => {
-    const duration = Math.round(performance.now() - startTime);
-    console.log(chalk.blueBright("✓") + ` Ready in ${duration}ms`);
-    console.log("");
-  });
+  const server = Bun.serve({ port, fetch: app.fetch });
+
+  const duration = Math.round(performance.now() - startTime);
+  console.log(chalk.blueBright("✓") + ` Ready in ${duration}ms`);
+  console.log("");
 }
 
 main();
