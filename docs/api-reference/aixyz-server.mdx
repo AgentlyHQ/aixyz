@@ -1,79 +1,101 @@
 ---
-title: "aixyz/server"
-description: "The core server class that wraps Express 5 with x402 payment support"
+title: "aixyz/app"
+description: "The core application class built on web-standard Request/Response"
 ---
 
-`AixyzServer` extends `x402ResourceServer` from `@x402/core/server`, which wraps Express 5. It provides built-in x402 payment verification for agent and tool endpoints.
+`AixyzApp` is a framework-agnostic server that manages route registration, middleware chaining, and optional x402 payment gating via a `PaymentGateway`. It uses web-standard `Request`/`Response` — no Express dependency.
 
 ```typescript
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
 ```
 
 ## Constructor
 
 ```typescript
-new AixyzServer(
-  facilitator?: FacilitatorClient,
-  config?: AixyzConfig,
-  express?: Express
-)
+new AixyzApp(options?: AixyzAppOptions)
 ```
 
-| Parameter     | Type                | Default                       | Description                  |
-| ------------- | ------------------- | ----------------------------- | ---------------------------- |
-| `facilitator` | `FacilitatorClient` | Default x402 facilitator      | Payment verification service |
-| `config`      | `AixyzConfig`       | Loaded from `aixyz.config.ts` | Agent configuration          |
-| `express`     | `Express`           | New Express 5 app             | Express instance to use      |
+| Parameter              | Type                                       | Default | Description                     |
+| ---------------------- | ------------------------------------------ | ------- | ------------------------------- |
+| `options.facilitators` | `FacilitatorClient \| FacilitatorClient[]` | —       | Payment verification service(s) |
 
-After constructing, register plugins with `await server.withPlugin(...)`, then call `await server.initialize()` to start the server.
+When `facilitators` is provided, a `PaymentGateway` is created and x402 payment verification is enabled for routes that declare a `payment` option.
+
+After constructing, register plugins with `await server.withPlugin(...)`, then call `await server.initialize()` to finalize payment routes.
 
 ## Properties
 
-| Property  | Type          | Description                    |
-| --------- | ------------- | ------------------------------ |
-| `config`  | `AixyzConfig` | The parsed agent configuration |
-| `express` | `Express`     | The underlying Express 5 app   |
+| Property  | Type                          | Description                                          |
+| --------- | ----------------------------- | ---------------------------------------------------- |
+| `routes`  | `Map<string, RouteEntry>`     | Registered routes, keyed by `"METHOD /path"`         |
+| `payment` | `PaymentGateway \| undefined` | Payment gateway (present when facilitators provided) |
 
 ## Methods
 
-### `withX402Exact(route, accepts)`
+### `route(method, path, handler, options?)`
 
-Registers x402 payment middleware on a route:
+Register a route with an optional x402 payment requirement:
 
 ```typescript
-server.withX402Exact("POST /agent", {
-  scheme: "exact",
-  price: "$0.005",
+server.route("POST", "/agent", handler, {
+  payment: { scheme: "exact", price: "$0.005" },
 });
 ```
 
-| Parameter | Type                                  | Description           |
-| --------- | ------------------------------------- | --------------------- |
-| `route`   | `` `${"GET" \| "POST"} /${string}` `` | Route pattern         |
-| `accepts` | `AcceptsX402`                         | Payment configuration |
+| Parameter         | Type           | Description                                           |
+| ----------------- | -------------- | ----------------------------------------------------- |
+| `method`          | `HttpMethod`   | HTTP method (GET, POST, etc.)                         |
+| `path`            | `string`       | Route path                                            |
+| `handler`         | `RouteHandler` | `(request: Request) => Response \| Promise<Response>` |
+| `options.payment` | `AcceptsX402`  | Optional payment configuration                        |
 
-The `payTo` and `network` fields default to the values from your `aixyz.config.ts` if not specified in the `accepts` object.
+### `fetch(request)`
 
-### `withPaymentRequirements(accepts)`
-
-Builds payment requirements for a given accepts configuration. Used internally by the MCP adapter.
+Dispatch a web-standard `Request` through payment verification, middleware chain, and route handler:
 
 ```typescript
-const requirements = await server.withPaymentRequirements({
-  scheme: "exact",
-  price: "$0.001",
+const response = await server.fetch(new Request("http://localhost/agent", { method: "POST" }));
+```
+
+### `use(middleware)`
+
+Append a middleware to the chain. Middlewares run in registration order before the route handler:
+
+```typescript
+server.use(async (request, next) => {
+  const response = await next();
+  return new Response(await response.text(), {
+    status: response.status,
+    headers: { ...Object.fromEntries(response.headers), "x-custom": "value" },
+  });
 });
+```
+
+### `withPlugin(plugin)`
+
+Register a plugin. Calls `plugin.register(this)` and returns `this` for chaining:
+
+```typescript
+await server.withPlugin(new IndexPagePlugin());
+```
+
+### `initialize()`
+
+Initialize payment gateway. Must be called after all routes are registered:
+
+```typescript
+await server.initialize();
 ```
 
 ## Example
 
 ```typescript title="app/server.ts"
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import * as agent from "./agent";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
 
 await server.withPlugin(new IndexPagePlugin());
 await server.withPlugin(new A2APlugin(agent));

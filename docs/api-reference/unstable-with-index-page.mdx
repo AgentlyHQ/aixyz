@@ -3,7 +3,7 @@ title: "IndexPagePlugin"
 description: "Add a human-readable text page to your agent server"
 ---
 
-Adds a human-readable plain text page to your `AixyzServer` showing agent name, description, version, and skills.
+Adds a human-readable plain text page to your `AixyzApp` showing agent name, description, version, and skills.
 
 ```typescript
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
@@ -43,10 +43,10 @@ The output includes:
 The auto-generated server registers the `IndexPagePlugin` automatically at `"/"`. In a custom server, register it explicitly:
 
 ```typescript title="app/server.ts"
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
 
 // Mount at root (default)
 await server.withPlugin(new IndexPagePlugin());

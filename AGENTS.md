@@ -55,14 +55,14 @@ bun run build  # → aixyz build (bundles for deployment)
 
 ### Packages (`packages/*`)
 
-| Package            | npm name           | Description                                                                 |
-| ------------------ | ------------------ | --------------------------------------------------------------------------- |
-| `aixyz`            | `aixyz`            | Main framework: server, plugins (A2A, MCP), x402 integration, Express-based |
-| `aixyz-cli`        | `@aixyz/cli`       | CLI: `dev`, `build`, `erc8004 register`, `erc8004 set-agent-uri`            |
-| `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files            |
-| `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                         |
-| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                               |
-| `aixyz-erc-8004`   | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, addresses, Zod schemas                              |
+| Package            | npm name           | Description                                                                |
+| ------------------ | ------------------ | -------------------------------------------------------------------------- |
+| `aixyz`            | `aixyz`            | Main framework: server, plugins (A2A, MCP), x402 integration, web-standard |
+| `aixyz-cli`        | `@aixyz/cli`       | CLI: `dev`, `build`, `erc8004 register`, `erc8004 set-agent-uri`           |
+| `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files           |
+| `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                        |
+| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                              |
+| `aixyz-erc-8004`   | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, addresses, Zod schemas                             |
 
 ### Examples (`examples/*`)
 
@@ -86,7 +86,7 @@ Mintlify documentation site (`mint dev` to preview locally). Structure:
 
 - `docs/getting-started/` — Installation, project structure, why Bun, agent and tools, payments (x402), deploying, testing
 - `docs/config/` — aixyz.config.ts reference, environment variables
-- `docs/api-reference/` — File-system conventions (agent.ts, agent.test.ts, tools/) and Functions (AixyzServer, A2APlugin, MCPPlugin, loadEnv, Accepts)
+- `docs/api-reference/` — File-system conventions (agent.ts, agent.test.ts, tools/) and Functions (AixyzApp, A2APlugin, MCPPlugin, loadEnv, Accepts)
 - `docs/protocols/` — A2A, MCP, x402, ERC-8004 (collapsed under Documentation tab)
 - `docs/packages/` — Package reference docs (collapsed under Documentation tab)
 - `docs/templates/` — Individual pages for each example template (separate Templates tab)
@@ -119,12 +119,14 @@ The `aixyz build` command in `packages/aixyz-cli/build/index.ts`:
 
 The `aixyz dev` command spawns a Bun worker process with file watching on `app/` and `aixyz.config.ts` (100ms debounce).
 
-### Server class hierarchy
+### Server architecture
 
-`AixyzServer` extends `x402ResourceServer` (from `@x402/express`), which wraps Express 5. Key methods:
+`AixyzApp` is a framework-agnostic server built on web-standard `Request`/`Response`. It uses a `PaymentGateway` for x402 payment verification (composition, not inheritance). Key methods:
 
-- `withX402Exact()` — Register payment-gated routes
+- `route()` — Register a route with an optional x402 payment requirement
+- `fetch()` — Dispatch a web-standard Request through payment verification, middleware, and route handler
 - `withPlugin()` — Register plugins (A2APlugin, MCPPlugin, IndexPagePlugin, etc.)
+- `use()` — Append middleware to the chain
 
 ### Protocol adapters (`packages/aixyz/app/plugins/`)
 
@@ -159,7 +161,7 @@ Agents/tools without `accepts` are not registered on payment-gated endpoints.
 
 ```
 aixyz → @aixyz/cli → @aixyz/config
-     → @a2a-js/sdk, @modelcontextprotocol/sdk, @x402/*, express, zod
+     → @a2a-js/sdk, @modelcontextprotocol/sdk, @x402/*, zod
      → ai (optional peer dep, Vercel AI SDK v6)
 ```
 

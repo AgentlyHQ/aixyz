@@ -117,7 +117,7 @@ That's it. Run `bun run dev` and aixyz auto-generates the server, wires up A2A +
 For full control, create `app/server.ts` instead. This takes precedence over auto-generation:
 
 ```ts
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { MCPPlugin } from "aixyz/app/plugins/mcp";
@@ -125,7 +125,7 @@ import { MCPPlugin } from "aixyz/app/plugins/mcp";
 import * as agent from "./agent";
 import lookup from "./tools/lookup";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
 
 // Index page: human-readable agent info
 await server.withPlugin(new IndexPagePlugin());
@@ -138,8 +138,10 @@ await server.withPlugin(
   new MCPPlugin([
     {
       name: "lookup",
-      default: lookup,
-      accepts: { scheme: "exact", price: "$0.001" },
+      exports: {
+        default: lookup,
+        accepts: { scheme: "exact", price: "$0.001" },
+      },
     },
   ]),
 );

@@ -32,7 +32,7 @@ agent-with-custom-server/
 The `app/server.ts` file gives you full control:
 
 ```typescript title="app/server.ts"
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { MCPPlugin } from "aixyz/app/plugins/mcp";
@@ -40,7 +40,7 @@ import { MCPPlugin } from "aixyz/app/plugins/mcp";
 import * as agent from "./agent";
 import lookup from "./tools/lookup";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
 
 await server.withPlugin(new IndexPagePlugin());
 await server.withPlugin(new A2APlugin(agent));
@@ -48,10 +48,12 @@ await server.withPlugin(
   new MCPPlugin([
     {
       name: "latestData",
-      default: lookup,
-      accepts: {
-        scheme: "exact",
-        price: "$0.001",
+      exports: {
+        default: lookup,
+        accepts: {
+          scheme: "exact",
+          price: "$0.001",
+        },
       },
     },
   ]),

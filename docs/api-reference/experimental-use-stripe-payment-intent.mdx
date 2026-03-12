@@ -3,7 +3,7 @@ title: "StripePaymentIntentPlugin"
 description: "Add Stripe PaymentIntent-based payments to your agent server"
 ---
 
-Adds Stripe PaymentIntent creation and validation to an `AixyzServer`, providing an alternative payment method alongside [x402](/protocols/x402).
+Adds Stripe PaymentIntent creation and validation to an `AixyzApp`, providing an alternative payment method alongside [x402](/protocols/x402).
 
 ```typescript
 import { StripePaymentIntentPlugin } from "@aixyz/stripe";
@@ -64,13 +64,13 @@ After registering the `StripePaymentIntentPlugin`, the server checks incoming re
 Use in a [custom server](/api-reference/agent) (`app/server.ts`):
 
 ```typescript title="app/server.ts"
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { StripePaymentIntentPlugin } from "@aixyz/stripe";
 import * as agent from "./agent";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
 
 await server.withPlugin(new IndexPagePlugin());
 

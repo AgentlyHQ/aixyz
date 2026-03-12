@@ -47,8 +47,10 @@ await server.withPlugin(
   new MCPPlugin([
     {
       name: "lookup",
-      default: lookup.default,
-      accepts: { scheme: "exact", price: "$0.001" },
+      exports: {
+        default: lookup.default,
+        accepts: { scheme: "exact", price: "$0.001" },
+      },
     },
   ]),
 );
@@ -64,8 +66,10 @@ await server.withPlugin(
   new MCPPlugin([
     {
       name: "premiumSearch",
-      default: searchTool,
-      accepts: { scheme: "exact", price: "$0.001" },
+      exports: {
+        default: searchTool,
+        accepts: { scheme: "exact", price: "$0.001" },
+      },
     },
   ]),
 );

@@ -7,7 +7,7 @@ description: "HTTP 402 micropayments for agent endpoints"
 
 [x402](https://www.x402.org/) is a payment protocol for HTTP resources. When a client requests a payment-gated endpoint, the server responds with HTTP 402 and payment requirements. The client includes a payment proof in the `X-Payment` header, and the server verifies it via a facilitator before granting access.
 
-In aixyz, `AixyzServer` extends `x402ResourceServer`, providing built-in payment gating for agent and tool endpoints.
+In aixyz, `AixyzApp` uses a `PaymentGateway` to provide built-in payment gating for agent and tool endpoints.
 
 ## How It Works
 
@@ -90,12 +90,11 @@ export const facilitator = new HTTPFacilitatorClient({
 
 ## Server Integration
 
-In a custom server, use `withX402Exact()` to add payment middleware:
+In a custom server, register payment-gated routes via `route()`:
 
 ```typescript
-server.withX402Exact("POST /agent", {
-  scheme: "exact",
-  price: "$0.005",
+server.route("POST", "/agent", handler, {
+  payment: { scheme: "exact", price: "$0.005" },
 });
 ```
 

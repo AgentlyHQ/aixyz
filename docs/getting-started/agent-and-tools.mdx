@@ -146,7 +146,7 @@ export default tool({ ... });
 For full control over endpoint registration and middleware, create `app/server.ts`. This overrides auto-generation entirely:
 
 ```typescript title="app/server.ts"
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { MCPPlugin } from "aixyz/app/plugins/mcp";
@@ -154,7 +154,7 @@ import { MCPPlugin } from "aixyz/app/plugins/mcp";
 import * as agent from "./agent";
 import * as lookup from "./tools/lookup";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
 
 await server.withPlugin(new IndexPagePlugin());
 await server.withPlugin(new A2APlugin(agent));
@@ -162,8 +162,10 @@ await server.withPlugin(
   new MCPPlugin([
     {
       name: "lookup",
-      default: lookup.default,
-      accepts: { scheme: "exact", price: "$0.001" },
+      exports: {
+        default: lookup.default,
+        accepts: { scheme: "exact", price: "$0.001" },
+      },
     },
   ]),
 );

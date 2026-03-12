@@ -72,7 +72,7 @@ describe("PaymentGateway", () => {
     expect(header).not.toBeNull();
 
     const decoded = decodePaymentRequiredHeader(header!);
-    expect(decoded.accepts).toBeArrayOfSize(1);
+    expect(decoded.accepts).toHaveLength(1);
     expect(decoded.accepts[0].scheme).toStrictEqual("exact");
     expect(decoded.accepts[0].network).toStrictEqual("eip155:8453");
     expect(decoded.accepts[0].amount).toStrictEqual("9000"); // $0.009
