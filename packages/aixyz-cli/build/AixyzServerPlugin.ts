@@ -1,9 +1,13 @@
 import type { BunPlugin } from "bun";
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "fs";
 import { resolve, relative, join } from "path";
 import { getAixyzConfig } from "@aixyz/config";
 
-export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone" | "executable"): BunPlugin {
+export function AixyzServerPlugin(
+  entrypoint: string,
+  mode: "vercel" | "standalone" | "executable",
+  isCustom = false,
+): BunPlugin {
   return {
     name: "aixyz-entrypoint",
     setup(build) {
@@ -12,52 +16,58 @@ export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalo
 
         const source = await Bun.file(args.path).text();
 
-        if (mode === "vercel") {
-          // For Vercel, export a web-standard fetch handler
+        // Custom server.ts manages its own lifecycle — pass through as-is
+        if (isCustom || mode === "vercel") {
           return { contents: source, loader: "ts" };
-        } else {
-          // For standalone and executable, rewrite `export default ...` into Bun.serve().
-          // Supports both identifier exports (`export default app;`) and
-          // expression exports (`export default new AixyzApp({...});`).
-          const identifierRe = /export\s+default\s+(\w+)\s*;/;
-          const expressionRe = /export\s+default\s+/;
-
-          let transformed: string;
-          const identifierMatch = source.match(identifierRe);
-          if (identifierMatch) {
-            transformed = source.replace(
-              identifierRe,
-              `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: ${identifierMatch[1]}.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`,
-            );
-          } else if (expressionRe.test(source)) {
-            transformed = source.replace(expressionRe, `const __app = `);
-            transformed += `\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: __app.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`;
-          } else {
-            throw new Error(
-              `[aixyz] Could not find \`export default\` in entrypoint ${args.path}. ` +
-                `Standalone and executable builds require the server entrypoint to use \`export default app;\` ` +
-                `or \`export default new AixyzApp({...});\`.`,
-            );
-          }
-          return { contents: transformed, loader: "ts" };
         }
+
+        // For generated entrypoints in standalone/executable, rewrite `export default ...` into Bun.serve().
+        // Supports both identifier exports (`export default app;`) and
+        // expression exports (`export default new AixyzApp({...});`).
+        const identifierRe = /export\s+default\s+(\w+)\s*;/;
+        const expressionRe = /export\s+default\s+/;
+
+        let transformed: string;
+        const identifierMatch = source.match(identifierRe);
+        if (identifierMatch) {
+          transformed = source.replace(
+            identifierRe,
+            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: ${identifierMatch[1]}.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`,
+          );
+        } else if (expressionRe.test(source)) {
+          transformed = source.replace(expressionRe, `const __app = `);
+          transformed += `\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: __app.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`;
+        } else {
+          throw new Error(
+            `[aixyz] Could not find \`export default\` in entrypoint ${args.path}. ` +
+              `Standalone and executable builds require the server entrypoint to use \`export default app;\` ` +
+              `or \`export default new AixyzApp({...});\`.`,
+          );
+        }
+        return { contents: transformed, loader: "ts" };
       });
     },
   };
 }
 
-export function getEntrypointMayGenerate(cwd: string, appDirName: string, mode: "dev" | "build"): string {
-  const appDir = resolve(cwd, appDirName);
+export type Entrypoint = { path: string; isCustom: boolean };
 
-  if (existsSync(resolve(appDir, "server.ts"))) {
-    return resolve(appDir, "server.ts");
+export function getEntrypointMayGenerate(cwd: string, appDirName: string, mode: "dev" | "build"): Entrypoint {
+  const appDir = resolve(cwd, appDirName);
+  const serverFile = resolve(appDir, "server.ts");
+
+  if (existsSync(serverFile)) {
+    const source = readFileSync(serverFile, "utf-8");
+    // assume that export default has `.fetch` typically `app`
+    const hasExportDefault = /export\s+default\s+/.test(source);
+    return { path: serverFile, isCustom: !hasExportDefault };
   }
 
   const devDir = resolve(cwd, join(".aixyz", mode));
   mkdirSync(devDir, { recursive: true });
   const entrypoint = resolve(devDir, "server.ts");
   writeFileSync(entrypoint, generateServer(appDir, devDir));
-  return entrypoint;
+  return { path: entrypoint, isCustom: false };
 }
 
 class AixyzGlob {

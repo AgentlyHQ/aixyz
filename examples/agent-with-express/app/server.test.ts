@@ -62,7 +62,7 @@ beforeAll(async () => {
   baseUrl = `http://localhost:${port}`;
 
   const projectRoot = resolve(import.meta.dir, "..");
-  serverProc = Bun.spawn(["bun", "run", "app/server.ts"], {
+  serverProc = Bun.spawn(["bun", "run", "dev"], {
     cwd: projectRoot,
     stdout: "ignore",
     stderr: "ignore",

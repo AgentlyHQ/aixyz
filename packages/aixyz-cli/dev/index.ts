@@ -8,7 +8,7 @@ import pkg from "../package.json";
 
 export const devCommand = new Command("dev")
   .description("Start a local development server")
-  .option("-p, --port <port>", "Port to listen on", "3000")
+  .option("-p, --port <port>", "Port to listen on")
   .action(action);
 
 type DevOptions = {
@@ -45,8 +45,10 @@ export async function action(options: DevOptions): Promise<void> {
   let restarting = false;
 
   function startServer() {
-    const endpoint = getEntrypointMayGenerate(cwd, appDir, "dev");
-    child = Bun.spawn(["bun", workerPath, endpoint, port], {
+    const { path: endpoint, isCustom } = getEntrypointMayGenerate(cwd, appDir, "dev");
+    const args = ["bun", workerPath, endpoint, port];
+    if (isCustom) args.push("custom");
+    child = Bun.spawn(args, {
       cwd,
       stdout: "inherit",
       stderr: "inherit",
