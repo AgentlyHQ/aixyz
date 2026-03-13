@@ -15,7 +15,7 @@ export interface AixyzAppOptions {
 
 /**
  * Framework-agnostic route and middleware registry with optional x402 payment gating.
- * Does not handle HTTP dispatch — use an adapter (e.g. `toFetch`, `toExpress`) for that.
+ * Call `fetch()` to dispatch a web-standard Request through payment verification, middleware, and route handler.
  */
 export class AixyzApp {
   readonly routes = new Map<string, RouteEntry>();
@@ -31,7 +31,7 @@ export class AixyzApp {
     }
   }
 
-  /** Initialize payment gateway. Must be called after all routes are registered. */
+  /** Initialize payment gateway and plugins. Must be called after all routes are registered. */
   async initialize(): Promise<void> {
     if (this.payment) {
       // Register payment routes with the gateway before initializing
@@ -41,6 +41,10 @@ export class AixyzApp {
         }
       }
       await this.payment.initialize();
+    }
+
+    for (const plugin of this.plugins) {
+      await plugin.initialize?.(this);
     }
   }
 
@@ -76,4 +80,45 @@ export class AixyzApp {
   getMiddlewares(): Middleware[] {
     return this.middlewares;
   }
+
+  /** Dispatch a web-standard Request through payment verification, middleware, and route handler. */
+  fetch = async (request: Request): Promise<Response> => {
+    console.log(request.method, request.url);
+    const url = new URL(request.url);
+    const key = this.getRouteKey(request.method as HttpMethod, url.pathname);
+    const entry = this.routes.get(key);
+
+    if (!entry) {
+      return new Response("Not Found", { status: 404 });
+    }
+
+    if (entry.payment && this.payment) {
+      const rejection = await this.payment.verify(request);
+      if (rejection) return rejection;
+    }
+
+    let index = 0;
+    const middlewares = this.middlewares;
+    const handler = entry.handler;
+
+    const next = async (): Promise<Response> => {
+      if (index < middlewares.length) {
+        const mw = middlewares[index++];
+        return mw(request, next);
+      }
+      return handler(request);
+    };
+
+    const response = await next();
+
+    if (entry.payment && this.payment) {
+      const settlementResult = await this.payment.settle(request);
+      if (settlementResult?.success) {
+        const paymentResultHeader = settlementResult.headers["PAYMENT-RESPONSE"];
+        response.headers.set("PAYMENT-RESPONSE", paymentResultHeader);
+      }
+    }
+
+    return response;
+  };
 }

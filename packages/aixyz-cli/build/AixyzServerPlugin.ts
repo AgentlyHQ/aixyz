@@ -101,7 +101,6 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const body: string[] = [];
 
   imports.push('import { AixyzApp } from "aixyz/app";');
-  imports.push('import { toFetch } from "aixyz/app/adapters/node";');
   imports.push('import { IndexPagePlugin } from "aixyz/app/plugins/index-page";');
 
   const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
@@ -172,7 +171,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   body.push("await app.initialize();");
-  body.push("export default { fetch: toFetch(app) };");
+  body.push("export default { fetch: app.fetch };");
 
   return [...imports, "", ...body].join("\n");
 }

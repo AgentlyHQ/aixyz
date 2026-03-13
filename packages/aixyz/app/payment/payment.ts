@@ -54,7 +54,7 @@ interface PaymentContext {
  * Thin wrapper around x402HTTPResourceServer
  */
 export class PaymentGateway {
-  private readonly resourceServer: x402ResourceServer;
+  readonly resourceServer: x402ResourceServer;
   private httpServer?: x402HTTPResourceServer;
   private readonly config: AixyzConfig;
   private readonly pendingRoutes = new Map<string, RouteConfig>();

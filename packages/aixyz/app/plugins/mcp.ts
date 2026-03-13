@@ -1,20 +1,26 @@
 import { type Tool } from "ai";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { createPaymentWrapper } from "@x402/mcp";
 import { BasePlugin } from "../plugin";
 import type { AixyzApp } from "../index";
-import { createDispatcher } from "../dispatcher";
 import type { Accepts } from "../../accepts";
 import { AcceptsScheme } from "../../accepts";
-import { getAixyzConfigRuntime } from "../../config";
+import { getAixyzConfig, getAixyzConfigRuntime } from "../../config";
+import { Network } from "@x402/core/types";
 
 /**
  * MCP (Model Context Protocol) plugin. Collects tools and exposes them
  * via a Streamable HTTP endpoint at `/mcp` using the official MCP SDK.
+ *
+ * Payment for paid tools is handled at the MCP protocol level using
+ * `@x402/mcp`'s `createPaymentWrapper`, which negotiates payment via
+ * `_meta["x402/payment"]` in the tool call params rather than HTTP headers.
  */
 export class MCPPlugin extends BasePlugin {
   readonly name = "mcp";
-  readonly registeredTools: Array<{ name: string; tool: Tool; accepts: Accepts }> = [];
+  readonly registeredTools: Array<{ name: string; tool: Tool; accepts?: Accepts }> = [];
+  private paymentWrappers = new Map<string, (handler: any) => any>();
 
   constructor(private tools: Array<{ name: string; exports: { default: Tool; accepts?: Accepts } }>) {
     super();
@@ -28,19 +34,22 @@ export class MCPPlugin extends BasePlugin {
     );
 
     for (const { name, tool } of this.registeredTools) {
+      const handler = async (args: Record<string, unknown>) => {
+        try {
+          const result = await tool.execute!(args, { toolCallId: name, messages: [] });
+          const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+          return { content: [{ type: "text" as const, text }] };
+        } catch (error) {
+          const text = error instanceof Error ? error.message : "Unknown error";
+          return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
+        }
+      };
+
+      const wrapper = this.paymentWrappers.get(name);
       mcpServer.registerTool(
         name,
         { description: tool.description, inputSchema: tool.inputSchema as any },
-        async (args: Record<string, unknown>) => {
-          try {
-            const result = await tool.execute!(args, { toolCallId: name, messages: [] });
-            const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
-            return { content: [{ type: "text" as const, text }] };
-          } catch (error) {
-            const text = error instanceof Error ? error.message : "Unknown error";
-            return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
-          }
-        },
+        wrapper ? wrapper(handler) : handler,
       );
     }
 
@@ -51,8 +60,6 @@ export class MCPPlugin extends BasePlugin {
     for (const t of this.tools) {
       if (t.exports.accepts) {
         AcceptsScheme.parse(t.exports.accepts);
-      } else {
-        continue;
       }
 
       const tool = t.exports.default;
@@ -63,10 +70,6 @@ export class MCPPlugin extends BasePlugin {
       this.registeredTools.push({ name: t.name, tool, accepts: t.exports.accepts });
     }
 
-    // TODO: The MCP SDK (v1.27.1) enforces a 1:1 server-to-transport relationship and prevents
-    // stateless transport reuse (_hasHandledRequest guard in webStandardStreamableHttp.js:139).
-    // Once the SDK ships v2.0 (which removes this guard), hoist both server and transport to
-    // avoid per-request McpServer + Ajv instantiation.
     const mcpHandler = async (request: Request) => {
       const transport = new WebStandardStreamableHTTPServerTransport({});
       const server = this.createMcpServer();
@@ -74,39 +77,34 @@ export class MCPPlugin extends BasePlugin {
       return transport.handleRequest(request);
     };
 
-    // Build a set of paid tool names for fast lookup.
-    const paidToolNames = new Set(this.registeredTools.filter((t) => t.accepts.scheme === "exact").map((t) => t.name));
+    app.route("POST", "/mcp", mcpHandler);
+    app.route("GET", "/mcp", mcpHandler);
+    app.route("DELETE", "/mcp", mcpHandler);
+  }
 
-    // Register per-tool routes with payment config. The app's fetch() handles x402 verification.
+  async initialize(app: AixyzApp): Promise<void> {
+    if (!app.payment) return;
+
+    const config = getAixyzConfig();
+    const resourceServer = app.payment.resourceServer;
+
     for (const { name, accepts } of this.registeredTools) {
-      if (accepts.scheme === "exact") {
-        app.route("POST", `/mcp/tools/${name}`, mcpHandler, { payment: accepts });
-      }
+      if (accepts?.scheme !== "exact") continue;
+
+      const reqs = await resourceServer.buildPaymentRequirements({
+        scheme: accepts.scheme,
+        payTo: accepts.payTo ?? config.x402.payTo,
+        price: accepts.price,
+        network: (accepts.network as Network) ?? (config.x402.network as Network),
+      });
+
+      this.paymentWrappers.set(
+        name,
+        createPaymentWrapper(resourceServer, {
+          accepts: reqs,
+          resource: { url: `mcp://tool/${name}` },
+        }),
+      );
     }
-
-    // Main /mcp handler — dispatches tools/call for paid tools through per-tool routes.
-    const dispatch = createDispatcher(app);
-    const handler = async (request: Request) => {
-      if (request.method === "POST" && paidToolNames.size > 0) {
-        const clone = request.clone();
-        try {
-          const body = await clone.json();
-          if (body.method === "tools/call" && paidToolNames.has(body.params?.name)) {
-            const syntheticRequest = new Request(
-              new URL(`/mcp/tools/${body.params.name}`, new URL(request.url).origin),
-              { method: "POST", headers: request.headers, body: JSON.stringify(body) },
-            );
-            return dispatch(syntheticRequest);
-          }
-        } catch {
-          // Body parse failures are handled by the MCP SDK below.
-        }
-      }
-      return mcpHandler(request);
-    };
-
-    app.route("POST", "/mcp", handler);
-    app.route("GET", "/mcp", handler);
-    app.route("DELETE", "/mcp", handler);
   }
 }

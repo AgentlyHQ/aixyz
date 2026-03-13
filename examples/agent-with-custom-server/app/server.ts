@@ -1,5 +1,5 @@
 import { AixyzApp } from "aixyz/app";
-import { toFetch } from "aixyz/app/adapters/node";
+
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { MCPPlugin } from "aixyz/app/plugins/mcp";
@@ -38,4 +38,4 @@ await app.withPlugin(
 );
 await app.initialize();
 
-export default { fetch: toFetch(app) };
+export default { fetch: app.fetch };

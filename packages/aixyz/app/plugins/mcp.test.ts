@@ -21,13 +21,8 @@ mock.module("@aixyz/config", () => ({
 }));
 
 import { AixyzApp } from "../index";
-import { createDispatcher } from "../dispatcher";
 import { MCPPlugin } from "./mcp";
 
-function dispatch(app: AixyzApp, request: Request): Promise<Response> {
-  return createDispatcher(app)(request);
-}
-import { decodePaymentRequiredHeader, encodePaymentSignatureHeader } from "@x402/core/http";
 import { tool } from "ai";
 import { z } from "zod";
 
@@ -88,6 +83,15 @@ function parseSSEEvents(text: string): Array<{ event?: string; data: string }> {
   return events;
 }
 
+/** Extract the JSON-RPC payload from an SSE response. */
+async function parseSSEJsonRpc(res: Response): Promise<any> {
+  const text = await res.text();
+  const events = parseSSEEvents(text);
+  const messageEvent = events.find((e) => e.event === "message");
+  if (!messageEvent) throw new Error(`No message event in SSE response: ${text}`);
+  return JSON.parse(messageEvent.data);
+}
+
 const toolEntries = [{ name: "add", exports: { default: mockTool, accepts: { scheme: "free" as const } } }];
 
 const toolEntriesWithFailing = [
@@ -110,98 +114,58 @@ describe("MCPPlugin", () => {
     expect(app.routes.has("DELETE /mcp")).toBe(true);
   });
 
-  test("skips tools without accepts", async () => {
+  test("registers tools without accepts (no payment)", async () => {
     const app = createApp();
     const plugin = new MCPPlugin([{ name: "add", exports: { default: mockTool } }]);
     await app.withPlugin(plugin);
 
-    expect(plugin.registeredTools.length).toBe(0);
+    expect(plugin.registeredTools.length).toBe(1);
+    expect(plugin.registeredTools[0].accepts).toBeUndefined();
   });
 
-  test("registers per-tool routes with payment on the app", async () => {
+  test("registers tools with payment accepts", async () => {
     const app = createApp();
-    await app.withPlugin(
-      new MCPPlugin([
-        { name: "add", exports: { default: mockTool, accepts: { scheme: "exact" as const, price: "$0.01" } } },
-        { name: "fail", exports: { default: failingTool, accepts: { scheme: "exact" as const, price: "$0.05" } } },
-      ]),
-    );
+    const plugin = new MCPPlugin([
+      { name: "add", exports: { default: mockTool, accepts: { scheme: "exact" as const, price: "$0.01" } } },
+      { name: "fail", exports: { default: failingTool, accepts: { scheme: "exact" as const, price: "$0.05" } } },
+    ]);
+    await app.withPlugin(plugin);
 
+    expect(plugin.registeredTools).toHaveLength(2);
+    expect(plugin.registeredTools[0].accepts).toEqual({ scheme: "exact", price: "$0.01" });
+    expect(plugin.registeredTools[1].accepts).toEqual({ scheme: "exact", price: "$0.05" });
+    // No per-tool routes — payment is handled at the MCP protocol level
     expect(app.routes.get("POST /mcp")?.payment).toBeUndefined();
-    expect(app.routes.get("POST /mcp/tools/add")?.payment).toEqual({ scheme: "exact", price: "$0.01" });
-    expect(app.routes.get("POST /mcp/tools/fail")?.payment).toEqual({ scheme: "exact", price: "$0.05" });
-  });
-
-  test("does not register per-tool routes for free tools", async () => {
-    const app = createApp();
-    await app.withPlugin(new MCPPlugin(toolEntries));
-
-    expect(app.routes.has("POST /mcp/tools/add")).toBe(false);
-  });
-
-  test("dispatches tools/call for paid tool through per-tool route", async () => {
-    const app = createApp();
-    await app.withPlugin(
-      new MCPPlugin([
-        { name: "add", exports: { default: mockTool, accepts: { scheme: "exact" as const, price: "$0.01" } } },
-      ]),
-    );
-
-    // tools/call on a paid tool should be routed through /mcp/tools/add
-    await dispatch(app, jsonRpcRequest("initialize", initParams));
-    const res = await dispatch(app, jsonRpcRequest("tools/call", { name: "add", arguments: { a: 2, b: 3 } }));
-    const json = await res.json();
-
-    expect(json.result.content[0].type).toBe("text");
-    expect(JSON.parse(json.result.content[0].text)).toEqual({ result: 5 });
-  });
-
-  test("free tool calls go through main /mcp handler", async () => {
-    const app = createApp();
-    await app.withPlugin(new MCPPlugin(toolEntries));
-
-    await dispatch(app, jsonRpcRequest("initialize", initParams));
-    const res = await dispatch(app, jsonRpcRequest("tools/call", { name: "add", arguments: { a: 2, b: 3 } }));
-    const json = await res.json();
-
-    expect(json.result.content[0].type).toBe("text");
-    expect(JSON.parse(json.result.content[0].text)).toEqual({ result: 5 });
   });
 
   // ---------------------------------------------------------------------------
-  // POST /mcp — JSON response path (enableJsonResponse: true)
+  // POST /mcp — SSE response path
   // ---------------------------------------------------------------------------
   describe("POST /mcp", () => {
-    test("initialize returns protocol info", async () => {
+    test("initialize returns protocol info via SSE", async () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(app, jsonRpcRequest("initialize", initParams, 42));
-      const json = await res.json();
+      const res = await app.fetch(jsonRpcRequest("initialize", initParams, 42));
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toBe("text/event-stream");
 
+      const json = await parseSSEJsonRpc(res);
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(42);
-      expect(json.result.serverInfo.name).toBe("aixyz-mcp");
+      expect(json.result.serverInfo.name).toBe("Test Agent");
       expect(json.result.serverInfo.version).toBe("1.0.0");
       expect(json.result.capabilities.tools).toEqual({ listChanged: true });
-    });
-
-    test("initialize response has Content-Type application/json", async () => {
-      const app = createApp();
-      await app.withPlugin(new MCPPlugin(toolEntries));
-
-      const res = await dispatch(app, jsonRpcRequest("initialize", initParams));
-      expect(res.headers.get("content-type")).toBe("application/json");
     });
 
     test("tools/list returns tool schemas", async () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      await dispatch(app, jsonRpcRequest("initialize", initParams));
+      await app.fetch(jsonRpcRequest("initialize", initParams));
 
-      const res = await dispatch(app, jsonRpcRequest("tools/list", undefined, 5));
-      const json = await res.json();
+      const res = await app.fetch(jsonRpcRequest("tools/list", undefined, 5));
+      const json = await parseSSEJsonRpc(res);
 
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(5);
@@ -220,10 +184,10 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      await dispatch(app, jsonRpcRequest("initialize", initParams));
+      await app.fetch(jsonRpcRequest("initialize", initParams));
 
-      const res = await dispatch(app, jsonRpcRequest("tools/call", { name: "add", arguments: { a: 2, b: 3 } }, 10));
-      const json = await res.json();
+      const res = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 2, b: 3 } }, 10));
+      const json = await parseSSEJsonRpc(res);
 
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(10);
@@ -236,10 +200,10 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      await dispatch(app, jsonRpcRequest("initialize", initParams));
+      await app.fetch(jsonRpcRequest("initialize", initParams));
 
-      const res = await dispatch(app, jsonRpcRequest("tools/call", { name: "nonexistent" }, 11));
-      const json = await res.json();
+      const res = await app.fetch(jsonRpcRequest("tools/call", { name: "nonexistent" }, 11));
+      const json = await parseSSEJsonRpc(res);
 
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(11);
@@ -251,10 +215,10 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntriesWithFailing));
 
-      await dispatch(app, jsonRpcRequest("initialize", initParams));
+      await app.fetch(jsonRpcRequest("initialize", initParams));
 
-      const res = await dispatch(app, jsonRpcRequest("tools/call", { name: "fail", arguments: {} }, 12));
-      const json = await res.json();
+      const res = await app.fetch(jsonRpcRequest("tools/call", { name: "fail", arguments: {} }, 12));
+      const json = await parseSSEJsonRpc(res);
 
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(12);
@@ -266,10 +230,10 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      await dispatch(app, jsonRpcRequest("initialize", initParams));
+      await app.fetch(jsonRpcRequest("initialize", initParams));
 
-      const res = await dispatch(app, jsonRpcRequest("unknown/method", undefined, 13));
-      const json = await res.json();
+      const res = await app.fetch(jsonRpcRequest("unknown/method", undefined, 13));
+      const json = await parseSSEJsonRpc(res);
 
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(13);
@@ -280,8 +244,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(
-        app,
+      const res = await app.fetch(
         new Request("http://localhost/mcp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -296,8 +259,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(
-        app,
+      const res = await app.fetch(
         new Request("http://localhost/mcp", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
@@ -312,8 +274,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(
-        app,
+      const res = await app.fetch(
         new Request("http://localhost/mcp", {
           method: "POST",
           headers: { "Content-Type": "text/plain", Accept: "application/json, text/event-stream" },
@@ -328,8 +289,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(
-        app,
+      const res = await app.fetch(
         new Request("http://localhost/mcp", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
@@ -346,8 +306,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(
-        app,
+      const res = await app.fetch(
         new Request("http://localhost/mcp", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
@@ -367,7 +326,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(app, sseGetRequest());
+      const res = await app.fetch(sseGetRequest());
 
       expect(res.status).toBe(200);
       expect(res.headers.get("content-type")).toBe("text/event-stream");
@@ -384,8 +343,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(
-        app,
+      const res = await app.fetch(
         new Request("http://localhost/mcp", {
           method: "GET",
           headers: { Accept: "application/json" },
@@ -401,7 +359,7 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(app, new Request("http://localhost/mcp", { method: "GET" }));
+      const res = await app.fetch(new Request("http://localhost/mcp", { method: "GET" }));
 
       expect(res.status).toBe(406);
     });
@@ -415,174 +373,9 @@ describe("MCPPlugin", () => {
       const app = createApp();
       await app.withPlugin(new MCPPlugin(toolEntries));
 
-      const res = await dispatch(app, deleteRequest());
+      const res = await app.fetch(deleteRequest());
 
       expect(res.status).toBe(200);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // SSE stream response format (POST without enableJsonResponse)
-  // ---------------------------------------------------------------------------
-  describe("SSE stream response", () => {
-    test("initialize via SSE returns event-stream with valid JSON-RPC", async () => {
-      // Create a plugin subclass that disables JSON response mode to exercise SSE path
-      class SSEMCPPlugin extends MCPPlugin {
-        async register(app: AixyzApp): Promise<void> {
-          // Re-implement register with enableJsonResponse: false
-          for (const t of (this as any).tools) {
-            if (t.exports.accepts) {
-              const { AcceptsScheme } = await import("../../accepts");
-              AcceptsScheme.parse(t.exports.accepts);
-            } else {
-              continue;
-            }
-            const tool = t.exports.default;
-            if (!tool.execute) throw new Error(`Tool "${t.name}" has no execute function`);
-            this.registeredTools.push({ name: t.name, tool, accepts: t.exports.accepts });
-          }
-
-          const { McpServer } = await import("@modelcontextprotocol/sdk/server/mcp.js");
-          const { WebStandardStreamableHTTPServerTransport } =
-            await import("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js");
-
-          const createServer = () => {
-            const mcpServer = new McpServer(
-              { name: "aixyz-mcp", version: "1.0.0" },
-              { capabilities: { tools: { listChanged: false } } },
-            );
-            for (const { name, tool } of this.registeredTools) {
-              mcpServer.registerTool(
-                name,
-                { description: tool.description, inputSchema: tool.inputSchema as any },
-                async (args: Record<string, unknown>) => {
-                  try {
-                    const result = await tool.execute!(args, { toolCallId: name, messages: [] });
-                    const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
-                    return { content: [{ type: "text" as const, text }] };
-                  } catch (error) {
-                    const text = error instanceof Error ? error.message : "Unknown error";
-                    return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
-                  }
-                },
-              );
-            }
-            return mcpServer;
-          };
-
-          const handler = async (request: Request) => {
-            const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: false });
-            const server = createServer();
-            await server.connect(transport);
-            return transport.handleRequest(request);
-          };
-
-          app.route("POST", "/mcp", handler);
-          app.route("GET", "/mcp", handler);
-          app.route("DELETE", "/mcp", handler);
-        }
-      }
-
-      const app = createApp();
-      await app.withPlugin(new SSEMCPPlugin(toolEntries));
-
-      const res = await dispatch(app, jsonRpcRequest("initialize", initParams, 1));
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-      // Read the SSE stream body
-      const text = await res.text();
-      const events = parseSSEEvents(text);
-
-      expect(events.length).toBe(1);
-
-      const messageEvent = events[0];
-      expect(messageEvent.event).toBe("message");
-
-      const jsonRpc = JSON.parse(messageEvent.data);
-      expect(jsonRpc.jsonrpc).toBe("2.0");
-      expect(jsonRpc.id).toBe(1);
-      expect(jsonRpc.result.serverInfo.name).toBe("aixyz-mcp");
-    });
-
-    test("tools/call via SSE returns result in event-stream format", async () => {
-      class SSEMCPPlugin extends MCPPlugin {
-        async register(app: AixyzApp): Promise<void> {
-          for (const t of (this as any).tools) {
-            if (t.exports.accepts) {
-              const { AcceptsScheme } = await import("../../accepts");
-              AcceptsScheme.parse(t.exports.accepts);
-            } else {
-              continue;
-            }
-            const tool = t.exports.default;
-            if (!tool.execute) throw new Error(`Tool "${t.name}" has no execute function`);
-            this.registeredTools.push({ name: t.name, tool, accepts: t.exports.accepts });
-          }
-
-          const { McpServer } = await import("@modelcontextprotocol/sdk/server/mcp.js");
-          const { WebStandardStreamableHTTPServerTransport } =
-            await import("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js");
-
-          const createServer = () => {
-            const mcpServer = new McpServer(
-              { name: "aixyz-mcp", version: "1.0.0" },
-              { capabilities: { tools: { listChanged: false } } },
-            );
-            for (const { name, tool } of this.registeredTools) {
-              mcpServer.registerTool(
-                name,
-                { description: tool.description, inputSchema: tool.inputSchema as any },
-                async (args: Record<string, unknown>) => {
-                  try {
-                    const result = await tool.execute!(args, { toolCallId: name, messages: [] });
-                    const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
-                    return { content: [{ type: "text" as const, text }] };
-                  } catch (error) {
-                    const text = error instanceof Error ? error.message : "Unknown error";
-                    return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
-                  }
-                },
-              );
-            }
-            return mcpServer;
-          };
-
-          const handler = async (request: Request) => {
-            const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: false });
-            const server = createServer();
-            await server.connect(transport);
-            return transport.handleRequest(request);
-          };
-
-          app.route("POST", "/mcp", handler);
-          app.route("GET", "/mcp", handler);
-          app.route("DELETE", "/mcp", handler);
-        }
-      }
-
-      const app = createApp();
-      await app.withPlugin(new SSEMCPPlugin(toolEntries));
-
-      // Initialize first
-      await dispatch(app, jsonRpcRequest("initialize", initParams));
-
-      // Call tool
-      const res = await dispatch(app, jsonRpcRequest("tools/call", { name: "add", arguments: { a: 10, b: 20 } }, 7));
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("content-type")).toBe("text/event-stream");
-
-      const text = await res.text();
-      const events = parseSSEEvents(text);
-      const messageEvent = events.find((e) => e.event === "message");
-
-      const jsonRpc = JSON.parse(messageEvent!.data);
-      expect(jsonRpc.jsonrpc).toBe("2.0");
-      expect(jsonRpc.id).toBe(7);
-      expect(jsonRpc.result.content[0].type).toBe("text");
-      expect(JSON.parse(jsonRpc.result.content[0].text)).toEqual({ result: 30 });
     });
   });
 
@@ -593,14 +386,14 @@ describe("MCPPlugin", () => {
     const app = createApp();
     await app.withPlugin(new MCPPlugin(toolEntries));
 
-    const res = await dispatch(app, new Request("http://localhost/mcp", { method: "PUT" }));
+    const res = await app.fetch(new Request("http://localhost/mcp", { method: "PUT" }));
 
     expect(res.status).toBe(404);
   });
 });
 
 // ---------------------------------------------------------------------------
-// x402 payment integration
+// x402 payment integration (MCP protocol level)
 // ---------------------------------------------------------------------------
 
 const mockFacilitator = {
@@ -613,40 +406,8 @@ const mockFacilitator = {
   }),
 } as any;
 
-function paidJsonRpcRequest(
-  path: string,
-  method: string,
-  params?: unknown,
-  headers?: Record<string, string>,
-  id: number = 1,
-): Request {
-  return new Request(`http://localhost${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json, text/event-stream",
-      ...headers,
-    },
-    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
-  });
-}
-
-async function createPaymentHeader(app: AixyzApp, path: string): Promise<string> {
-  const res = await dispatch(app, new Request(`http://localhost${path}`, { method: "POST" }));
-  if (res.status !== 402) throw new Error(`Expected 402 but got ${res.status}`);
-  const header = res.headers.get("payment-required");
-  if (!header) throw new Error("Missing payment-required header");
-  const decoded = decodePaymentRequiredHeader(header);
-  return encodePaymentSignatureHeader({
-    x402Version: decoded.x402Version,
-    resource: decoded.resource,
-    accepted: decoded.accepts[0],
-    payload: { signature: "0xfake" },
-  });
-}
-
 describe("MCPPlugin x402 payment", () => {
-  test("tools/call returns 402 with correct amount for paid tool without payment header", async () => {
+  test("tools/call returns isError with payment requirements for paid tool without payment", async () => {
     const app = new AixyzApp({ facilitators: mockFacilitator });
     await app.withPlugin(
       new MCPPlugin([
@@ -655,21 +416,23 @@ describe("MCPPlugin x402 payment", () => {
     );
     await app.initialize();
 
-    const res = await dispatch(
-      app,
-      paidJsonRpcRequest("/mcp", "tools/call", { name: "add", arguments: { a: 1, b: 2 } }),
-    );
-    expect(res.status).toBe(402);
+    await app.fetch(jsonRpcRequest("initialize", initParams));
+    const res = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 1, b: 2 } }));
 
-    const decoded = decodePaymentRequiredHeader(res.headers.get("payment-required")!);
-    expect(decoded.accepts).toHaveLength(1);
-    expect(decoded.accepts[0].scheme).toBe("exact");
-    expect(decoded.accepts[0].network).toBe("eip155:8453");
-    expect(decoded.accepts[0].amount).toBe("10000"); // $0.01 = 10000 (USDC 6 decimals)
-    expect(decoded.accepts[0].payTo).toBe("0x1234");
+    expect(res.status).toBe(200);
+    const json = await parseSSEJsonRpc(res);
+    expect(json.result.isError).toBe(true);
+
+    // The payment requirements should be in the content
+    const paymentRequired = JSON.parse(json.result.content[0].text);
+    expect(paymentRequired.x402Version).toBe(2);
+    expect(paymentRequired.accepts).toHaveLength(1);
+    expect(paymentRequired.accepts[0].scheme).toBe("exact");
+    expect(paymentRequired.accepts[0].network).toBe("eip155:8453");
+    expect(paymentRequired.accepts[0].payTo).toBe("0x1234");
   });
 
-  test("tools/call returns 200 with result for paid tool with valid payment header", async () => {
+  test("tools/call returns result for paid tool with valid payment in _meta", async () => {
     const app = new AixyzApp({ facilitators: mockFacilitator });
     await app.withPlugin(
       new MCPPlugin([
@@ -678,23 +441,33 @@ describe("MCPPlugin x402 payment", () => {
     );
     await app.initialize();
 
-    const paymentHeader = await createPaymentHeader(app, "/mcp/tools/add");
-    const res = await dispatch(
-      app,
-      paidJsonRpcRequest(
-        "/mcp",
-        "tools/call",
-        { name: "add", arguments: { a: 2, b: 3 } },
-        {
-          "payment-signature": paymentHeader,
-        },
-      ),
+    // First call without payment to get the requirements
+    await app.fetch(jsonRpcRequest("initialize", initParams));
+    const reqRes = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 2, b: 3 } }));
+    const reqJson = await parseSSEJsonRpc(reqRes);
+    const paymentRequired = JSON.parse(reqJson.result.content[0].text);
+
+    // Build a payment payload from the requirements
+    const paymentPayload = {
+      x402Version: paymentRequired.x402Version,
+      resource: paymentRequired.resource,
+      accepted: paymentRequired.accepts[0],
+      payload: { signature: "0xfake" },
+    };
+
+    // Call again with payment in _meta
+    const res = await app.fetch(
+      jsonRpcRequest("tools/call", {
+        name: "add",
+        arguments: { a: 2, b: 3 },
+        _meta: { "x402/payment": paymentPayload },
+      }),
     );
 
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await parseSSEJsonRpc(res);
     expect(json.jsonrpc).toBe("2.0");
-    expect(json.id).toBe(1);
+    expect(json.result.isError).toBeUndefined();
     expect(json.result.content).toHaveLength(1);
     expect(json.result.content[0].type).toBe("text");
     expect(JSON.parse(json.result.content[0].text)).toEqual({ result: 5 });
@@ -709,14 +482,14 @@ describe("MCPPlugin x402 payment", () => {
     );
     await app.initialize();
 
-    const initRes = await dispatch(app, paidJsonRpcRequest("/mcp", "initialize", initParams));
+    const initRes = await app.fetch(jsonRpcRequest("initialize", initParams));
     expect(initRes.status).toBe(200);
-    const initJson = await initRes.json();
-    expect(initJson.result.serverInfo.name).toBe("aixyz-mcp");
+    const initJson = await parseSSEJsonRpc(initRes);
+    expect(initJson.result.serverInfo.name).toBe("Test Agent");
 
-    const listRes = await dispatch(app, paidJsonRpcRequest("/mcp", "tools/list", undefined, undefined, 2));
+    const listRes = await app.fetch(jsonRpcRequest("tools/list", undefined, 2));
     expect(listRes.status).toBe(200);
-    const listJson = await listRes.json();
+    const listJson = await parseSSEJsonRpc(listRes);
     expect(listJson.result.tools).toHaveLength(1);
     expect(listJson.result.tools[0].name).toBe("add");
   });
@@ -731,22 +504,19 @@ describe("MCPPlugin x402 payment", () => {
     );
     await app.initialize();
 
-    await dispatch(app, paidJsonRpcRequest("/mcp", "initialize", initParams));
-    const res = await dispatch(
-      app,
-      paidJsonRpcRequest("/mcp", "tools/call", { name: "add", arguments: { a: 1, b: 2 } }),
-    );
+    await app.fetch(jsonRpcRequest("initialize", initParams));
+    const res = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 1, b: 2 } }));
 
     expect(res.status).toBe(200);
-    const json = await res.json();
+    const json = await parseSSEJsonRpc(res);
     expect(json.jsonrpc).toBe("2.0");
-    expect(json.id).toBe(1);
+    expect(json.result.isError).toBeUndefined();
     expect(json.result.content).toHaveLength(1);
     expect(json.result.content[0].type).toBe("text");
     expect(JSON.parse(json.result.content[0].text)).toEqual({ result: 3 });
   });
 
-  test("each tool has its own price in the 402 response", async () => {
+  test("each paid tool returns its own price in the payment requirements", async () => {
     const app = new AixyzApp({ facilitators: mockFacilitator });
     await app.withPlugin(
       new MCPPlugin([
@@ -756,27 +526,29 @@ describe("MCPPlugin x402 payment", () => {
     );
     await app.initialize();
 
-    const addRes = await dispatch(
-      app,
-      paidJsonRpcRequest("/mcp", "tools/call", { name: "add", arguments: { a: 1, b: 2 } }),
-    );
-    const failRes = await dispatch(app, paidJsonRpcRequest("/mcp", "tools/call", { name: "fail", arguments: {} }));
+    await app.fetch(jsonRpcRequest("initialize", initParams));
 
-    expect(addRes.status).toBe(402);
-    expect(failRes.status).toBe(402);
+    const addRes = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 1, b: 2 } }));
+    const failRes = await app.fetch(jsonRpcRequest("tools/call", { name: "fail", arguments: {} }));
 
-    const addDecoded = decodePaymentRequiredHeader(addRes.headers.get("payment-required")!);
-    expect(addDecoded.accepts).toHaveLength(1);
-    expect(addDecoded.accepts[0].scheme).toBe("exact");
-    expect(addDecoded.accepts[0].network).toBe("eip155:8453");
-    expect(addDecoded.accepts[0].payTo).toBe("0x1234");
-    expect(addDecoded.accepts[0].amount).toBe("1000"); // $0.001 = 1000 (USDC 6 decimals)
+    const addJson = await parseSSEJsonRpc(addRes);
+    const failJson = await parseSSEJsonRpc(failRes);
 
-    const failDecoded = decodePaymentRequiredHeader(failRes.headers.get("payment-required")!);
-    expect(failDecoded.accepts).toHaveLength(1);
-    expect(failDecoded.accepts[0].scheme).toBe("exact");
-    expect(failDecoded.accepts[0].network).toBe("eip155:8453");
-    expect(failDecoded.accepts[0].payTo).toBe("0x1234");
-    expect(failDecoded.accepts[0].amount).toBe("1000000"); // $1.00 = 1000000 (USDC 6 decimals)
+    expect(addJson.result.isError).toBe(true);
+    expect(failJson.result.isError).toBe(true);
+
+    const addPayment = JSON.parse(addJson.result.content[0].text);
+    expect(addPayment.accepts).toHaveLength(1);
+    expect(addPayment.accepts[0].scheme).toBe("exact");
+    expect(addPayment.accepts[0].network).toBe("eip155:8453");
+    expect(addPayment.accepts[0].payTo).toBe("0x1234");
+    expect(addPayment.accepts[0].amount).toBe("1000"); // $0.001 = 1000 (USDC 6 decimals)
+
+    const failPayment = JSON.parse(failJson.result.content[0].text);
+    expect(failPayment.accepts).toHaveLength(1);
+    expect(failPayment.accepts[0].scheme).toBe("exact");
+    expect(failPayment.accepts[0].network).toBe("eip155:8453");
+    expect(failPayment.accepts[0].payTo).toBe("0x1234");
+    expect(failPayment.accepts[0].amount).toBe("1000000"); // $1.00 = 1000000 (USDC 6 decimals)
   });
 });

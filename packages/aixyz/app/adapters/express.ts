@@ -1,5 +1,4 @@
 import type { IncomingMessage } from "node:http";
-import { createDispatcher } from "../dispatcher";
 import type { AixyzApp } from "../index";
 
 /** Minimal request shape compatible with both Node's IncomingMessage and Express's Request. */
@@ -17,11 +16,9 @@ interface NodeResponse {
 }
 
 export function toExpress(app: AixyzApp) {
-  const dispatch = createDispatcher(app);
-
   return async (req: NodeRequest, res: NodeResponse, next: (err?: unknown) => void) => {
     const request = toWebRequest(req);
-    const response = await dispatch(request);
+    const response = await app.fetch(request);
 
     // Let Express handle unmatched routes
     if (response.status === 404) {
