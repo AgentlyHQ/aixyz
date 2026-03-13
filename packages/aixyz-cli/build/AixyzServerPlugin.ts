@@ -18,8 +18,8 @@ export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalo
         } else {
           // For standalone and executable, use Bun.serve directly
           const transformed = source.replace(
-            /export\s+default\s+(\{[^}]+\})\s*;/,
-            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), ...$1 });
+            /export\s+default\s+(\w+)\s*;/,
+            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: $1.fetch });
 console.log(\`Server listening on port \${__server.port}\`);`,
           );
           return { contents: transformed, loader: "ts" };
@@ -171,7 +171,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   body.push("await app.initialize();");
-  body.push("export default { fetch: app.fetch };");
+  body.push("export default app;");
 
   return [...imports, "", ...body].join("\n");
 }

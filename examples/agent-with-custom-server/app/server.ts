@@ -38,4 +38,4 @@ await app.withPlugin(
 );
 await app.initialize();
 
-export default { fetch: app.fetch };
+export default app;
