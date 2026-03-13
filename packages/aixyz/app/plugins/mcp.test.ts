@@ -1,4 +1,8 @@
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { createFixture, type X402Fixture } from "../../test/x402-fixture";
+import { callMcpTool, listMcpTools, createDryRunFetch, DryRunPaymentRequired, PayTransaction } from "@use-agently/sdk";
+
+let testPayTo = "0x0000000000000000000000000000000000000000";
 
 mock.module("@aixyz/config", () => ({
   getAixyzConfig: () => ({
@@ -6,7 +10,7 @@ mock.module("@aixyz/config", () => ({
     description: "A test agent",
     version: "1.0.0",
     url: "http://localhost:3000",
-    x402: { payTo: "0x1234", network: "eip155:8453" },
+    x402: { payTo: testPayTo, network: "eip155:8453" },
     build: { tools: [], agents: [], excludes: [] },
     vercel: { maxDuration: 30 },
     skills: [],
@@ -36,7 +40,9 @@ const failingTool = tool({
   description: "Always fails",
   inputSchema: z.object({}),
   execute: async () => {
-    throw new Error("broken");
+    return new Promise((_, reject) => {
+      reject(new Error());
+    });
   },
 });
 
@@ -100,6 +106,17 @@ const toolEntriesWithFailing = [
 ];
 
 const initParams = { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1.0" } };
+
+let fixture: X402Fixture;
+
+beforeAll(async () => {
+  fixture = await createFixture();
+  testPayTo = fixture.payTo;
+}, 120_000);
+
+afterAll(async () => {
+  await fixture.close();
+}, 30_000);
 
 // ---------------------------------------------------------------------------
 // Route registration
@@ -396,159 +413,110 @@ describe("MCPPlugin", () => {
 // x402 payment integration (MCP protocol level)
 // ---------------------------------------------------------------------------
 
-const mockFacilitator = {
-  verify: async () => ({ isValid: true, invalidReason: undefined }),
-  settle: async () => ({ success: true }),
-  getSupported: async () => ({
-    kinds: [{ x402Version: 2, scheme: "exact", network: "eip155:8453" }],
-    extensions: [],
-    signers: {},
-  }),
-} as any;
-
 describe("MCPPlugin x402 payment", () => {
-  test("tools/call returns isError with payment requirements for paid tool without payment", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    await app.withPlugin(
+  // Single-tool paid app for most tests
+  let paidUrl: string;
+  let stopPaidServer: () => void;
+
+  // Multi-tool app (free + paid)
+  let mixedUrl: string;
+  let stopMixedServer: () => void;
+
+  // Multi-price app
+  let multiPriceUrl: string;
+  let stopMultiPriceServer: () => void;
+
+  beforeAll(async () => {
+    // Single paid tool app
+    const paidApp = new AixyzApp({ facilitators: fixture.facilitator });
+    await paidApp.withPlugin(
       new MCPPlugin([
         { name: "add", exports: { default: mockTool, accepts: { scheme: "exact" as const, price: "$0.01" } } },
       ]),
     );
-    await app.initialize();
+    await paidApp.initialize();
+    ({ url: paidUrl, stop: stopPaidServer } = await fixture.serve(paidApp));
 
-    await app.fetch(jsonRpcRequest("initialize", initParams));
-    const res = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 1, b: 2 } }));
-
-    expect(res.status).toBe(200);
-    const json = await parseSSEJsonRpc(res);
-    expect(json.result.isError).toBe(true);
-
-    // The payment requirements should be in the content
-    const paymentRequired = JSON.parse(json.result.content[0].text);
-    expect(paymentRequired.x402Version).toBe(2);
-    expect(paymentRequired.accepts).toHaveLength(1);
-    expect(paymentRequired.accepts[0].scheme).toBe("exact");
-    expect(paymentRequired.accepts[0].network).toBe("eip155:8453");
-    expect(paymentRequired.accepts[0].payTo).toBe("0x1234");
-  });
-
-  test("tools/call returns result for paid tool with valid payment in _meta", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    await app.withPlugin(
-      new MCPPlugin([
-        { name: "add", exports: { default: mockTool, accepts: { scheme: "exact" as const, price: "$0.01" } } },
-      ]),
-    );
-    await app.initialize();
-
-    // First call without payment to get the requirements
-    await app.fetch(jsonRpcRequest("initialize", initParams));
-    const reqRes = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 2, b: 3 } }));
-    const reqJson = await parseSSEJsonRpc(reqRes);
-    const paymentRequired = JSON.parse(reqJson.result.content[0].text);
-
-    // Build a payment payload from the requirements
-    const paymentPayload = {
-      x402Version: paymentRequired.x402Version,
-      resource: paymentRequired.resource,
-      accepted: paymentRequired.accepts[0],
-      payload: { signature: "0xfake" },
-    };
-
-    // Call again with payment in _meta
-    const res = await app.fetch(
-      jsonRpcRequest("tools/call", {
-        name: "add",
-        arguments: { a: 2, b: 3 },
-        _meta: { "x402/payment": paymentPayload },
-      }),
-    );
-
-    expect(res.status).toBe(200);
-    const json = await parseSSEJsonRpc(res);
-    expect(json.jsonrpc).toBe("2.0");
-    expect(json.result.isError).toBeUndefined();
-    expect(json.result.content).toHaveLength(1);
-    expect(json.result.content[0].type).toBe("text");
-    expect(JSON.parse(json.result.content[0].text)).toEqual({ result: 5 });
-  });
-
-  test("initialize and tools/list do not require payment", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    await app.withPlugin(
-      new MCPPlugin([
-        { name: "add", exports: { default: mockTool, accepts: { scheme: "exact" as const, price: "$0.01" } } },
-      ]),
-    );
-    await app.initialize();
-
-    const initRes = await app.fetch(jsonRpcRequest("initialize", initParams));
-    expect(initRes.status).toBe(200);
-    const initJson = await parseSSEJsonRpc(initRes);
-    expect(initJson.result.serverInfo.name).toBe("Test Agent");
-
-    const listRes = await app.fetch(jsonRpcRequest("tools/list", undefined, 2));
-    expect(listRes.status).toBe(200);
-    const listJson = await parseSSEJsonRpc(listRes);
-    expect(listJson.result.tools).toHaveLength(1);
-    expect(listJson.result.tools[0].name).toBe("add");
-  });
-
-  test("free tool does not require payment even when paid tools exist", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    await app.withPlugin(
+    // Mixed free + paid app
+    const mixedApp = new AixyzApp({ facilitators: fixture.facilitator });
+    await mixedApp.withPlugin(
       new MCPPlugin([
         { name: "add", exports: { default: mockTool, accepts: { scheme: "free" as const } } },
         { name: "fail", exports: { default: failingTool, accepts: { scheme: "exact" as const, price: "$0.05" } } },
       ]),
     );
-    await app.initialize();
+    await mixedApp.initialize();
+    ({ url: mixedUrl, stop: stopMixedServer } = await fixture.serve(mixedApp));
 
-    await app.fetch(jsonRpcRequest("initialize", initParams));
-    const res = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 1, b: 2 } }));
-
-    expect(res.status).toBe(200);
-    const json = await parseSSEJsonRpc(res);
-    expect(json.jsonrpc).toBe("2.0");
-    expect(json.result.isError).toBeUndefined();
-    expect(json.result.content).toHaveLength(1);
-    expect(json.result.content[0].type).toBe("text");
-    expect(JSON.parse(json.result.content[0].text)).toEqual({ result: 3 });
-  });
-
-  test("each paid tool returns its own price in the payment requirements", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    await app.withPlugin(
+    // Multi-price app
+    const multiPriceApp = new AixyzApp({ facilitators: fixture.facilitator });
+    await multiPriceApp.withPlugin(
       new MCPPlugin([
         { name: "add", exports: { default: mockTool, accepts: { scheme: "exact" as const, price: "$0.001" } } },
         { name: "fail", exports: { default: failingTool, accepts: { scheme: "exact" as const, price: "$1.00" } } },
       ]),
     );
-    await app.initialize();
+    await multiPriceApp.initialize();
+    ({ url: multiPriceUrl, stop: stopMultiPriceServer } = await fixture.serve(multiPriceApp));
+  });
 
-    await app.fetch(jsonRpcRequest("initialize", initParams));
+  afterAll(() => {
+    stopPaidServer?.();
+    stopMixedServer?.();
+    stopMultiPriceServer?.();
+  });
 
-    const addRes = await app.fetch(jsonRpcRequest("tools/call", { name: "add", arguments: { a: 1, b: 2 } }));
-    const failRes = await app.fetch(jsonRpcRequest("tools/call", { name: "fail", arguments: {} }));
+  test("paid tool without payment throws DryRunPaymentRequired", async () => {
+    try {
+      await callMcpTool(paidUrl, "add", { a: 1, b: 2 });
+      expect.unreachable("expected DryRunPaymentRequired");
+    } catch (e) {
+      expect(e).toBeInstanceOf(DryRunPaymentRequired);
+      expect((e as DryRunPaymentRequired).requirements).toStrictEqual([
+        expect.objectContaining({ scheme: "exact", network: "eip155:8453", payTo: fixture.payTo, amount: "10000" }),
+      ]);
+    }
+  });
 
-    const addJson = await parseSSEJsonRpc(addRes);
-    const failJson = await parseSSEJsonRpc(failRes);
+  test("paid tool with valid payment succeeds", async () => {
+    const result = await callMcpTool(paidUrl, "add", { a: 2, b: 3 }, { transaction: PayTransaction(fixture.wallet) });
+    const content = result.content as Array<{ type: string; text: string }>;
+    expect(JSON.parse(content[0].text)).toEqual({ result: 5 });
+  }, 30_000);
 
-    expect(addJson.result.isError).toBe(true);
-    expect(failJson.result.isError).toBe(true);
+  test("initialize and tools/list do not require payment", async () => {
+    const tools = await listMcpTools(paidUrl);
+    expect(tools).toHaveLength(1);
+    expect(tools[0].name).toBe("add");
+  });
 
-    const addPayment = JSON.parse(addJson.result.content[0].text);
-    expect(addPayment.accepts).toHaveLength(1);
-    expect(addPayment.accepts[0].scheme).toBe("exact");
-    expect(addPayment.accepts[0].network).toBe("eip155:8453");
-    expect(addPayment.accepts[0].payTo).toBe("0x1234");
-    expect(addPayment.accepts[0].amount).toBe("1000"); // $0.001 = 1000 (USDC 6 decimals)
+  test("free tool does not require payment even when paid tools exist", async () => {
+    const result = await callMcpTool(mixedUrl, "add", { a: 1, b: 2 });
+    const content = result.content as Array<{ type: string; text: string }>;
+    expect(JSON.parse(content[0].text)).toEqual({ result: 3 });
+  });
 
-    const failPayment = JSON.parse(failJson.result.content[0].text);
-    expect(failPayment.accepts).toHaveLength(1);
-    expect(failPayment.accepts[0].scheme).toBe("exact");
-    expect(failPayment.accepts[0].network).toBe("eip155:8453");
-    expect(failPayment.accepts[0].payTo).toBe("0x1234");
-    expect(failPayment.accepts[0].amount).toBe("1000000"); // $1.00 = 1000000 (USDC 6 decimals)
+  test("add tool ($0.001) returns correct price in payment requirements", async () => {
+    try {
+      await callMcpTool(multiPriceUrl, "add", { a: 1, b: 2 }, { fetchImpl: createDryRunFetch() });
+      expect.unreachable("expected DryRunPaymentRequired");
+    } catch (e) {
+      expect(e).toBeInstanceOf(DryRunPaymentRequired);
+      expect((e as DryRunPaymentRequired).requirements).toStrictEqual([
+        expect.objectContaining({ scheme: "exact", network: "eip155:8453", payTo: fixture.payTo, amount: "1000" }),
+      ]);
+    }
+  });
+
+  test("fail tool ($1.00) returns correct price in payment requirements", async () => {
+    try {
+      await callMcpTool(multiPriceUrl, "fail", {}, { fetchImpl: createDryRunFetch() });
+      expect.unreachable("expected DryRunPaymentRequired");
+    } catch (e) {
+      expect(e).toBeInstanceOf(DryRunPaymentRequired);
+      expect((e as DryRunPaymentRequired).requirements).toStrictEqual([
+        expect.objectContaining({ scheme: "exact", network: "eip155:8453", payTo: fixture.payTo, amount: "1000000" }),
+      ]);
+    }
   });
 });

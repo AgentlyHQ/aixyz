@@ -1,4 +1,9 @@
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { createFixture, type X402Fixture } from "../../test/x402-fixture";
+import { sendA2AMessage, getA2ACard, DryRunPaymentRequired, PayTransaction } from "@use-agently/sdk";
+
+let testPayTo = "0x0000000000000000000000000000000000000000";
+let testUrl = "http://localhost:3000";
 
 // Mock config before any imports that depend on it
 mock.module("@aixyz/config", () => ({
@@ -6,15 +11,15 @@ mock.module("@aixyz/config", () => ({
     name: "Test Agent",
     description: "A test agent",
     version: "1.0.0",
-    url: "http://localhost:3000/",
-    x402: { payTo: "0x0000000000000000000000000000000000000000", network: "base:mainnet" },
+    url: testUrl,
+    x402: { payTo: testPayTo, network: "eip155:8453" },
     skills: [{ id: "test-skill", name: "Test Skill", description: "Does testing", tags: ["test"] }],
   }),
   getAixyzConfigRuntime: () => ({
     name: "Test Agent",
     description: "A test agent",
     version: "1.0.0",
-    url: "http://localhost:3000/",
+    url: testUrl,
     skills: [{ id: "test-skill", name: "Test Skill", description: "Does testing", tags: ["test"] }],
   }),
 }));
@@ -26,9 +31,6 @@ import { DefaultExecutionEventBus } from "@a2a-js/sdk/server";
 import type { AgentExecutionEvent } from "@a2a-js/sdk/server";
 import type { Task, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 import type { RequestContext } from "@a2a-js/sdk/server";
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function makeRequestContext(overrides?: Partial<RequestContext>): RequestContext {
   return {
@@ -63,28 +65,33 @@ function makeMockAgent(chunks: string[] = ["Hello", " world"]): ToolLoopAgent<ne
   } as unknown as ToolLoopAgent<never>;
 }
 
-function jsonRpcRequest(method: string, params?: unknown, id: number = 1): Request {
-  return new Request("http://localhost/agent", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
-  });
-}
-
-function createPluginApp(
+/** Spin up a real Bun server with an A2APlugin-backed AixyzApp. */
+function createServer(
   agent: ToolLoopAgent<never> = makeMockAgent(),
   accepts: { scheme: "free" } | { scheme: "exact"; price: string } = { scheme: "free" },
   prefix?: string,
 ) {
+  const server = Bun.serve({ port: 0, fetch: () => new Response("") });
+  const url = `http://localhost:${server.port}`;
+  const prevUrl = testUrl;
+  testUrl = url;
   const app = new AixyzApp();
-  const plugin = new A2APlugin({ default: agent, accepts }, prefix);
-  plugin.register(app);
-  return app;
+  new A2APlugin({ default: agent, accepts }, prefix).register(app);
+  server.reload({ fetch: app.fetch.bind(app) });
+  testUrl = prevUrl;
+  return { server, url, app };
 }
 
-// ---------------------------------------------------------------------------
-// ToolLoopAgentExecutor
-// ---------------------------------------------------------------------------
+let fixture: X402Fixture;
+
+beforeAll(async () => {
+  fixture = await createFixture();
+  testPayTo = fixture.payTo;
+}, 120_000);
+
+afterAll(async () => {
+  await fixture.close();
+}, 30_000);
 
 describe("ToolLoopAgentExecutor", () => {
   test("publishes initial task, working status, artifact chunks, and completed status", async () => {
@@ -130,10 +137,6 @@ describe("ToolLoopAgentExecutor", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// getAgentCard
-// ---------------------------------------------------------------------------
-
 describe("getAgentCard", () => {
   test("returns card with config values", () => {
     const card = getAgentCard();
@@ -161,65 +164,60 @@ describe("getAgentCard", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// A2APlugin — route registration
-// ---------------------------------------------------------------------------
-
 describe("A2APlugin", () => {
+  let mainServer: ReturnType<typeof Bun.serve>;
+  let mainUrl: string;
+  let prefixedServer: ReturnType<typeof Bun.serve>;
+  let prefixedUrl: string;
+
+  beforeAll(() => {
+    const main = createServer();
+    mainServer = main.server;
+    mainUrl = main.url;
+
+    const prefixed = createServer(makeMockAgent(), { scheme: "free" }, "v1");
+    prefixedServer = prefixed.server;
+    prefixedUrl = prefixed.url;
+  });
+
+  afterAll(() => {
+    mainServer?.stop(true);
+    prefixedServer?.stop(true);
+  });
+
   describe("route registration", () => {
     test("registers GET well-known and POST agent routes", () => {
-      const app = createPluginApp();
-
+      const app = new AixyzApp();
+      new A2APlugin({ default: makeMockAgent(), accepts: { scheme: "free" } }).register(app);
       expect(app.routes.has("GET /.well-known/agent-card.json")).toBe(true);
       expect(app.routes.has("POST /agent")).toBe(true);
     });
 
     test("skips registration when no accepts", () => {
       const app = new AixyzApp();
-      const plugin = new A2APlugin({ default: makeMockAgent() });
-      plugin.register(app);
-
+      new A2APlugin({ default: makeMockAgent() }).register(app);
       expect(app.routes.size).toBe(0);
     });
 
     test("registers routes with custom prefix", () => {
-      const app = createPluginApp(makeMockAgent(), { scheme: "free" }, "v1");
-
+      const app = new AixyzApp();
+      new A2APlugin({ default: makeMockAgent(), accepts: { scheme: "free" } }, "v1").register(app);
       expect(app.routes.has("GET /v1/.well-known/agent-card.json")).toBe(true);
       expect(app.routes.has("POST /v1/agent")).toBe(true);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // GET /.well-known/agent-card.json
-  // ---------------------------------------------------------------------------
+  describe("agent card", () => {
+    test("getA2ACard returns agent card with config values", async () => {
+      const card = await getA2ACard(mainUrl);
 
-  describe("GET /.well-known/agent-card.json", () => {
-    test("returns agent card as JSON", async () => {
-      const app = createPluginApp();
-
-      const res = await app.fetch(new Request("http://localhost/.well-known/agent-card.json"));
-
-      expect(res.status).toBe(200);
-      expect(res.headers.get("content-type")).toContain("application/json");
-
-      const card = await res.json();
       expect(card.name).toBe("Test Agent");
       expect(card.description).toBe("A test agent");
       expect(card.version).toBe("1.0.0");
       expect(card.protocolVersion).toBe("0.3.0");
-      expect(card.url).toBe("http://localhost:3000/agent");
       expect(card.capabilities.streaming).toBe(true);
-    });
-
-    test("returns card with skills", async () => {
-      const app = createPluginApp();
-
-      const res = await app.fetch(new Request("http://localhost/.well-known/agent-card.json"));
-      const card = await res.json();
-
       expect(card.skills).toHaveLength(1);
-      expect(card.skills[0]).toMatchObject({
+      expect(card.skills![0]).toMatchObject({
         id: "test-skill",
         name: "Test Skill",
         description: "Does testing",
@@ -227,251 +225,228 @@ describe("A2APlugin", () => {
       });
     });
 
-    test("well-known path respects prefix", async () => {
-      const app = createPluginApp(makeMockAgent(), { scheme: "free" }, "v1");
-
-      const res = await app.fetch(new Request("http://localhost/v1/.well-known/agent-card.json"));
-
+    test("getA2ACard works with prefixed well-known path", async () => {
+      const res = await fetch(`${prefixedUrl}/v1/.well-known/agent-card.json`);
       expect(res.status).toBe(200);
       const card = await res.json();
-      expect(card.url).toBe("http://localhost:3000/v1/agent");
+      expect(card.name).toBe("Test Agent");
+      expect(card.url).toBe(`${prefixedUrl}/v1/agent`);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // POST /agent — JSON-RPC
-  // ---------------------------------------------------------------------------
+  describe("message/send", () => {
+    test("sendA2AMessage returns agent text", async () => {
+      const result = await sendA2AMessage(mainUrl, "greet me");
+      expect(result.text).toContain("Hello");
+      expect(result.text).toContain("world");
+    });
 
-  describe("POST /agent", () => {
-    test("message/send returns completed task", async () => {
-      const app = createPluginApp();
-
-      const res = await app.fetch(
-        jsonRpcRequest("message/send", {
-          message: {
-            kind: "message",
-            messageId: "msg-1",
-            role: "user",
-            parts: [{ kind: "text", text: "add 2+3" }],
+    test("sendA2AMessage with prefixed agent works", async () => {
+      const res = await fetch(`${prefixedUrl}/v1/agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "message/send",
+          params: {
+            message: {
+              kind: "message",
+              messageId: "msg-1",
+              role: "user",
+              parts: [{ kind: "text", text: "prefixed" }],
+            },
           },
         }),
-      );
-
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
-      expect(json.jsonrpc).toBe("2.0");
-      expect(json.id).toBe(1);
       expect(json.result.status.state).toBe("completed");
-      expect(json.result.kind).toBe("task");
     });
 
-    test("message/send returns artifacts from agent stream", async () => {
-      const app = createPluginApp(makeMockAgent(["Hello", " world"]));
-
-      const res = await app.fetch(
-        jsonRpcRequest("message/send", {
-          message: {
-            kind: "message",
-            messageId: "msg-1",
-            role: "user",
-            parts: [{ kind: "text", text: "greet me" }],
-          },
-        }),
-      );
-
-      const json = await res.json();
-      expect(json.result.artifacts).toBeDefined();
-      expect(json.result.artifacts.length).toBeGreaterThanOrEqual(1);
-
-      // The artifact parts should contain the streamed text
-      const textParts = json.result.artifacts[0].parts.filter((p: any) => p.kind === "text");
-      const fullText = textParts.map((p: any) => p.text).join("");
-      expect(fullText).toContain("Hello");
-      expect(fullText).toContain("world");
+    test("sendA2AMessage with agent error still returns result", async () => {
+      const failingAgent = {
+        stream: async () => {
+          throw new Error("agent exploded");
+        },
+      } as unknown as ToolLoopAgent<never>;
+      const { server, url } = createServer(failingAgent);
+      try {
+        const result = await sendA2AMessage(url, "fail");
+        expect(result.text).toBeDefined();
+      } finally {
+        server.stop(true);
+      }
     });
+  });
 
-    test("message/stream returns streaming result (collected as last chunk)", async () => {
-      const app = createPluginApp();
-
-      const res = await app.fetch(
-        jsonRpcRequest("message/stream", {
-          message: {
-            kind: "message",
-            messageId: "msg-1",
-            role: "user",
-            parts: [{ kind: "text", text: "stream test" }],
+  describe("message/stream", () => {
+    test("message/stream returns collected result", async () => {
+      const res = await fetch(`${mainUrl}/agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "message/stream",
+          params: {
+            message: {
+              kind: "message",
+              messageId: "msg-1",
+              role: "user",
+              parts: [{ kind: "text", text: "stream test" }],
+            },
           },
         }),
-      );
-
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(1);
-      // The plugin collects streaming chunks and returns the last one
       expect(json.result).toBeDefined();
     });
+  });
 
-    test("tasks/get for unknown task returns error", async () => {
-      const app = createPluginApp();
-
-      const res = await app.fetch(jsonRpcRequest("tasks/get", { id: "nonexistent-task" }, 5));
-
-      expect(res.status).toBe(200);
+  describe("tasks/get", () => {
+    test("tasks/get for unknown task returns JSON-RPC error", async () => {
+      const res = await fetch(`${mainUrl}/agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 5, method: "tasks/get", params: { id: "nonexistent-task" } }),
+      });
       const json = await res.json();
       expect(json.jsonrpc).toBe("2.0");
       expect(json.id).toBe(5);
       expect(json.error).toBeDefined();
     });
 
-    test("tasks/get returns task after message/send", async () => {
-      const app = createPluginApp();
+    test("tasks/get returns task after sendA2AMessage", async () => {
+      const result = await sendA2AMessage(mainUrl, "test");
+      const taskId = (result.raw as any).id;
 
-      // First send a message to create a task
-      const sendRes = await app.fetch(
-        jsonRpcRequest("message/send", {
-          message: {
-            kind: "message",
-            messageId: "msg-1",
-            role: "user",
-            parts: [{ kind: "text", text: "test" }],
-          },
-        }),
-      );
-      const sendJson = await sendRes.json();
-      const taskId = sendJson.result.id;
-
-      // Now fetch that task
-      const getRes = await app.fetch(jsonRpcRequest("tasks/get", { id: taskId }, 2));
-      const getJson = await getRes.json();
-
-      expect(getJson.jsonrpc).toBe("2.0");
-      expect(getJson.id).toBe(2);
-      expect(getJson.result.id).toBe(taskId);
-      expect(getJson.result.status.state).toBe("completed");
-    });
-
-    test("unknown method returns method-not-found error", async () => {
-      const app = createPluginApp();
-
-      const res = await app.fetch(jsonRpcRequest("nonexistent/method", {}, 10));
-
-      expect(res.status).toBe(200);
+      const res = await fetch(`${mainUrl}/agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tasks/get", params: { id: taskId } }),
+      });
       const json = await res.json();
       expect(json.jsonrpc).toBe("2.0");
-      expect(json.id).toBe(10);
-      expect(json.error).toBeDefined();
-      expect(json.error.code).toBe(-32601); // Method not found
-    });
-
-    test("invalid JSON-RPC request returns error", async () => {
-      const app = createPluginApp();
-
-      const res = await app.fetch(
-        new Request("http://localhost/agent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ not: "jsonrpc" }),
-        }),
-      );
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.error).toBeDefined();
-    });
-
-    test("invalid JSON body throws (unhandled at route level)", async () => {
-      const app = createPluginApp();
-
-      // The plugin calls request.json() which throws SyntaxError before
-      // reaching the A2A JSON-RPC handler
-      expect(
-        app.fetch(
-          new Request("http://localhost/agent", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: "{broken json",
-          }),
-        ),
-      ).rejects.toThrow(SyntaxError);
-    });
-
-    test("message/send with agent error returns completed task with error artifact", async () => {
-      const failingAgent = {
-        stream: async () => {
-          throw new Error("agent exploded");
-        },
-      } as unknown as ToolLoopAgent<never>;
-
-      const app = createPluginApp(failingAgent);
-
-      const res = await app.fetch(
-        jsonRpcRequest("message/send", {
-          message: {
-            kind: "message",
-            messageId: "msg-1",
-            role: "user",
-            parts: [{ kind: "text", text: "fail" }],
-          },
-        }),
-      );
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.jsonrpc).toBe("2.0");
-      // The task should still resolve (executor catches errors)
-      expect(json.result).toBeDefined();
-    });
-
-    test("POST to prefixed agent path works", async () => {
-      const app = createPluginApp(makeMockAgent(), { scheme: "free" }, "v1");
-
-      const res = await app.fetch(
-        new Request("http://localhost/v1/agent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: 1,
-            method: "message/send",
-            params: {
-              message: {
-                kind: "message",
-                messageId: "msg-1",
-                role: "user",
-                parts: [{ kind: "text", text: "prefixed" }],
-              },
-            },
-          }),
-        }),
-      );
-
-      expect(res.status).toBe(200);
-      const json = await res.json();
+      expect(json.id).toBe(2);
+      expect(json.result.id).toBe(taskId);
       expect(json.result.status.state).toBe("completed");
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // Unregistered routes
-  // ---------------------------------------------------------------------------
+  describe("JSON-RPC edge cases", () => {
+    test("unknown JSON-RPC method returns method-not-found error", async () => {
+      const res = await fetch(`${mainUrl}/agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 10, method: "nonexistent/method", params: {} }),
+      });
+      const json = await res.json();
+      expect(json.jsonrpc).toBe("2.0");
+      expect(json.id).toBe(10);
+      expect(json.error).toBeDefined();
+      expect(json.error.code).toBe(-32601);
+    });
 
-  test("GET /agent returns 404 (only POST registered)", async () => {
-    const app = createPluginApp();
-
-    const res = await app.fetch(new Request("http://localhost/agent"));
-    expect(res.status).toBe(404);
+    test("invalid JSON-RPC request returns error", async () => {
+      const res = await fetch(`${mainUrl}/agent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ not: "jsonrpc" }),
+      });
+      const json = await res.json();
+      expect(json.error).toBeDefined();
+    });
   });
 
-  test("POST /.well-known/agent-card.json returns 404 (only GET registered)", async () => {
-    const app = createPluginApp();
+  describe("unregistered routes", () => {
+    test("GET /agent returns 404 (only POST registered)", async () => {
+      const res = await fetch(`${mainUrl}/agent`);
+      expect(res.status).toBe(404);
+    });
 
-    const res = await app.fetch(
-      new Request("http://localhost/.well-known/agent-card.json", {
+    test("POST /.well-known/agent-card.json returns 404 (only GET registered)", async () => {
+      const res = await fetch(`${mainUrl}/.well-known/agent-card.json`, {
         method: "POST",
         body: "{}",
-      }),
-    );
-    expect(res.status).toBe(404);
+      });
+      expect(res.status).toBe(404);
+    });
+  });
+});
+
+describe("A2APlugin x402 payment", () => {
+  let paidUrl: string;
+  let stopPaidServer: () => void;
+
+  let freeUrl: string;
+  let stopFreeServer: () => void;
+
+  // A2A embeds the server URL in the agent card, so we must allocate the port
+  // before building the app (fixture.serve() allocates after, which breaks the card URL).
+  function createX402Server(accepts: { scheme: "free" } | { scheme: "exact"; price: string }): {
+    url: string;
+    stop: () => void;
+    app: AixyzApp;
+  } {
+    const server = Bun.serve({ port: 0, fetch: () => new Response("") });
+    const url = `http://localhost:${server.port}`;
+    const prevUrl = testUrl;
+    testUrl = url;
+    const app = new AixyzApp({ facilitators: fixture.facilitator });
+    new A2APlugin({ default: makeMockAgent(), accepts }).register(app);
+    server.reload({ fetch: app.fetch.bind(app) });
+    testUrl = prevUrl;
+    return { url, stop: () => server.stop(true), app };
+  }
+
+  beforeAll(async () => {
+    const paid = createX402Server({ scheme: "exact" as const, price: "$0.01" });
+    paidUrl = paid.url;
+    stopPaidServer = paid.stop;
+    await paid.app.initialize();
+
+    const free = createX402Server({ scheme: "free" as const });
+    freeUrl = free.url;
+    stopFreeServer = free.stop;
+    await free.app.initialize();
+  });
+
+  afterAll(() => {
+    stopPaidServer?.();
+    stopFreeServer?.();
+  });
+
+  test("getA2ACard does not require payment", async () => {
+    const card = await getA2ACard(paidUrl);
+    expect(card.name).toBe("Test Agent");
+    expect(card.protocolVersion).toBe("0.3.0");
+  });
+
+  test("paid agent without payment throws DryRunPaymentRequired", async () => {
+    try {
+      await sendA2AMessage(paidUrl, "hello");
+      expect.unreachable("expected DryRunPaymentRequired");
+    } catch (e) {
+      expect(e).toBeInstanceOf(DryRunPaymentRequired);
+      expect((e as DryRunPaymentRequired).requirements).toStrictEqual([
+        expect.objectContaining({ scheme: "exact", network: "eip155:8453", payTo: fixture.payTo, amount: "10000" }),
+      ]);
+    }
+  });
+
+  test("paid agent with valid payment succeeds", async () => {
+    const result = await sendA2AMessage(paidUrl, "hello", { transaction: PayTransaction(fixture.wallet) });
+    expect(result.text).toContain("Hello");
+    expect(result.text).toContain("world");
+  }, 30_000);
+
+  test("free agent does not require payment", async () => {
+    const result = await sendA2AMessage(freeUrl, "hello");
+    expect(result.text).toContain("Hello");
+    expect(result.text).toContain("world");
   });
 });

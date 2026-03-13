@@ -83,7 +83,6 @@ export class AixyzApp {
 
   /** Dispatch a web-standard Request through payment verification, middleware, and route handler. */
   fetch = async (request: Request): Promise<Response> => {
-    console.log(request.method, request.url);
     const url = new URL(request.url);
     const key = this.getRouteKey(request.method as HttpMethod, url.pathname);
     const entry = this.routes.get(key);

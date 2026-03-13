@@ -1,9 +1,9 @@
-import { describe, expect, mock, test } from "bun:test";
-import {
-  decodePaymentRequiredHeader,
-  decodePaymentResponseHeader,
-  encodePaymentSignatureHeader,
-} from "@x402/core/http";
+import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { createFixture, type X402Fixture } from "../test/x402-fixture";
+import { createPaymentFetch } from "@use-agently/sdk";
+import { decodePaymentResponseHeader } from "@x402/core/http";
+
+let testPayTo = "0x0000000000000000000000000000000000000000";
 
 mock.module("@aixyz/config", () => ({
   getAixyzConfig: () => ({
@@ -11,7 +11,7 @@ mock.module("@aixyz/config", () => ({
     description: "A test agent",
     version: "1.0.0",
     url: "http://localhost:3000",
-    x402: { payTo: "0x1234", network: "eip155:8453" },
+    x402: { payTo: testPayTo, network: "eip155:8453" },
     build: { tools: [], agents: [], excludes: [] },
     vercel: { maxDuration: 30 },
     skills: [],
@@ -26,6 +26,17 @@ mock.module("@aixyz/config", () => ({
 }));
 
 import { AixyzApp } from "./index";
+
+let fixture: X402Fixture;
+
+beforeAll(async () => {
+  fixture = await createFixture();
+  testPayTo = fixture.payTo;
+}, 120_000);
+
+afterAll(async () => {
+  await fixture.close();
+}, 30_000);
 
 describe("AixyzApp", () => {
   test("route() registers a handler and fetch() dispatches it", async () => {
@@ -103,74 +114,44 @@ describe("AixyzApp", () => {
   });
 });
 
-const mockFacilitator = {
-  verify: async () => ({ isValid: true, invalidReason: undefined }),
-  settle: async () => ({ success: true, headers: { "PAYMENT-RESPONSE": "settled" } }),
-  getSupported: async () => ({
-    kinds: [{ x402Version: 2, scheme: "exact", network: "eip155:8453" }],
-    extensions: [],
-    signers: {},
-  }),
-} as any;
-
-/**
- * Helper: get 402 from app, decode requirements, build a valid payment header.
- */
-async function createPaymentHeaderFromApp(app: AixyzApp, method: string, path: string): Promise<string> {
-  const res = await app.fetch(new Request(`http://localhost${path}`, { method }));
-  if (res.status !== 402) throw new Error(`Expected 402 but got ${res.status}`);
-  const header = res.headers.get("payment-required");
-  if (!header) throw new Error("Missing payment-required header");
-  const decoded = decodePaymentRequiredHeader(header);
-  return encodePaymentSignatureHeader({
-    x402Version: decoded.x402Version,
-    resource: decoded.resource,
-    accepted: decoded.accepts[0],
-    payload: { signature: "0xfake" },
-  });
-}
-
 describe("AixyzApp with payment", () => {
-  test("fetch() returns 402 for payment-gated route without X-PAYMENT header", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    app.route("POST", "/agent", () => new Response("ok"), {
-      payment: { scheme: "exact", price: "$0.01", payTo: "0x1234", network: "eip155:8453" },
-    });
-    await app.initialize();
+  let url: string;
+  let stopServer: () => void;
 
-    const res = await app.fetch(new Request("http://localhost/agent", { method: "POST" }));
-    expect(res.status).toBe(402);
-  });
-
-  test("fetch() passes through for routes without payment", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    app.route("GET", "/free", () => new Response("free"));
-    await app.initialize();
-
-    const res = await app.fetch(new Request("http://localhost/free"));
-    expect(res.status).toBe(200);
-  });
-
-  test("fetch() returns 200 after valid payment", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
+  beforeAll(async () => {
+    const app = new AixyzApp({ facilitators: fixture.facilitator });
     app.route("POST", "/agent", () => new Response("agent response"), {
       payment: { scheme: "exact", price: "$0.01" },
     });
+    app.route("GET", "/free", () => new Response("free"));
     await app.initialize();
 
-    const paymentHeader = await createPaymentHeaderFromApp(app, "POST", "/agent");
-    const res = await app.fetch(
-      new Request("http://localhost/agent", {
-        method: "POST",
-        headers: { "payment-signature": paymentHeader },
-      }),
-    );
-    expect(res.status).toBe(200);
-    expect(await res.text()).toBe("agent response");
+    ({ url, stop: stopServer } = await fixture.serve(app));
   });
 
+  afterAll(() => {
+    stopServer?.();
+  });
+
+  test("returns 402 for payment-gated route without payment header", async () => {
+    const res = await fetch(`${url}/agent`, { method: "POST" });
+    expect(res.status).toBe(402);
+  });
+
+  test("passes through for routes without payment", async () => {
+    const res = await fetch(`${url}/free`);
+    expect(res.status).toBe(200);
+  });
+
+  test("returns 200 after valid payment", async () => {
+    const payFetch = createPaymentFetch(fixture.wallet) as typeof fetch;
+    const res = await payFetch(`${url}/agent`, { method: "POST" });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("agent response");
+  }, 30_000);
+
   test("middleware runs after payment verified", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
+    const app = new AixyzApp({ facilitators: fixture.facilitator });
     app.use(async (_req, next) => {
       const res = await next();
       return new Response(await res.text(), {
@@ -183,36 +164,29 @@ describe("AixyzApp with payment", () => {
     });
     await app.initialize();
 
-    const paymentHeader = await createPaymentHeaderFromApp(app, "POST", "/agent");
-    const res = await app.fetch(
-      new Request("http://localhost/agent", {
-        method: "POST",
-        headers: { "payment-signature": paymentHeader },
-      }),
-    );
-    expect(res.status).toBe(200);
-    expect(res.headers.get("x-custom")).toBe("middleware-ran");
-  });
+    const { url: mwUrl, stop } = await fixture.serve(app);
+    try {
+      const payFetch = createPaymentFetch(fixture.wallet) as typeof fetch;
+      const res = await payFetch(`${mwUrl}/agent`, { method: "POST" });
+      expect(res.status).toBe(200);
+      expect(res.headers.get("x-custom")).toBe("middleware-ran");
+    } finally {
+      stop();
+    }
+  }, 30_000);
 
-  test("fetch() includes payment-response header after successful payment", async () => {
-    const app = new AixyzApp({ facilitators: mockFacilitator });
-    app.route("POST", "/agent", () => new Response("agent response"), {
-      payment: { scheme: "exact", price: "$0.01" },
+  test("includes payment-response header after successful payment", async () => {
+    const payFetch = createPaymentFetch(fixture.wallet) as typeof fetch;
+    const res = await payFetch(`${url}/agent`, { method: "POST" });
+    expect(res.status).toBe(200);
+    const decoded = decodePaymentResponseHeader(res.headers.get("PAYMENT-RESPONSE")!);
+    expect(decoded).toEqual({
+      success: true,
+      transaction: expect.stringMatching(/^0x[0-9a-f]{64}$/),
+      network: "eip155:8453",
+      payer: fixture.wallet.address,
     });
-    await app.initialize();
-
-    const paymentHeader = await createPaymentHeaderFromApp(app, "POST", "/agent");
-    const res = await app.fetch(
-      new Request("http://localhost/agent", {
-        method: "POST",
-        headers: { "payment-signature": paymentHeader },
-      }),
-    );
-    expect(res.status).toBe(200);
-    expect(res.headers.has("PAYMENT-RESPONSE")).toBe(true);
-    const decodedHeader = decodePaymentResponseHeader(res.headers.get("PAYMENT-RESPONSE")!);
-    expect(decodedHeader).toStrictEqual({ success: true, headers: { "PAYMENT-RESPONSE": "settled" } });
-  });
+  }, 30_000);
 
   test("app without facilitators ignores payment config", async () => {
     const app = new AixyzApp();
