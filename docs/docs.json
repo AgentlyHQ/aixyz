@@ -46,7 +46,7 @@
               "api-reference/aixyz-server",
               "api-reference/aixyz-model-fake",
               "api-reference/unstable-with-index-page",
-              "api-reference/experimental-use-stripe-payment-intent"
+              "api-reference/experimental-stripe-payment-intent-plugin"
             ]
           },
           {

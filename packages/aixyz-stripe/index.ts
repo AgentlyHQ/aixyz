@@ -91,7 +91,7 @@ async function validateAndConsumePaymentIntent(
  * - STRIPE_SECRET_KEY: Stripe secret key (required to enable Stripe)
  * - STRIPE_PRICE_CENTS: Price per request in cents (default: 100)
  */
-export class StripePaymentIntentPlugin extends BasePlugin {
+export class experimental_StripePaymentIntentPlugin extends BasePlugin {
   readonly name = "stripe-payment-intent";
 
   register(app: AixyzApp): void {

@@ -6,6 +6,7 @@ import type { AixyzApp } from "../index";
 import { createDispatcher } from "../dispatcher";
 import type { Accepts } from "../../accepts";
 import { AcceptsScheme } from "../../accepts";
+import { getAixyzConfigRuntime } from "../../config";
 
 /**
  * MCP (Model Context Protocol) plugin. Collects tools and exposes them
@@ -20,8 +21,9 @@ export class MCPPlugin extends BasePlugin {
   }
 
   private createMcpServer(): McpServer {
+    const config = getAixyzConfigRuntime();
     const mcpServer = new McpServer(
-      { name: "aixyz-mcp", version: "1.0.0" },
+      { name: "aixyz-mcp", version: config.version },
       { capabilities: { tools: { listChanged: false } } },
     );
 

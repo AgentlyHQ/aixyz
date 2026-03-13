@@ -1,4 +1,3 @@
-import { Network } from "@x402/core/types";
 import type { AcceptsX402 } from "../accepts";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
@@ -13,5 +12,3 @@ export interface RouteEntry {
   handler: RouteHandler;
   payment?: AcceptsX402;
 }
-
-export const BASE_NETWORK: Network = "eip155:8453";

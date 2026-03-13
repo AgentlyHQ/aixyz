@@ -1,6 +1,6 @@
 import type { AcceptsX402 } from "../accepts";
 import type { FacilitatorClient } from "@x402/core/server";
-import { type HttpMethod, type RouteHandler, type Middleware, type RouteEntry, BASE_NETWORK } from "./types";
+import { type HttpMethod, type RouteHandler, type Middleware, type RouteEntry } from "./types";
 import { PaymentGateway } from "./payment/payment";
 import { Network } from "@x402/core/types";
 import { getAixyzConfig } from "@aixyz/config";
@@ -27,7 +27,7 @@ export class AixyzApp {
     if (options?.facilitators) {
       const config = getAixyzConfig();
       this.payment = new PaymentGateway(options.facilitators, config);
-      this.payment.register((config.x402.network as Network) ?? BASE_NETWORK);
+      this.payment.register((config.x402.network as Network) ?? "eip155:8453");
     }
   }
 

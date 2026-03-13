@@ -1,12 +1,12 @@
 ---
-title: "StripePaymentIntentPlugin"
+title: "experimental_StripePaymentIntentPlugin"
 description: "Add Stripe PaymentIntent-based payments to your agent server"
 ---
 
 Adds Stripe PaymentIntent creation and validation to an `AixyzApp`, providing an alternative payment method alongside [x402](/protocols/x402).
 
 ```typescript
-import { StripePaymentIntentPlugin } from "@aixyz/stripe";
+import { experimental_StripePaymentIntentPlugin } from "@aixyz/stripe";
 ```
 
 <Warning>This API is experimental and may change significantly in future releases.</Warning>
@@ -20,7 +20,7 @@ bun add @aixyz/stripe
 ## Usage
 
 ```typescript
-await server.withPlugin(new StripePaymentIntentPlugin());
+await server.withPlugin(new experimental_StripePaymentIntentPlugin());
 ```
 
 ## Environment Variables
@@ -49,7 +49,7 @@ Creates a new Stripe PaymentIntent for the configured price.
 
 ## Payment Middleware
 
-After registering the `StripePaymentIntentPlugin`, the server checks incoming requests for the `x-stripe-payment-intent-id` header:
+After registering the `experimental_StripePaymentIntentPlugin`, the server checks incoming requests for the `x-stripe-payment-intent-id` header:
 
 1. If the header is present, it validates the PaymentIntent:
    - Status must be `succeeded`
@@ -67,7 +67,7 @@ Use in a [custom server](/api-reference/agent) (`app/server.ts`):
 import { AixyzApp } from "aixyz/app";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
-import { StripePaymentIntentPlugin } from "@aixyz/stripe";
+import { experimental_StripePaymentIntentPlugin } from "@aixyz/stripe";
 import * as agent from "./agent";
 
 const server = new AixyzApp();
@@ -75,7 +75,7 @@ const server = new AixyzApp();
 await server.withPlugin(new IndexPagePlugin());
 
 // Register Stripe before other plugins so the Stripe middleware runs first
-await server.withPlugin(new StripePaymentIntentPlugin());
+await server.withPlugin(new experimental_StripePaymentIntentPlugin());
 
 await server.withPlugin(new A2APlugin(agent));
 
@@ -85,6 +85,6 @@ export default server;
 ```
 
 <Note>
-  Register the `StripePaymentIntentPlugin` **before** A2A or MCP plugins so the Stripe middleware runs first. If a valid
-  Stripe payment is found, x402 verification is skipped.
+  Register the `experimental_StripePaymentIntentPlugin` **before** A2A or MCP plugins so the Stripe middleware runs
+  first. If a valid Stripe payment is found, x402 verification is skipped.
 </Note>
