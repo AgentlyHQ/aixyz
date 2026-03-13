@@ -1,21 +1,22 @@
 import { AixyzApp } from "aixyz/app";
+import { toFetch } from "aixyz/app/adapters/node";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { MCPPlugin } from "aixyz/app/plugins/mcp";
 import { ERC8004Plugin } from "aixyz/app/plugins/erc-8004";
 import { facilitator } from "aixyz/accepts";
-import { StripePaymentIntentPlugin } from "@aixyz/stripe";
+import { experimental_StripePaymentIntentPlugin } from "@aixyz/stripe";
 
 import * as agent from "./agent";
 import * as searchFlights from "./tools/searchFlights";
 import erc8004 from "./erc-8004";
 
-const server = new AixyzApp({ facilitators: facilitator });
-await server.withPlugin(new IndexPagePlugin());
-await server.withPlugin(new StripePaymentIntentPlugin());
-await server.withPlugin(new A2APlugin(agent));
-await server.withPlugin(new MCPPlugin([{ name: "searchFlights", exports: searchFlights }]));
-await server.withPlugin(
+const app = new AixyzApp({ facilitators: facilitator });
+await app.withPlugin(new IndexPagePlugin());
+await app.withPlugin(new experimental_StripePaymentIntentPlugin());
+await app.withPlugin(new A2APlugin(agent));
+await app.withPlugin(new MCPPlugin([{ name: "searchFlights", exports: searchFlights }]));
+await app.withPlugin(
   new ERC8004Plugin({
     default: erc8004,
     options: {
@@ -24,6 +25,6 @@ await server.withPlugin(
     },
   }),
 );
-await server.initialize();
+await app.initialize();
 
-export default server;
+export default { fetch: toFetch(app) };

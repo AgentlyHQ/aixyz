@@ -51,8 +51,10 @@ await server.withPlugin(
   new MCPPlugin([
     {
       name: "latestData",
-      default: lookup,
-      accepts: { scheme: "exact", price: "$0.001" },
+      exports: {
+        default: lookup,
+        accepts: { scheme: "exact", price: "$0.001" },
+      },
     },
   ]),
 );

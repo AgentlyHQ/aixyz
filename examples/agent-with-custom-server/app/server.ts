@@ -1,4 +1,5 @@
 import { AixyzApp } from "aixyz/app";
+import { toFetch } from "aixyz/app/adapters/node";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { MCPPlugin } from "aixyz/app/plugins/mcp";
@@ -9,10 +10,10 @@ import * as agent from "./agent";
 import lookup from "./tools/lookup";
 import erc8004 from "./erc-8004";
 
-const server = new AixyzApp({ facilitators: facilitator });
-await server.withPlugin(new IndexPagePlugin());
-await server.withPlugin(new A2APlugin(agent));
-await server.withPlugin(
+const app = new AixyzApp({ facilitators: facilitator });
+await app.withPlugin(new IndexPagePlugin());
+await app.withPlugin(new A2APlugin(agent));
+await app.withPlugin(
   new MCPPlugin([
     {
       name: "latestData",
@@ -26,7 +27,7 @@ await server.withPlugin(
     },
   ]),
 );
-await server.withPlugin(
+await app.withPlugin(
   new ERC8004Plugin({
     default: erc8004,
     options: {
@@ -35,6 +36,6 @@ await server.withPlugin(
     },
   }),
 );
-await server.initialize();
+await app.initialize();
 
-export default server;
+export default { fetch: toFetch(app) };
