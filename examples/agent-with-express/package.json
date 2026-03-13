@@ -14,15 +14,11 @@
     "zod": "^4"
   },
   "devDependencies": {
-    "@a2a-js/sdk": "^0",
-    "@modelcontextprotocol/sdk": "^1",
     "@types/bun": "^1",
     "@types/express": "^5",
-    "@x402/evm": "^2",
-    "@x402/fetch": "^2",
+    "@use-agently/sdk": "^0",
     "testcontainers": "^11",
     "typescript": "^5",
-    "viem": "^2",
     "x402-fl": "^0"
   }
 }

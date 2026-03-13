@@ -7,7 +7,8 @@ import { MCPPlugin } from "aixyz/app/plugins/mcp";
 
 import { facilitator } from "./accepts";
 import * as agent from "./agent";
-import convertTemperature from "./tools/temperature";
+import * as convertTemperature from "./tools/temperature";
+import * as premiumTemperature from "./tools/premium-temperature";
 
 // 1. Create AixyzApp with plugins
 const app = new AixyzApp(facilitator ? { facilitators: facilitator } : undefined);
@@ -15,13 +16,8 @@ await app.withPlugin(new IndexPagePlugin());
 await app.withPlugin(new A2APlugin(agent));
 await app.withPlugin(
   new MCPPlugin([
-    {
-      name: "convertTemperature",
-      exports: {
-        default: convertTemperature,
-        accepts: { scheme: "free" },
-      },
-    },
+    { name: "convertTemperature", exports: convertTemperature },
+    { name: "premiumTemperature", exports: premiumTemperature },
   ]),
 );
 await app.initialize();
