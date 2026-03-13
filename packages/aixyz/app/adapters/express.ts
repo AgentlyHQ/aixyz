@@ -64,15 +64,19 @@ interface NodeResponse {
  */
 export function toExpressMiddleware(app: AixyzApp) {
   return async (req: NodeRequest, res: NodeResponse, next: (err?: unknown) => void) => {
-    const request = toWebRequest(req);
-    const response = await app.fetch(request);
+    try {
+      const request = toWebRequest(req);
+      const response = await app.fetch(request);
 
-    // Let Express handle unmatched routes
-    if (response.status === 404) {
-      return next();
+      // Let Express handle unmatched routes
+      if (response.status === 404) {
+        return next();
+      }
+
+      await writeResponse(response, res);
+    } catch (err) {
+      next(err);
     }
-
-    await writeResponse(response, res);
   };
 }
 

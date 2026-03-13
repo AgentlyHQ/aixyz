@@ -114,7 +114,9 @@ export class AixyzApp {
       const settlementResult = await this.payment.settle(request);
       if (settlementResult?.success) {
         const paymentResultHeader = settlementResult.headers["PAYMENT-RESPONSE"];
-        response.headers.set("PAYMENT-RESPONSE", paymentResultHeader);
+        const cloned = new Response(response.body, response);
+        cloned.headers.set("PAYMENT-RESPONSE", paymentResultHeader);
+        return cloned;
       }
     }
 

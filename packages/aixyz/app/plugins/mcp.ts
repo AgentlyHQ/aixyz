@@ -28,10 +28,7 @@ export class MCPPlugin extends BasePlugin {
 
   private createMcpServer(): McpServer {
     const config = getAixyzConfigRuntime();
-    const mcpServer = new McpServer(
-      { name: config.name, version: config.version },
-      { capabilities: { tools: { listChanged: false } } },
-    );
+    const mcpServer = new McpServer({ name: config.name, version: config.version }, { capabilities: { tools: {} } });
 
     for (const { name, tool } of this.registeredTools) {
       const handler = async (args: Record<string, unknown>) => {

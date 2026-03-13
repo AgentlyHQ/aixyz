@@ -16,12 +16,29 @@ export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalo
           // For Vercel, export a web-standard fetch handler
           return { contents: source, loader: "ts" };
         } else {
-          // For standalone and executable, use Bun.serve directly
-          const transformed = source.replace(
-            /export\s+default\s+(\w+)\s*;/,
-            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: $1.fetch });
-console.log(\`Server listening on port \${__server.port}\`);`,
-          );
+          // For standalone and executable, rewrite `export default ...` into Bun.serve().
+          // Supports both identifier exports (`export default app;`) and
+          // expression exports (`export default new AixyzApp({...});`).
+          const identifierRe = /export\s+default\s+(\w+)\s*;/;
+          const expressionRe = /export\s+default\s+/;
+
+          let transformed: string;
+          const identifierMatch = source.match(identifierRe);
+          if (identifierMatch) {
+            transformed = source.replace(
+              identifierRe,
+              `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: ${identifierMatch[1]}.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`,
+            );
+          } else if (expressionRe.test(source)) {
+            transformed = source.replace(expressionRe, `const __app = `);
+            transformed += `\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: __app.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`;
+          } else {
+            throw new Error(
+              `[aixyz] Could not find \`export default\` in entrypoint ${args.path}. ` +
+                `Standalone and executable builds require the server entrypoint to use \`export default app;\` ` +
+                `or \`export default new AixyzApp({...});\`.`,
+            );
+          }
           return { contents: transformed, loader: "ts" };
         }
       });
