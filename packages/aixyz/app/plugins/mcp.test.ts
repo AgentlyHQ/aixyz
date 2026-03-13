@@ -41,7 +41,7 @@ const failingTool = tool({
   inputSchema: z.object({}),
   execute: async () => {
     return new Promise((_, reject) => {
-      reject(new Error());
+      reject(new Error("broken"));
     });
   },
 });
