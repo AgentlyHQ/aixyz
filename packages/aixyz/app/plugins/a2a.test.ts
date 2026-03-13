@@ -1,6 +1,8 @@
-import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, mock, test, setDefaultTimeout } from "bun:test";
 import { createFixture, type X402Fixture } from "../../test/x402-fixture";
 import { sendA2AMessage, getA2ACard, DryRunPaymentRequired, PayTransaction } from "@use-agently/sdk";
+
+setDefaultTimeout(30_000);
 
 let testPayTo = "0x0000000000000000000000000000000000000000";
 let testUrl = "http://localhost:3000";

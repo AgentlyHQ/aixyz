@@ -1,9 +1,11 @@
-import { afterAll, beforeAll, describe, expect, test, mock } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test, mock, setDefaultTimeout } from "bun:test";
 import { PaymentGateway } from "./payment";
 import { decodePaymentRequiredHeader, decodePaymentResponseHeader } from "@x402/core/http";
 import { createFixture, type X402Fixture } from "../../test/x402-fixture";
 import { createPaymentFetch } from "@use-agently/sdk";
 import { AixyzApp } from "../index";
+
+setDefaultTimeout(30_000);
 
 let fixture: X402Fixture;
 

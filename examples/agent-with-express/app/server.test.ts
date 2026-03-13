@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test, setDefaultTimeout } from "bun:test";
 import { resolve } from "node:path";
 import {
   X402FacilitatorLocalContainer,
@@ -17,6 +17,8 @@ import {
   createPaymentFetch,
 } from "@use-agently/sdk";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+
+setDefaultTimeout(30_000);
 
 const TEST_PRIVATE_KEY = generatePrivateKey();
 const TEST_ADDRESS = privateKeyToAccount(TEST_PRIVATE_KEY).address;

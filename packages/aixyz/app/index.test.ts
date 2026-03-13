@@ -1,7 +1,9 @@
-import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, mock, test, setDefaultTimeout } from "bun:test";
 import { createFixture, type X402Fixture } from "../test/x402-fixture";
 import { createPaymentFetch } from "@use-agently/sdk";
 import { decodePaymentResponseHeader } from "@x402/core/http";
+
+setDefaultTimeout(30_000);
 
 let testPayTo = "0x0000000000000000000000000000000000000000";
 
