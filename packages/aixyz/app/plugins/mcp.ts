@@ -23,7 +23,7 @@ export class MCPPlugin extends BasePlugin {
   private createMcpServer(): McpServer {
     const config = getAixyzConfigRuntime();
     const mcpServer = new McpServer(
-      { name: "aixyz-mcp", version: config.version },
+      { name: config.name, version: config.version },
       { capabilities: { tools: { listChanged: false } } },
     );
 
@@ -68,7 +68,7 @@ export class MCPPlugin extends BasePlugin {
     // Once the SDK ships v2.0 (which removes this guard), hoist both server and transport to
     // avoid per-request McpServer + Ajv instantiation.
     const mcpHandler = async (request: Request) => {
-      const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
+      const transport = new WebStandardStreamableHTTPServerTransport({});
       const server = this.createMcpServer();
       await server.connect(transport);
       return transport.handleRequest(request);

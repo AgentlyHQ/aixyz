@@ -143,7 +143,6 @@
         "zod": "^4",
       },
       "devDependencies": {
-        "@modelcontextprotocol/sdk": "^1",
         "@types/bun": "^1",
         "@types/express": "^5",
         "@use-agently/sdk": "^0",
