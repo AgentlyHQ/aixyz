@@ -58,7 +58,7 @@ bun run build  # → aixyz build (bundles for deployment)
 | Package            | npm name           | Description                                                                |
 | ------------------ | ------------------ | -------------------------------------------------------------------------- |
 | `aixyz`            | `aixyz`            | Main framework: server, plugins (A2A, MCP), x402 integration, web-standard |
-| `aixyz-cli`        | `@aixyz/cli`       | CLI: `dev`, `build`, `erc8004 register`, `erc8004 set-agent-uri`           |
+| `aixyz-cli`        | `@aixyz/cli`       | CLI: `dev`, `build`, `erc-8004 register`, `erc-8004 update`                |
 | `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files           |
 | `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                        |
 | `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                              |
@@ -95,7 +95,7 @@ Mintlify documentation site (`mint dev` to preview locally). Structure:
 Protocols and Packages are groups within the Documentation tab (not separate tabs).
 Templates have their own tab with one page per example.
 
-Each `docs/templates/<name>.mdx` is a symlink to `examples/agent-*/TEMPLATE.mdx` (canonical files live in examples).
+Each `docs/templates/<name>.mdx` documents the corresponding `examples/agent-*/` example.
 
 ### Other
 
@@ -116,6 +116,7 @@ The `aixyz build` command in `packages/aixyz-cli/build/index.ts`:
 4. Output format:
    - **Vercel** (when `VERCEL=1` or `--output vercel`): `.vercel/output/` Build Output API v3
    - **Standalone** (default): `.aixyz/output/server.js`
+   - **Executable** (`--output executable`): `.aixyz/output/server` self-contained binary
 
 The `aixyz dev` command spawns a Bun worker process with file watching on `app/` and `aixyz.config.ts` (100ms debounce).
 
@@ -132,8 +133,9 @@ The `aixyz dev` command spawns a Bun worker process with file watching on `app/`
 
 - **`a2a.ts`** — `A2APlugin`: Generates agent card at `/.well-known/agent-card.json`, JSON-RPC endpoint at
   `/agent`
-- **`mcp.ts`** — `MCPPlugin`: Exposes tools at `/mcp` via `StreamableHTTPServerTransport`
+- **`mcp.ts`** — `MCPPlugin`: Exposes tools at `/mcp` via `WebStandardStreamableHTTPServerTransport`
 - **`index-page.ts`** — `IndexPagePlugin`: Human-readable agent info page
+- **`erc-8004.ts`** — `ERC8004Plugin`: Serves ERC-8004 identity at `/.well-known/erc-8004.json` and `/_aixyz/erc-8004.json`
 
 ### Config loading (`@aixyz/config`)
 

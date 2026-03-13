@@ -5,13 +5,15 @@ description: "Model Context Protocol support for sharing tools with MCP clients"
 
 ## Overview
 
-The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) allows AI clients to discover and invoke tools exposed by your agent. aixyz implements MCP via the `MCPPlugin`, serving tools at `/mcp` over a stateless `StreamableHTTPServerTransport`.
+The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) allows AI clients to discover and invoke tools exposed by your agent. aixyz implements MCP via the `MCPPlugin`, serving tools at `/mcp` over a stateless `WebStandardStreamableHTTPServerTransport`.
 
-## Endpoint
+## Endpoints
 
-| Endpoint | Method | Description                                             |
-| -------- | ------ | ------------------------------------------------------- |
-| `/mcp`   | POST   | MCP tool endpoint using `StreamableHTTPServerTransport` |
+| Endpoint | Method | Description                                                        |
+| -------- | ------ | ------------------------------------------------------------------ |
+| `/mcp`   | POST   | JSON-RPC requests using `WebStandardStreamableHTTPServerTransport` |
+| `/mcp`   | GET    | SSE stream for server-initiated messages                           |
+| `/mcp`   | DELETE | Session termination (stateless, returns 200)                       |
 
 ## Compatible Clients
 

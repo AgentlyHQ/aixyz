@@ -44,11 +44,12 @@ Bundles your agent for deployment.
 aixyz build                       # Standalone (default)
 aixyz build --output standalone   # Explicit standalone
 aixyz build --output vercel       # Vercel Build Output API v3
+aixyz build --output executable   # Self-contained binary
 ```
 
-| Flag       | Default      | Description                             |
-| ---------- | ------------ | --------------------------------------- |
-| `--output` | `standalone` | Output format: `standalone` or `vercel` |
+| Flag       | Default      | Description                                            |
+| ---------- | ------------ | ------------------------------------------------------ |
+| `--output` | `standalone` | Output format: `standalone`, `vercel`, or `executable` |
 
 **Standalone** output goes to `.aixyz/output/server.js` — run it with `bun .aixyz/output/server.js`.
 

@@ -176,14 +176,7 @@ describe("mcp routes", () => {
 
   test("callMcpTool premiumTemperature without payment throws DryRunPaymentRequired", async () => {
     await expect(
-      callMcpTool(
-        baseUrl,
-        "premiumTemperature",
-        { value: 373.15, from: "kelvin", to: "celsius" },
-        {
-          fetchImpl: createDryRunFetch(),
-        },
-      ),
+      callMcpTool(baseUrl, "premiumTemperature", { value: 373.15, from: "kelvin", to: "celsius" }),
     ).rejects.toThrow(DryRunPaymentRequired);
   });
 
@@ -195,7 +188,7 @@ describe("mcp routes", () => {
       baseUrl,
       "premiumTemperature",
       { value: 373.15, from: "kelvin", to: "celsius" },
-      { transaction: PayTransaction(wallet), fetchImpl: createPaymentFetch(wallet) as fetch },
+      { transaction: PayTransaction(wallet) },
     );
     const content = result.content as Array<{ type: string; text: string }>;
     const parsed = JSON.parse(content[0].text);

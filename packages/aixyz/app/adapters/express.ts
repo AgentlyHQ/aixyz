@@ -15,7 +15,54 @@ interface NodeResponse {
   end(): this;
 }
 
-export function toExpress(app: AixyzApp) {
+/**
+ * Converts an {@link AixyzApp} into Express-compatible middleware.
+ *
+ * This adapter bridges the web-standard `Request`/`Response` API used by
+ * `AixyzApp` with Express's Node-style `(req, res, next)` middleware signature.
+ * Incoming Express requests are converted to web-standard `Request` objects,
+ * routed through `app.fetch()`, and the resulting `Response` is streamed back
+ * to the Express response. If the `AixyzApp` does not match the request
+ * (404), control is passed to the next Express middleware via `next()`.
+ *
+ * The returned middleware handles all AixyzApp concerns — A2A, MCP, x402
+ * payment verification, and any registered plugins — so you can mount it
+ * alongside your own Express routes without conflict.
+ *
+ * **Important:** Do not apply `express.json()` or other body-parsing middleware
+ * before this middleware, as it needs access to the raw request body stream.
+ *
+ * @param app - A fully initialized {@link AixyzApp} instance (call
+ *   `app.initialize()` before passing it here).
+ * @returns An async Express middleware function `(req, res, next) => void`.
+ *
+ * @example
+ * ```ts
+ * import express from "express";
+ * import { AixyzApp } from "aixyz/app";
+ * import { toExpressMiddleware } from "aixyz/app/adapters/express";
+ * import { A2APlugin } from "aixyz/app/plugins/a2a";
+ * import { MCPPlugin } from "aixyz/app/plugins/mcp";
+ * import * as agent from "./agent";
+ * import * as myTool from "./tools/my-tool";
+ *
+ * const app = new AixyzApp();
+ * await app.withPlugin(new A2APlugin(agent));
+ * await app.withPlugin(new MCPPlugin([{ name: "myTool", exports: myTool }]));
+ * await app.initialize();
+ *
+ * const server = express();
+ *
+ * // Your own Express routes
+ * server.get("/health", (_req, res) => res.json({ status: "ok" }));
+ *
+ * // Mount AixyzApp (handles /agent, /mcp, /.well-known/agent-card.json, etc.)
+ * server.use(toExpressMiddleware(app));
+ *
+ * server.listen(3000);
+ * ```
+ */
+export function toExpressMiddleware(app: AixyzApp) {
   return async (req: NodeRequest, res: NodeResponse, next: (err?: unknown) => void) => {
     const request = toWebRequest(req);
     const response = await app.fetch(request);

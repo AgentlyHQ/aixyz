@@ -80,7 +80,8 @@
               "templates/advanced/agent-with-custom-server",
               "templates/advanced/agent-byo-facilitator",
               "templates/advanced/agent-with-tests",
-              "templates/advanced/agent-fake-model"
+              "templates/advanced/agent-fake-model",
+              "templates/advanced/agent-with-express"
             ]
           }
         ]

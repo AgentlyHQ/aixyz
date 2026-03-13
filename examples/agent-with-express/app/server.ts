@@ -1,6 +1,6 @@
 import express from "express";
 import { AixyzApp } from "aixyz/app";
-import { toExpress } from "aixyz/app/adapters/express";
+import { toExpressMiddleware } from "aixyz/app/adapters/express";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import { MCPPlugin } from "aixyz/app/plugins/mcp";
@@ -35,7 +35,7 @@ expressApp.post("/echo", express.json(), (req, res) => {
 });
 
 // Mount AixyzApp — do NOT use express.json() before this
-expressApp.use(toExpress(app));
+expressApp.use(toExpressMiddleware(app));
 
 // 3. Start server
 const port = parseInt(process.env.PORT || "3000", 10);
