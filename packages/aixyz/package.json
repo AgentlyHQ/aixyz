@@ -17,6 +17,14 @@
   "license": "MIT",
   "author": "AgentlyHQ",
   "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./*": "./*.ts",
+    "./app": "./app/index.ts",
+    "./app/*": "./app/*.ts",
+    "./app/adapters/*": "./app/adapters/*.ts",
+    "./app/plugins/*": "./app/plugins/*.ts"
+  },
   "bin": "bin.js",
   "files": [
     "**/*.ts"

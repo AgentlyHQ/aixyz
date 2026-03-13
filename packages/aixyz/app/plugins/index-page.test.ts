@@ -19,14 +19,19 @@ mock.module("@aixyz/config", () => ({
 }));
 
 import { AixyzApp } from "../index";
+import { createDispatcher } from "../dispatcher";
 import { IndexPagePlugin } from "./index-page";
+
+function dispatch(app: AixyzApp, request: Request): Promise<Response> {
+  return createDispatcher(app)(request);
+}
 
 describe("IndexPagePlugin", () => {
   test("registers GET / that returns text/plain with agent info", async () => {
     const app = new AixyzApp();
     await app.withPlugin(new IndexPagePlugin());
 
-    const res = await app.fetch(new Request("http://localhost/"));
+    const res = await dispatch(app, new Request("http://localhost/"));
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("text/plain");
 
@@ -48,7 +53,7 @@ describe("IndexPagePlugin", () => {
     const app = new AixyzApp();
     await app.withPlugin(new IndexPagePlugin());
 
-    const res = await app.fetch(new Request("http://localhost/"));
+    const res = await dispatch(app, new Request("http://localhost/"));
     const text = await res.text();
 
     const expected = [
@@ -77,7 +82,7 @@ describe("IndexPagePlugin", () => {
     const app = new AixyzApp();
     await app.withPlugin(new IndexPagePlugin());
 
-    const res = await app.fetch(new Request("http://localhost/"));
+    const res = await dispatch(app, new Request("http://localhost/"));
     const text = await res.text();
 
     expect(text).toContain("Skills:");

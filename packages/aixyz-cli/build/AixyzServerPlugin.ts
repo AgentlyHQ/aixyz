@@ -18,8 +18,8 @@ export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalo
         } else {
           // For standalone and executable, use Bun.serve directly
           const transformed = source.replace(
-            /export\s+default\s+(\w+)\s*;/,
-            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: $1.fetch });
+            /export\s+default\s+(\{[^}]+\})\s*;/,
+            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), ...$1 });
 console.log(\`Server listening on port \${__server.port}\`);`,
           );
           return { contents: transformed, loader: "ts" };
@@ -101,6 +101,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const body: string[] = [];
 
   imports.push('import { AixyzApp } from "aixyz/app";');
+  imports.push('import { toFetch } from "aixyz/app/adapters/node";');
   imports.push('import { IndexPagePlugin } from "aixyz/app/plugins/index-page";');
 
   const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
@@ -142,19 +143,19 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push(`import * as erc8004 from "${importPrefix}/erc-8004";`);
   }
 
-  body.push("const server = new AixyzApp({ facilitators: facilitator });");
-  body.push("await server.withPlugin(new IndexPagePlugin());");
+  body.push("const app = new AixyzApp({ facilitators: facilitator });");
+  body.push("await app.withPlugin(new IndexPagePlugin());");
 
   if (rootAgent) {
-    body.push("await server.withPlugin(new A2APlugin(agent));");
+    body.push("await app.withPlugin(new A2APlugin(agent));");
   }
   for (const subAgent of subAgents) {
-    body.push(`await server.withPlugin(new A2APlugin(${subAgent.identifier}, "${subAgent.name}"));`);
+    body.push(`await app.withPlugin(new A2APlugin(${subAgent.identifier}, "${subAgent.name}"));`);
   }
 
   if (tools.length > 0) {
     const toolEntries = tools.map((tool) => `  { name: "${tool.name}", exports: ${tool.identifier} },`);
-    body.push(`await server.withPlugin(new MCPPlugin([`);
+    body.push(`await app.withPlugin(new MCPPlugin([`);
     for (const entry of toolEntries) {
       body.push(entry);
     }
@@ -166,12 +167,12 @@ function generateServer(appDir: string, entrypointDir: string): string {
     if (rootAgent) a2aPaths.push("/.well-known/agent-card.json");
     for (const subAgent of subAgents) a2aPaths.push(`/${subAgent.name}/.well-known/agent-card.json`);
     body.push(
-      `await server.withPlugin(new ERC8004Plugin({ default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } }));`,
+      `await app.withPlugin(new ERC8004Plugin({ default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } }));`,
     );
   }
 
-  body.push("await server.initialize();");
-  body.push("export default server;");
+  body.push("await app.initialize();");
+  body.push("export default { fetch: toFetch(app) };");
 
   return [...imports, "", ...body].join("\n");
 }

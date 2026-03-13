@@ -11,7 +11,12 @@ mock.module("@aixyz/config", () => ({
 }));
 
 import { AixyzApp } from "../index";
+import { createDispatcher } from "../dispatcher";
 import { ERC8004Plugin, getAgentRegistrationFile } from "./erc-8004";
+
+function dispatch(app: AixyzApp, request: Request): Promise<Response> {
+  return createDispatcher(app)(request);
+}
 import {
   StrictAgentRegistrationFileSchema,
   ServiceSchema,
@@ -23,7 +28,7 @@ import {
 // ---------------------------------------------------------------------------
 
 async function fetchJson(app: AixyzApp, path: string) {
-  const res = await app.fetch(new Request(`http://localhost${path}`));
+  const res = await dispatch(app, new Request(`http://localhost${path}`));
   return { res, json: await res.json() };
 }
 
@@ -264,7 +269,8 @@ describe("ERC8004Plugin", () => {
   test("POST to well-known returns 404", async () => {
     const app = createApp({});
 
-    const res = await app.fetch(
+    const res = await dispatch(
+      app,
       new Request("http://localhost/.well-known/erc-8004.json", { method: "POST", body: "{}" }),
     );
     expect(res.status).toBe(404);

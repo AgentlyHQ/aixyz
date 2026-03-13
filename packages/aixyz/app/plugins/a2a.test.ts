@@ -21,6 +21,11 @@ mock.module("@aixyz/config", () => ({
 
 import { ToolLoopAgentExecutor, A2APlugin, getAgentCard } from "./a2a";
 import { AixyzApp } from "../index";
+import { createDispatcher } from "../dispatcher";
+
+function dispatch(app: AixyzApp, request: Request): Promise<Response> {
+  return createDispatcher(app)(request);
+}
 import type { ToolLoopAgent } from "ai";
 import { DefaultExecutionEventBus } from "@a2a-js/sdk/server";
 import type { AgentExecutionEvent } from "@a2a-js/sdk/server";
@@ -199,7 +204,7 @@ describe("A2APlugin", () => {
     test("returns agent card as JSON", async () => {
       const app = createPluginApp();
 
-      const res = await app.fetch(new Request("http://localhost/.well-known/agent-card.json"));
+      const res = await dispatch(app, new Request("http://localhost/.well-known/agent-card.json"));
 
       expect(res.status).toBe(200);
       expect(res.headers.get("content-type")).toContain("application/json");
@@ -216,7 +221,7 @@ describe("A2APlugin", () => {
     test("returns card with skills", async () => {
       const app = createPluginApp();
 
-      const res = await app.fetch(new Request("http://localhost/.well-known/agent-card.json"));
+      const res = await dispatch(app, new Request("http://localhost/.well-known/agent-card.json"));
       const card = await res.json();
 
       expect(card.skills).toHaveLength(1);
@@ -231,7 +236,7 @@ describe("A2APlugin", () => {
     test("well-known path respects prefix", async () => {
       const app = createPluginApp(makeMockAgent(), { scheme: "free" }, "v1");
 
-      const res = await app.fetch(new Request("http://localhost/v1/.well-known/agent-card.json"));
+      const res = await dispatch(app, new Request("http://localhost/v1/.well-known/agent-card.json"));
 
       expect(res.status).toBe(200);
       const card = await res.json();
@@ -247,7 +252,8 @@ describe("A2APlugin", () => {
     test("message/send returns completed task", async () => {
       const app = createPluginApp();
 
-      const res = await app.fetch(
+      const res = await dispatch(
+        app,
         jsonRpcRequest("message/send", {
           message: {
             kind: "message",
@@ -269,7 +275,8 @@ describe("A2APlugin", () => {
     test("message/send returns artifacts from agent stream", async () => {
       const app = createPluginApp(makeMockAgent(["Hello", " world"]));
 
-      const res = await app.fetch(
+      const res = await dispatch(
+        app,
         jsonRpcRequest("message/send", {
           message: {
             kind: "message",
@@ -294,7 +301,8 @@ describe("A2APlugin", () => {
     test("message/stream returns streaming result (collected as last chunk)", async () => {
       const app = createPluginApp();
 
-      const res = await app.fetch(
+      const res = await dispatch(
+        app,
         jsonRpcRequest("message/stream", {
           message: {
             kind: "message",
@@ -316,7 +324,7 @@ describe("A2APlugin", () => {
     test("tasks/get for unknown task returns error", async () => {
       const app = createPluginApp();
 
-      const res = await app.fetch(jsonRpcRequest("tasks/get", { id: "nonexistent-task" }, 5));
+      const res = await dispatch(app, jsonRpcRequest("tasks/get", { id: "nonexistent-task" }, 5));
 
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -329,7 +337,8 @@ describe("A2APlugin", () => {
       const app = createPluginApp();
 
       // First send a message to create a task
-      const sendRes = await app.fetch(
+      const sendRes = await dispatch(
+        app,
         jsonRpcRequest("message/send", {
           message: {
             kind: "message",
@@ -343,7 +352,7 @@ describe("A2APlugin", () => {
       const taskId = sendJson.result.id;
 
       // Now fetch that task
-      const getRes = await app.fetch(jsonRpcRequest("tasks/get", { id: taskId }, 2));
+      const getRes = await dispatch(app, jsonRpcRequest("tasks/get", { id: taskId }, 2));
       const getJson = await getRes.json();
 
       expect(getJson.jsonrpc).toBe("2.0");
@@ -355,7 +364,7 @@ describe("A2APlugin", () => {
     test("unknown method returns method-not-found error", async () => {
       const app = createPluginApp();
 
-      const res = await app.fetch(jsonRpcRequest("nonexistent/method", {}, 10));
+      const res = await dispatch(app, jsonRpcRequest("nonexistent/method", {}, 10));
 
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -368,7 +377,8 @@ describe("A2APlugin", () => {
     test("invalid JSON-RPC request returns error", async () => {
       const app = createPluginApp();
 
-      const res = await app.fetch(
+      const res = await dispatch(
+        app,
         new Request("http://localhost/agent", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -387,7 +397,8 @@ describe("A2APlugin", () => {
       // The plugin calls request.json() which throws SyntaxError before
       // reaching the A2A JSON-RPC handler
       expect(
-        app.fetch(
+        dispatch(
+          app,
           new Request("http://localhost/agent", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -406,7 +417,8 @@ describe("A2APlugin", () => {
 
       const app = createPluginApp(failingAgent);
 
-      const res = await app.fetch(
+      const res = await dispatch(
+        app,
         jsonRpcRequest("message/send", {
           message: {
             kind: "message",
@@ -427,7 +439,8 @@ describe("A2APlugin", () => {
     test("POST to prefixed agent path works", async () => {
       const app = createPluginApp(makeMockAgent(), { scheme: "free" }, "v1");
 
-      const res = await app.fetch(
+      const res = await dispatch(
+        app,
         new Request("http://localhost/v1/agent", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -460,14 +473,15 @@ describe("A2APlugin", () => {
   test("GET /agent returns 404 (only POST registered)", async () => {
     const app = createPluginApp();
 
-    const res = await app.fetch(new Request("http://localhost/agent"));
+    const res = await dispatch(app, new Request("http://localhost/agent"));
     expect(res.status).toBe(404);
   });
 
   test("POST /.well-known/agent-card.json returns 404 (only GET registered)", async () => {
     const app = createPluginApp();
 
-    const res = await app.fetch(
+    const res = await dispatch(
+      app,
       new Request("http://localhost/.well-known/agent-card.json", {
         method: "POST",
         body: "{}",

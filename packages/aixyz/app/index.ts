@@ -14,8 +14,8 @@ export interface AixyzAppOptions {
 }
 
 /**
- * Framework-agnostic application server that manages route registration, middleware chaining,
- * and optional x402 payment gating. Serves as the core of an aixyz agent deployment.
+ * Framework-agnostic route and middleware registry with optional x402 payment gating.
+ * Does not handle HTTP dispatch — use an adapter (e.g. `toFetch`, `toExpress`) for that.
  */
 export class AixyzApp {
   readonly routes = new Map<string, RouteEntry>();
@@ -72,35 +72,8 @@ export class AixyzApp {
     this.middlewares.push(middleware);
   }
 
-  /** Dispatch a web-standard Request through payment verification, middleware chain, and route handler. */
-  fetch = async (request: Request): Promise<Response> => {
-    const url = new URL(request.url);
-    const key = this.getRouteKey(request.method as HttpMethod, url.pathname);
-    const entry = this.routes.get(key);
-
-    if (!entry) {
-      return new Response("Not Found", { status: 404 });
-    }
-
-    // Payment gating
-    if (entry.payment && this.payment) {
-      const rejection = await this.payment.verify(request);
-      if (rejection) return rejection;
-    }
-
-    // Build middleware chain
-    let index = 0;
-    const middlewares = this.middlewares;
-    const handler = entry.handler;
-
-    const next = async (): Promise<Response> => {
-      if (index < middlewares.length) {
-        const mw = middlewares[index++];
-        return mw(request, next);
-      }
-      return handler(request);
-    };
-
-    return next();
-  };
+  /** Returns the registered middlewares (read-only access for adapters). */
+  getMiddlewares(): Middleware[] {
+    return this.middlewares;
+  }
 }

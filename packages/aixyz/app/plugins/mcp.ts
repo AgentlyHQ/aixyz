@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { BasePlugin } from "../plugin";
 import type { AixyzApp } from "../index";
+import { createDispatcher } from "../dispatcher";
 import type { Accepts } from "../../accepts";
 import { AcceptsScheme } from "../../accepts";
 
@@ -82,6 +83,7 @@ export class MCPPlugin extends BasePlugin {
     }
 
     // Main /mcp handler — dispatches tools/call for paid tools through per-tool routes.
+    const dispatch = createDispatcher(app);
     const handler = async (request: Request) => {
       if (request.method === "POST" && paidToolNames.size > 0) {
         const clone = request.clone();
@@ -92,7 +94,7 @@ export class MCPPlugin extends BasePlugin {
               new URL(`/mcp/tools/${body.params.name}`, new URL(request.url).origin),
               { method: "POST", headers: request.headers, body: JSON.stringify(body) },
             );
-            return app.fetch(syntheticRequest);
+            return dispatch(syntheticRequest);
           }
         } catch {
           // Body parse failures are handled by the MCP SDK below.

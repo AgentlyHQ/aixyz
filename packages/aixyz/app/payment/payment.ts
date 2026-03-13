@@ -1,4 +1,4 @@
-import { FacilitatorClient, x402ResourceServer } from "@x402/core/server";
+import { FacilitatorClient, ProcessSettleResultResponse, x402ResourceServer } from "@x402/core/server";
 import {
   x402HTTPResourceServer,
   type HTTPAdapter,
@@ -9,7 +9,7 @@ import {
 } from "@x402/core/http";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import type { AcceptsX402 } from "../../accepts";
-import { Network } from "@x402/core/types";
+import { Network, PaymentPayload, PaymentRequirements } from "@x402/core/types";
 import { AixyzConfig } from "@aixyz/config";
 
 /**
@@ -44,6 +44,12 @@ function toResponse(instructions: HTTPResponseInstructions): Response {
   return new Response(body, { status: instructions.status, headers });
 }
 
+interface PaymentContext {
+  paymentPayload: PaymentPayload;
+  paymentRequirements: PaymentRequirements;
+  declaredExtensions?: Record<string, unknown>;
+}
+
 /**
  * Thin wrapper around x402HTTPResourceServer
  */
@@ -52,6 +58,7 @@ export class PaymentGateway {
   private httpServer?: x402HTTPResourceServer;
   private readonly config: AixyzConfig;
   private readonly pendingRoutes = new Map<string, RouteConfig>();
+  private readonly verifiedPayments = new WeakMap<Request, PaymentContext>();
 
   constructor(facilitators: FacilitatorClient | FacilitatorClient[], config: AixyzConfig) {
     this.resourceServer = new x402ResourceServer(facilitators);
@@ -118,12 +125,33 @@ export class PaymentGateway {
         return null;
 
       case "payment-verified":
-        // Settlement happens after the handler responds successfully
-        // Store payment info for later settlement
+        this.verifiedPayments.set(request, {
+          paymentPayload: result.paymentPayload,
+          paymentRequirements: result.paymentRequirements,
+          declaredExtensions: result.declaredExtensions,
+        });
         return null;
 
       case "payment-error":
         return toResponse(result.response);
     }
+  }
+
+  /**
+   * Settle a previously verified payment. Call after the handler responds successfully.
+   * Returns settlement headers to merge into the response, or null if nothing to settle.
+   */
+  async settle(request: Request): Promise<ProcessSettleResultResponse | null> {
+    const ctx = this.verifiedPayments.get(request);
+    if (!ctx || !this.httpServer) return null;
+    this.verifiedPayments.delete(request);
+
+    const result = await this.httpServer.processSettlement(
+      ctx.paymentPayload,
+      ctx.paymentRequirements,
+      ctx.declaredExtensions,
+    );
+
+    return result;
   }
 }
