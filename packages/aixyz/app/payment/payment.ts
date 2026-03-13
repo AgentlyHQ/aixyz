@@ -34,12 +34,12 @@ function toHTTPAdapter(request: Request): HTTPAdapter {
  */
 function toResponse(instructions: HTTPResponseInstructions): Response {
   const headers = new Headers(instructions.headers);
-  const body = instructions.body != null ? JSON.stringify(instructions.body) : undefined;
-  if (body && !headers.has("content-type") && !instructions.isHtml) {
-    headers.set("content-type", "application/json");
+  let body: string | undefined;
+  if (instructions.body != null) {
+    body = instructions.isHtml ? String(instructions.body) : JSON.stringify(instructions.body);
   }
-  if (instructions.isHtml && body) {
-    headers.set("content-type", "text/html");
+  if (body && !headers.has("content-type")) {
+    headers.set("content-type", instructions.isHtml ? "text/html" : "application/json");
   }
   return new Response(body, { status: instructions.status, headers });
 }

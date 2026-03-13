@@ -19,6 +19,7 @@
     "@use-agently/sdk": "^0",
     "testcontainers": "^11",
     "typescript": "^5",
+    "viem": "^2.47.2",
     "x402-fl": "^0"
   }
 }
