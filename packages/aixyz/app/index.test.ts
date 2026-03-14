@@ -14,7 +14,7 @@ mock.module("@aixyz/config", () => ({
     version: "1.0.0",
     url: "http://localhost:3000",
     x402: { payTo: testPayTo, network: "eip155:8453" },
-    build: { tools: [], agents: [], excludes: [] },
+    build: { tools: [], agents: [], excludes: [], poweredByHeader: true },
     vercel: { maxDuration: 30 },
     skills: [],
   }),
@@ -113,6 +113,21 @@ describe("AixyzApp", () => {
     expect(app.routes.size).toBe(2);
     expect(app.routes.has("GET /a")).toBe(true);
     expect(app.routes.get("POST /b")?.payment).toEqual({ scheme: "exact", price: "$0.01" });
+  });
+
+  test("fetch() sets X-Powered-By header by default", async () => {
+    const app = new AixyzApp();
+    app.route("GET", "/hello", () => new Response("world"));
+
+    const res = await app.fetch(new Request("http://localhost/hello"));
+    expect(res.headers.get("X-Powered-By")).toBe("aixyz");
+  });
+
+  test("fetch() sets X-Powered-By header on 404 responses", async () => {
+    const app = new AixyzApp();
+    const res = await app.fetch(new Request("http://localhost/missing"));
+    expect(res.status).toBe(404);
+    expect(res.headers.get("X-Powered-By")).toBe("aixyz");
   });
 });
 
