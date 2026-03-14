@@ -274,7 +274,7 @@ my-agent/
 | ------------------------- | ----------------------------------------------- |
 | `boilerplate`             | Minimal starter (auto-generated server)         |
 | `chainlink`               | Chainlink data feeds with custom server         |
-| `flights-search`          | Flight search with Stripe payments              |
+| `flight-search`           | Flight search with Stripe payments              |
 | `local-llm`               | Local LLM via Docker (no external API)          |
 | `with-custom-facilitator` | Bring-your-own x402 facilitator                 |
 | `with-custom-server`      | Custom server setup                             |

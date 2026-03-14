@@ -68,7 +68,7 @@
               "templates/basic/boilerplate",
               "templates/basic/local-llm",
               "templates/basic/chainlink",
-              "templates/basic/flights-search"
+              "templates/basic/flight-search"
             ]
           },
           {

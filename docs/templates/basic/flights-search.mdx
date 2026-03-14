@@ -3,9 +3,7 @@ title: "Flight Search"
 description: "Flight search agent with Skyscanner API and dual x402/Stripe payments"
 ---
 
-<Info>
-  **Source:** [`examples/flights-search`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/flights-search)
-</Info>
+<Info>**Source:** [`examples/flight-search`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/flight-search)</Info>
 
 ## Overview
 
@@ -14,7 +12,7 @@ The flight search agent finds the cheapest flights between airports worldwide us
 ## Project Structure
 
 ```
-flights-search/
+flight-search/
 ├── aixyz.config.ts             # Agent metadata and skills
 ├── app/
 │   ├── agent.ts                # Agent with flight search tool
@@ -70,7 +68,7 @@ The agent charges `$0.01` per request via x402. Environment variables `X402_PAY_
 ## Running
 
 ```bash
-cd examples/flights-search
+cd examples/flight-search
 bun install
 bun run dev
 ```

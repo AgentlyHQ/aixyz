@@ -1,5 +1,5 @@
 {
-  "name": "@examples/flights-search",
+  "name": "@examples/flight-search",
   "private": true,
   "scripts": {
     "build": "aixyz build",
