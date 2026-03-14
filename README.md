@@ -273,10 +273,8 @@ my-agent/
 | Example                   | Description                                     |
 | ------------------------- | ----------------------------------------------- |
 | `boilerplate`             | Minimal starter (auto-generated server)         |
-| `price-oracle`            | CoinGecko price feeds                           |
 | `chainlink`               | Chainlink data feeds with custom server         |
-| `job-hunter`              | Remote job search                               |
-| `travel`                  | Flight search with Stripe payments              |
+| `flights-search`          | Flight search with Stripe payments              |
 | `local-llm`               | Local LLM via Docker (no external API)          |
 | `with-custom-facilitator` | Bring-your-own x402 facilitator                 |
 | `with-custom-server`      | Custom server setup                             |

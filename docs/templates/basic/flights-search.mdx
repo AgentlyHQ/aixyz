@@ -1,18 +1,20 @@
 ---
-title: "Travel Agent"
+title: "Flight Search"
 description: "Flight search agent with Skyscanner API and dual x402/Stripe payments"
 ---
 
-<Info>**Source:** [`examples/travel`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/travel)</Info>
+<Info>
+  **Source:** [`examples/flights-search`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/flights-search)
+</Info>
 
 ## Overview
 
-The travel agent finds the cheapest flights between airports worldwide using real-time pricing data from the Skyscanner API. It demonstrates a custom server setup with dual payment support — both x402 crypto micropayments and Stripe for traditional payments.
+The flight search agent finds the cheapest flights between airports worldwide using real-time pricing data from the Skyscanner API. It demonstrates a custom server setup with dual payment support — both x402 crypto micropayments and Stripe for traditional payments.
 
 ## Project Structure
 
 ```
-travel/
+flights-search/
 ├── aixyz.config.ts             # Agent metadata and skills
 ├── app/
 │   ├── agent.ts                # Agent with flight search tool
@@ -68,7 +70,7 @@ The agent charges `$0.01` per request via x402. Environment variables `X402_PAY_
 ## Running
 
 ```bash
-cd examples/travel
+cd examples/flights-search
 bun install
 bun run dev
 ```

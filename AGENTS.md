@@ -32,7 +32,7 @@ Or navigate directly:
 
 ```bash
 cd packages/aixyz && bun run build
-cd examples/travel && bun run dev
+cd examples/flights-search && bun run dev
 ```
 
 ### Running a single test
@@ -46,7 +46,7 @@ bun test packages/aixyz-erc-8004/src/schemas/registration.test.ts
 ### Example agent dev/build
 
 ```bash
-cd examples/travel
+cd examples/flights-search
 bun run dev    # → aixyz dev (hot reload, watches app/ and aixyz.config.ts)
 bun run build  # → aixyz build (bundles for deployment)
 ```

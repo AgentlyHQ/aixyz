@@ -68,9 +68,7 @@
               "templates/basic/boilerplate",
               "templates/basic/local-llm",
               "templates/basic/chainlink",
-              "templates/basic/travel",
-              "templates/basic/price-oracle",
-              "templates/basic/job-hunter"
+              "templates/basic/flights-search"
             ]
           },
           {

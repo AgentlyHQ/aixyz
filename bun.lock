@@ -27,19 +27,6 @@
         "typescript": "^5",
       },
     },
-    "examples/with-custom-facilitator": {
-      "name": "@examples/with-custom-facilitator",
-      "dependencies": {
-        "@ai-sdk/openai": "^3",
-        "ai": "^6",
-        "aixyz": "^0",
-        "zod": "^4",
-      },
-      "devDependencies": {
-        "@types/bun": "^1",
-        "typescript": "^5",
-      },
-    },
     "examples/chainlink": {
       "name": "@examples/chainlink",
       "dependencies": {
@@ -65,10 +52,11 @@
         "typescript": "^5",
       },
     },
-    "examples/job-hunter": {
-      "name": "@examples/job-hunter",
+    "examples/flights-search": {
+      "name": "@examples/flights-search",
       "dependencies": {
         "@ai-sdk/openai": "^3",
+        "@aixyz/stripe": "^0",
         "ai": "^6",
         "aixyz": "^0",
         "zod": "^4",
@@ -92,13 +80,12 @@
         "typescript": "^5",
       },
     },
-    "examples/price-oracle": {
-      "name": "@examples/price-oracle",
+    "examples/sub-agents": {
+      "name": "@examples/sub-agents",
       "dependencies": {
         "@ai-sdk/openai": "^3",
         "ai": "^6",
         "aixyz": "^0",
-        "viem": "^2",
         "zod": "^4",
       },
       "devDependencies": {
@@ -106,11 +93,10 @@
         "typescript": "^5",
       },
     },
-    "examples/travel": {
-      "name": "@examples/travel",
+    "examples/with-custom-facilitator": {
+      "name": "@examples/with-custom-facilitator",
       "dependencies": {
         "@ai-sdk/openai": "^3",
-        "@aixyz/stripe": "^0",
         "ai": "^6",
         "aixyz": "^0",
         "zod": "^4",
@@ -150,19 +136,6 @@
         "typescript": "^5",
         "viem": "^2.47.2",
         "x402-fl": "^0",
-      },
-    },
-    "examples/sub-agents": {
-      "name": "@examples/sub-agents",
-      "dependencies": {
-        "@ai-sdk/openai": "^3",
-        "ai": "^6",
-        "aixyz": "^0",
-        "zod": "^4",
-      },
-      "devDependencies": {
-        "@types/bun": "^1",
-        "typescript": "^5",
       },
     },
     "examples/with-tests": {
@@ -311,25 +284,21 @@
 
     "@examples/boilerplate": ["@examples/boilerplate@workspace:examples/boilerplate"],
 
-    "@examples/with-custom-facilitator": ["@examples/with-custom-facilitator@workspace:examples/with-custom-facilitator"],
-
     "@examples/chainlink": ["@examples/chainlink@workspace:examples/chainlink"],
 
     "@examples/fake-llm": ["@examples/fake-llm@workspace:examples/fake-llm"],
 
-    "@examples/job-hunter": ["@examples/job-hunter@workspace:examples/job-hunter"],
+    "@examples/flights-search": ["@examples/flights-search@workspace:examples/flights-search"],
 
     "@examples/local-llm": ["@examples/local-llm@workspace:examples/local-llm"],
 
-    "@examples/price-oracle": ["@examples/price-oracle@workspace:examples/price-oracle"],
+    "@examples/sub-agents": ["@examples/sub-agents@workspace:examples/sub-agents"],
 
-    "@examples/travel": ["@examples/travel@workspace:examples/travel"],
+    "@examples/with-custom-facilitator": ["@examples/with-custom-facilitator@workspace:examples/with-custom-facilitator"],
 
     "@examples/with-custom-server": ["@examples/with-custom-server@workspace:examples/with-custom-server"],
 
     "@examples/with-express": ["@examples/with-express@workspace:examples/with-express"],
-
-    "@examples/sub-agents": ["@examples/sub-agents@workspace:examples/sub-agents"],
 
     "@examples/with-tests": ["@examples/with-tests@workspace:examples/with-tests"],
 
@@ -1155,8 +1124,6 @@
 
     "@examples/chainlink/viem": ["viem@2.46.2", "", { "dependencies": { "@noble/curves": "1.9.1", "@noble/hashes": "1.8.0", "@scure/bip32": "1.7.0", "@scure/bip39": "1.6.0", "abitype": "1.2.3", "isows": "1.0.7", "ox": "0.12.4", "ws": "8.18.3" }, "peerDependencies": { "typescript": ">=5.0.4" }, "optionalPeers": ["typescript"] }, "sha512-w8Qv5Vyo7TfXcH3vgmxRa1NRvzJCDy2aSGSRsJn3503nC/qVbgEQ+n3aj/CkqWXbloudZh97h5o5aQrQSVGy0w=="],
 
-    "@examples/price-oracle/viem": ["viem@2.46.2", "", { "dependencies": { "@noble/curves": "1.9.1", "@noble/hashes": "1.8.0", "@scure/bip32": "1.7.0", "@scure/bip39": "1.6.0", "abitype": "1.2.3", "isows": "1.0.7", "ox": "0.12.4", "ws": "8.18.3" }, "peerDependencies": { "typescript": ">=5.0.4" }, "optionalPeers": ["typescript"] }, "sha512-w8Qv5Vyo7TfXcH3vgmxRa1NRvzJCDy2aSGSRsJn3503nC/qVbgEQ+n3aj/CkqWXbloudZh97h5o5aQrQSVGy0w=="],
-
     "@examples/with-custom-server/viem": ["viem@2.46.2", "", { "dependencies": { "@noble/curves": "1.9.1", "@noble/hashes": "1.8.0", "@scure/bip32": "1.7.0", "@scure/bip39": "1.6.0", "abitype": "1.2.3", "isows": "1.0.7", "ox": "0.12.4", "ws": "8.18.3" }, "peerDependencies": { "typescript": ">=5.0.4" }, "optionalPeers": ["typescript"] }, "sha512-w8Qv5Vyo7TfXcH3vgmxRa1NRvzJCDy2aSGSRsJn3503nC/qVbgEQ+n3aj/CkqWXbloudZh97h5o5aQrQSVGy0w=="],
 
     "@grpc/grpc-js/@grpc/proto-loader": ["@grpc/proto-loader@0.8.0", "", { "dependencies": { "lodash.camelcase": "^4.3.0", "long": "^5.0.0", "protobufjs": "^7.5.3", "yargs": "^17.7.2" }, "bin": { "proto-loader-gen-types": "build/bin/proto-loader-gen-types.js" } }, "sha512-rc1hOQtjIWGxcxpb9aHAfLpIctjEnsDehj0DAiVfBlmT84uvR0uUtN2hEi/ecvWVjXUGf5qPF4qEgiLOx1YIMQ=="],
@@ -1277,14 +1244,6 @@
 
     "@examples/chainlink/viem/ws": ["ws@8.18.3", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="],
 
-    "@examples/price-oracle/viem/@noble/curves": ["@noble/curves@1.9.1", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA=="],
-
-    "@examples/price-oracle/viem/@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
-
-    "@examples/price-oracle/viem/ox": ["ox@0.12.4", "", { "dependencies": { "@adraffy/ens-normalize": "^1.11.0", "@noble/ciphers": "^1.3.0", "@noble/curves": "1.9.1", "@noble/hashes": "^1.8.0", "@scure/bip32": "^1.7.0", "@scure/bip39": "^1.6.0", "abitype": "^1.2.3", "eventemitter3": "5.0.1" }, "peerDependencies": { "typescript": ">=5.4.0" }, "optionalPeers": ["typescript"] }, "sha512-+P+C7QzuwPV8lu79dOwjBKfB2CbnbEXe/hfyyrff1drrO1nOOj3Hc87svHfcW1yneRr3WXaKr6nz11nq+/DF9Q=="],
-
-    "@examples/price-oracle/viem/ws": ["ws@8.18.3", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="],
-
     "@examples/with-custom-server/viem/@noble/curves": ["@noble/curves@1.9.1", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA=="],
 
     "@examples/with-custom-server/viem/@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
@@ -1392,10 +1351,6 @@
     "@examples/chainlink/viem/ox/@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.11.1", "", {}, "sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ=="],
 
     "@examples/chainlink/viem/ox/eventemitter3": ["eventemitter3@5.0.1", "", {}, "sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA=="],
-
-    "@examples/price-oracle/viem/ox/@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.11.1", "", {}, "sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ=="],
-
-    "@examples/price-oracle/viem/ox/eventemitter3": ["eventemitter3@5.0.1", "", {}, "sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA=="],
 
     "@examples/with-custom-server/viem/ox/@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.11.1", "", {}, "sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ=="],
 
