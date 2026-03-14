@@ -45,6 +45,11 @@ export type AixyzConfig = {
      */
     output?: "standalone" | "vercel" | "executable";
     /**
+     * Whether to include the `X-Powered-By: aixyz` header in all responses.
+     * @default true
+     */
+    poweredByHeader?: boolean;
+    /**
      * Glob pattern(s) for tool files to include in the build from the `app/tools/` directory.
      * @default ["**\/*.{js,ts}"]
      */
@@ -82,6 +87,7 @@ const defaultConfig = {
     tools: ["**/*.{js,ts}"],
     agents: ["**/*.{js,ts}"],
     excludes: ["**/{_*,*.{test,spec,e2e}}.{js,ts}"],
+    poweredByHeader: true,
   },
   vercel: { maxDuration: 60 },
   skills: [],
@@ -117,6 +123,7 @@ const AixyzConfigSchema = z.object({
   build: z
     .object({
       output: z.enum(["standalone", "vercel", "executable"]).optional(),
+      poweredByHeader: z.boolean().default(defaultConfig.build.poweredByHeader),
       tools: z
         .union([z.string(), z.array(z.string())])
         .default(defaultConfig.build.tools)

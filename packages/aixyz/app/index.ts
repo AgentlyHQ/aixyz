@@ -22,10 +22,15 @@ export class AixyzApp {
   readonly payment?: PaymentGateway;
   private middlewares: Middleware[] = [];
   private plugins: BasePlugin[] = [];
+  private readonly poweredByHeader: boolean;
 
   constructor(options?: AixyzAppOptions) {
+    // TODO(future): getAiXyzConfig will be materialized.
+    //  this is internal, we control it so it's fine for us to use—but we changing it in the future.
+    const config = getAixyzConfig();
+    this.poweredByHeader = config.build.poweredByHeader;
+
     if (options?.facilitators) {
-      const config = getAixyzConfig();
       this.payment = new PaymentGateway(options.facilitators, config);
       this.payment.register((config.x402.network as Network) ?? "eip155:8453");
     }
@@ -83,6 +88,14 @@ export class AixyzApp {
 
   /** Dispatch a web-standard Request through payment verification, middleware, and route handler. */
   fetch = async (request: Request): Promise<Response> => {
+    const response = await this.dispatch(request);
+    if (this.poweredByHeader) {
+      response.headers.set("X-Powered-By", "aixyz");
+    }
+    return response;
+  };
+
+  private dispatch = async (request: Request): Promise<Response> => {
     const url = new URL(request.url);
     const key = this.getRouteKey(request.method as HttpMethod, url.pathname);
     const entry = this.routes.get(key);

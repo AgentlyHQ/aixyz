@@ -7,9 +7,7 @@ function label(text: string): string {
   return chalk.dim(text.padEnd(14));
 }
 
-export function AixyzConfigPlugin(): BunPlugin {
-  const materialized = getAixyzConfig();
-
+function logConfig(materialized: ReturnType<typeof getAixyzConfig>): void {
   const maxLen = Math.max(materialized.url.length, materialized.x402.payTo.length);
   const description =
     materialized.description.length > maxLen
@@ -33,6 +31,11 @@ export function AixyzConfigPlugin(): BunPlugin {
       titleAlignment: "left",
     }),
   );
+}
+
+export function AixyzConfigPlugin(): BunPlugin {
+  const materialized = getAixyzConfig();
+  logConfig(materialized);
 
   return {
     name: "aixyz-config",
