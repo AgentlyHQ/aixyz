@@ -32,7 +32,7 @@ Or navigate directly:
 
 ```bash
 cd packages/aixyz && bun run build
-cd examples/agent-travel && bun run dev
+cd examples/travel && bun run dev
 ```
 
 ### Running a single test
@@ -46,7 +46,7 @@ bun test packages/aixyz-erc-8004/src/schemas/registration.test.ts
 ### Example agent dev/build
 
 ```bash
-cd examples/agent-travel
+cd examples/travel
 bun run dev    # → aixyz dev (hot reload, watches app/ and aixyz.config.ts)
 bun run build  # → aixyz build (bundles for deployment)
 ```
@@ -69,7 +69,7 @@ bun run build  # → aixyz build (bundles for deployment)
 Working agents demonstrating patterns. All share the same structure:
 
 ```
-examples/agent-*/
+examples/*/
   aixyz.config.ts     # Agent metadata and config (required)
   app/
     agent.ts          # Agent definition (required if no server.ts)
@@ -95,7 +95,7 @@ Mintlify documentation site (`mint dev` to preview locally). Structure:
 Protocols and Packages are groups within the Documentation tab (not separate tabs).
 Templates have their own tab with one page per example.
 
-Each `docs/templates/<name>.mdx` documents the corresponding `examples/agent-*/` example.
+Each `docs/templates/<name>.mdx` documents the corresponding `examples/*/` example.
 
 ### Other
 
