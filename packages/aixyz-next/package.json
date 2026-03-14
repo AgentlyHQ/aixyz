@@ -29,11 +29,20 @@
     "test": "bun test"
   },
   "devDependencies": {
+    "@aixyz/config": "workspace:*",
+    "ai": "^6",
     "aixyz": "workspace:*",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4"
   },
   "peerDependencies": {
+    "ai": "^6",
     "aixyz": "workspace:*",
     "next": ">=14"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    }
   }
 }
