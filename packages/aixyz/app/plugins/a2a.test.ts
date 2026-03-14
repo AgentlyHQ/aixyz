@@ -15,6 +15,7 @@ mock.module("@aixyz/config", () => ({
     version: "1.0.0",
     url: testUrl,
     x402: { payTo: testPayTo, network: "eip155:8453" },
+    build: { tools: [], agents: [], excludes: [], poweredByHeader: true },
     skills: [{ id: "test-skill", name: "Test Skill", description: "Does testing", tags: ["test"] }],
   }),
   getAixyzConfigRuntime: () => ({

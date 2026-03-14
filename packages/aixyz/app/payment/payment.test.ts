@@ -21,7 +21,7 @@ mock.module("@aixyz/config", () => ({
     version: "1.0.0",
     url: "http://localhost:3000",
     x402: { payTo: testPayTo, network: "eip155:8453" },
-    build: { tools: [], agents: [], excludes: [] },
+    build: { tools: [], agents: [], excludes: [], poweredByHeader: true },
     vercel: { maxDuration: 30 },
     skills: [],
   }),

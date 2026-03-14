@@ -1,6 +1,24 @@
 import { describe, expect, mock, test } from "bun:test";
 
 mock.module("@aixyz/config", () => ({
+  getAixyzConfig: () => ({
+    name: "Test Agent",
+    description: "A test agent",
+    version: "1.0.0",
+    url: "http://localhost:3000",
+    x402: { payTo: "0x0000000000000000000000000000000000000000", network: "eip155:8453" },
+    build: { tools: [], agents: [], excludes: [], poweredByHeader: true },
+    vercel: { maxDuration: 30 },
+    skills: [
+      {
+        id: "skill-travel",
+        name: "Travel Planner",
+        description: "Plans trips and itineraries",
+        tags: ["travel", "planning"],
+        examples: ["Plan a trip to Paris", "Find flights to Tokyo"],
+      },
+    ],
+  }),
   getAixyzConfigRuntime: () => ({
     name: "Test Agent",
     description: "A test agent",
