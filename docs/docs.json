@@ -65,23 +65,21 @@
           {
             "group": "Basic",
             "pages": [
-              "templates/basic/agent-boilerplate",
-              "templates/basic/agent-local-llm",
-              "templates/basic/agent-chainlink",
-              "templates/basic/agent-travel",
-              "templates/basic/agent-price-oracle",
-              "templates/basic/agent-job-hunter"
+              "templates/basic/boilerplate",
+              "templates/basic/local-llm",
+              "templates/basic/chainlink",
+              "templates/basic/flight-search"
             ]
           },
           {
             "group": "Advanced",
             "pages": [
-              "templates/advanced/agent-with-sub-agents",
-              "templates/advanced/agent-with-custom-server",
-              "templates/advanced/agent-byo-facilitator",
-              "templates/advanced/agent-with-tests",
-              "templates/advanced/agent-fake-model",
-              "templates/advanced/agent-with-express"
+              "templates/advanced/sub-agents",
+              "templates/advanced/with-custom-server",
+              "templates/advanced/with-custom-facilitator",
+              "templates/advanced/with-tests",
+              "templates/advanced/fake-llm",
+              "templates/advanced/with-express"
             ]
           }
         ]

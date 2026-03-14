@@ -1,0 +1,88 @@
+---
+title: "Custom Server Agent"
+description: "Template demonstrating manual server control with app/server.ts"
+---
+
+<Info>
+  **Source:** [`examples/with-custom-server`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/with-custom-server)
+</Info>
+
+## Overview
+
+This template demonstrates how to take full control over endpoint registration by providing a custom `app/server.ts`. Instead of relying on the auto-generated server, you manually wire up A2A, MCP, and x402 — giving you complete control over pricing, middleware, and route configuration.
+
+## Project Structure
+
+```
+with-custom-server/
+├── aixyz.config.ts           # Agent metadata
+├── app/
+│   ├── server.ts             # Custom server setup
+│   ├── agent.ts              # Agent definition
+│   ├── tools/
+│   │   └── lookup.ts         # Example tool
+│   └── icon.png              # Agent icon
+├── package.json
+└── vercel.json
+```
+
+## Custom Server
+
+The `app/server.ts` file gives you full control:
+
+```typescript title="app/server.ts"
+import { AixyzApp } from "aixyz/app";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
+
+import * as agent from "./agent";
+import lookup from "./tools/lookup";
+
+const server = new AixyzApp();
+
+await server.withPlugin(new IndexPagePlugin());
+await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "latestData",
+      exports: {
+        default: lookup,
+        accepts: {
+          scheme: "exact",
+          price: "$0.001",
+        },
+      },
+    },
+  ]),
+);
+
+await server.initialize();
+
+export default server;
+```
+
+## Key Features
+
+- **Manual A2A setup** — `A2APlugin` registers agent card and JSON-RPC endpoint
+- **Manual MCP setup** — `MCPPlugin` registers tools with custom names and pricing
+- **Per-tool pricing** — Set different x402 prices for each MCP tool
+- **Index page** — `IndexPagePlugin` adds a human-readable landing page
+
+## When to Use
+
+Use a custom server when you need to:
+
+- Register MCP tools with custom names or specific pricing
+- Add custom Express middleware or routes
+- Control the order of endpoint registration
+- Integrate additional services (e.g., Stripe, webhooks)
+
+## Running
+
+```bash
+cd examples/with-custom-server
+bun install
+bun run dev
+```

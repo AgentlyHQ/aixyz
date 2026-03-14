@@ -270,20 +270,18 @@ my-agent/
 
 ## Examples
 
-| Example                    | Description                                     |
-| -------------------------- | ----------------------------------------------- |
-| `agent-boilerplate`        | Minimal starter (auto-generated server)         |
-| `agent-price-oracle`       | CoinGecko price feeds                           |
-| `agent-chainlink`          | Chainlink data feeds with custom server         |
-| `agent-job-hunter`         | Remote job search                               |
-| `agent-travel`             | Flight search with Stripe payments              |
-| `agent-local-llm`          | Local LLM via Docker (no external API)          |
-| `agent-byo-facilitator`    | Bring-your-own x402 facilitator                 |
-| `agent-with-custom-server` | Custom server setup                             |
-| `agent-with-express`       | Express middleware integration                  |
-| `agent-with-sub-agents`    | Multiple A2A endpoints from one deployment      |
-| `agent-with-tests`         | Agent with test examples                        |
-| `agent-fake-model`         | Fully deterministic testing with `fake()` model |
+| Example                   | Description                                     |
+| ------------------------- | ----------------------------------------------- |
+| `boilerplate`             | Minimal starter (auto-generated server)         |
+| `chainlink`               | Chainlink data feeds with custom server         |
+| `flight-search`           | Flight search with Stripe payments              |
+| `local-llm`               | Local LLM via Docker (no external API)          |
+| `with-custom-facilitator` | Bring-your-own x402 facilitator                 |
+| `with-custom-server`      | Custom server setup                             |
+| `with-express`            | Express middleware integration                  |
+| `sub-agents`              | Multiple A2A endpoints from one deployment      |
+| `with-tests`              | Agent with test examples                        |
+| `fake-llm`                | Fully deterministic testing with `fake()` model |
 
 ## Contributing
 
