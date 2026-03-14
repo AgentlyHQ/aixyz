@@ -207,17 +207,19 @@ type WebpackOptions = {
  * That's it — no route file imports, no plugin wiring, nothing else.
  */
 export function withAixyzConfig(nextConfig: NextConfig = {}): NextConfig {
-  const cwd = process.cwd();
-
-  // Auto-create the catch-all route file if the project doesn't have one yet.
-  ensureRouteFile(cwd);
-
-  // Generate the handler code into .next/cache/ and obtain its absolute path.
-  const generatedRoute = generateAixyzRoute(cwd);
-
   return {
     ...nextConfig,
     webpack(config: WebpackConfig, options: WebpackOptions) {
+      const { dir } = options;
+
+      // Auto-create the catch-all route file if the project doesn't have one yet.
+      // Uses options.dir (the real Next.js project root) rather than process.cwd()
+      // so that this works correctly regardless of where the process is started from.
+      ensureRouteFile(dir);
+
+      // Generate the handler code into .next/cache/ and obtain its absolute path.
+      const generatedRoute = generateAixyzRoute(dir);
+
       // Redirect @aixyz/next/route to the auto-generated handler so that
       // `export ... from "@aixyz/next/route"` picks up the scanned agent/tools.
       config.resolve = {
@@ -242,8 +244,8 @@ export function withAixyzConfig(nextConfig: NextConfig = {}): NextConfig {
  *
  * @internal
  */
-export function ensureRouteFile(cwd: string): void {
-  const routeDir = join(cwd, "app", "api", "[[...route]]");
+export function ensureRouteFile(dir: string): void {
+  const routeDir = join(dir, "app", "api", "[[...route]]");
   const routeFile = join(routeDir, "route.ts");
 
   if (existsSync(routeFile)) return;
@@ -256,7 +258,7 @@ export function ensureRouteFile(cwd: string): void {
 }
 
 /**
- * Scan `<cwd>/app/agent.ts` and `<cwd>/app/tools/*.ts`, generate a self-contained
+ * Scan `<dir>/app/agent.ts` and `<dir>/app/tools/*.ts`, generate a self-contained
  * route handler module in `.next/cache/aixyz/route.mjs`, and return its absolute path.
  *
  * The generated `.mjs` file is plain JavaScript ESM that imports directly from the
@@ -267,14 +269,14 @@ export function ensureRouteFile(cwd: string): void {
  *
  * @internal
  */
-export function generateAixyzRoute(cwd: string): string {
-  const appDir = join(cwd, "app");
+export function generateAixyzRoute(dir: string): string {
+  const appDir = join(dir, "app");
   const toolsDir = join(appDir, "tools");
 
   // Locate app/agent.{ts,js}
   const agentFile = ["agent.ts", "agent.js"].map((f) => join(appDir, f)).find(existsSync);
 
-  const cacheDir = join(cwd, ".next", "cache", "aixyz");
+  const cacheDir = join(dir, ".next", "cache", "aixyz");
   mkdirSync(cacheDir, { recursive: true });
 
   const lines: string[] = [

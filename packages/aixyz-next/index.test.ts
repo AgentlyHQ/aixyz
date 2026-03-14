@@ -72,25 +72,34 @@ function makeTempProject(): string {
 
 describe("withAixyzConfig", () => {
   test("returns a config object with a webpack function", () => {
-    const dir = makeTempProject();
-    mkdirSync(join(dir, "app"), { recursive: true });
-
-    // withAixyzConfig runs against process.cwd(); test the returned config shape.
     const config = withAixyzConfig({});
     expect(typeof config).toBe("object");
     expect(typeof config.webpack).toBe("function");
+  });
+
+  test("webpack function creates route file and adds @aixyz/next/route alias", () => {
+    const dir = makeTempProject();
+    mkdirSync(join(dir, "app"), { recursive: true });
+
+    const config = withAixyzConfig({});
+    const webpackConfig: any = { resolve: { alias: {} } };
+    const result = (config.webpack as any)(webpackConfig, { isServer: true, dir });
+
+    // Alias points to a generated .mjs file
+    expect(typeof result.resolve.alias["@aixyz/next/route"]).toBe("string");
+    expect(result.resolve.alias["@aixyz/next/route"]).toContain("route.mjs");
+
+    // Route file was auto-created
+    const routeFile = join(dir, "app", "api", "[[...route]]", "route.ts");
+    expect(existsSync(routeFile)).toBe(true);
+
     rmSync(dir, { recursive: true, force: true });
   });
 
-  test("webpack function adds @aixyz/next/route alias", () => {
-    const config = withAixyzConfig({});
-    const webpackConfig: any = { resolve: { alias: {} } };
-    const result = (config.webpack as any)(webpackConfig, { isServer: true, dir: process.cwd() });
-    expect(typeof result.resolve.alias["@aixyz/next/route"]).toBe("string");
-    expect(result.resolve.alias["@aixyz/next/route"]).toContain("route.mjs");
-  });
-
   test("webpack function calls through user-provided webpack", () => {
+    const dir = makeTempProject();
+    mkdirSync(join(dir, "app"), { recursive: true });
+
     let called = false;
     const userWebpack = (cfg: any) => {
       called = true;
@@ -98,14 +107,31 @@ describe("withAixyzConfig", () => {
     };
     const config = withAixyzConfig({ webpack: userWebpack });
     const webpackConfig: any = { resolve: { alias: {} } };
-    (config.webpack as any)(webpackConfig, { isServer: true, dir: process.cwd() });
+    (config.webpack as any)(webpackConfig, { isServer: true, dir });
+
     expect(called).toBe(true);
+    rmSync(dir, { recursive: true, force: true });
   });
 
   test("preserves user config keys", () => {
     const config = withAixyzConfig({ reactStrictMode: true, swcMinify: true } as any);
     expect((config as any).reactStrictMode).toBe(true);
     expect((config as any).swcMinify).toBe(true);
+  });
+
+  test("webpack function does not create duplicate aliases when called twice", () => {
+    const dir = makeTempProject();
+    mkdirSync(join(dir, "app"), { recursive: true });
+
+    const config = withAixyzConfig({});
+    const webpackConfig: any = { resolve: { alias: {} } };
+
+    // Simulate webpack calling the function twice (server + client compile)
+    (config.webpack as any)(webpackConfig, { isServer: true, dir });
+    const result = (config.webpack as any)(webpackConfig, { isServer: false, dir });
+
+    expect(typeof result.resolve.alias["@aixyz/next/route"]).toBe("string");
+    rmSync(dir, { recursive: true, force: true });
   });
 });
 
