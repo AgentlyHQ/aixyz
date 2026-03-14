@@ -29,10 +29,13 @@ mock.module("aixyz/accepts", () => ({
   HTTPFacilitatorClient: class {},
 }));
 
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { tool } from "ai";
 import { z } from "zod";
 import { AixyzApp } from "aixyz/app";
-import { createNextHandler, toNextRouteHandler } from "./index";
+import { createNextHandler, ensureRouteFile, generateAixyzRoute, toNextRouteHandler, withAixyzConfig } from "./index";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -55,6 +58,207 @@ function makeMockTool(result = "tool result") {
     execute: async () => result,
   });
 }
+
+/** Create a temp project directory for filesystem tests. */
+function makeTempProject(): string {
+  const dir = join(tmpdir(), `aixyz-next-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  mkdirSync(join(dir, ".next", "cache", "aixyz"), { recursive: true });
+  return dir;
+}
+
+// ---------------------------------------------------------------------------
+// withAixyzConfig — Next.js config wrapper
+// ---------------------------------------------------------------------------
+
+describe("withAixyzConfig", () => {
+  test("returns a config object with a webpack function", () => {
+    const dir = makeTempProject();
+    mkdirSync(join(dir, "app"), { recursive: true });
+
+    // withAixyzConfig runs against process.cwd(); test the returned config shape.
+    const config = withAixyzConfig({});
+    expect(typeof config).toBe("object");
+    expect(typeof config.webpack).toBe("function");
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("webpack function adds @aixyz/next/route alias", () => {
+    const config = withAixyzConfig({});
+    const webpackConfig: any = { resolve: { alias: {} } };
+    const result = (config.webpack as any)(webpackConfig, { isServer: true, dir: process.cwd() });
+    expect(typeof result.resolve.alias["@aixyz/next/route"]).toBe("string");
+    expect(result.resolve.alias["@aixyz/next/route"]).toContain("route.mjs");
+  });
+
+  test("webpack function calls through user-provided webpack", () => {
+    let called = false;
+    const userWebpack = (cfg: any) => {
+      called = true;
+      return cfg;
+    };
+    const config = withAixyzConfig({ webpack: userWebpack });
+    const webpackConfig: any = { resolve: { alias: {} } };
+    (config.webpack as any)(webpackConfig, { isServer: true, dir: process.cwd() });
+    expect(called).toBe(true);
+  });
+
+  test("preserves user config keys", () => {
+    const config = withAixyzConfig({ reactStrictMode: true, swcMinify: true } as any);
+    expect((config as any).reactStrictMode).toBe(true);
+    expect((config as any).swcMinify).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ensureRouteFile — auto-creates app/api/[[...route]]/route.ts
+// ---------------------------------------------------------------------------
+
+describe("ensureRouteFile", () => {
+  test("creates route file when it does not exist", () => {
+    const dir = makeTempProject();
+    mkdirSync(join(dir, "app"), { recursive: true });
+
+    ensureRouteFile(dir);
+
+    const routeFile = join(dir, "app", "api", "[[...route]]", "route.ts");
+    expect(existsSync(routeFile)).toBe(true);
+    const content = readFileSync(routeFile, "utf-8");
+    expect(content).toContain("@aixyz/next/route");
+    expect(content).toContain("GET");
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("does not overwrite an existing route file", () => {
+    const dir = makeTempProject();
+    const routeDir = join(dir, "app", "api", "[[...route]]");
+    mkdirSync(routeDir, { recursive: true });
+    const routeFile = join(routeDir, "route.ts");
+    writeFileSync(routeFile, "// custom\n");
+
+    ensureRouteFile(dir);
+
+    expect(readFileSync(routeFile, "utf-8")).toBe("// custom\n");
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateAixyzRoute — scans app/ and emits .next/cache/aixyz/route.mjs
+// ---------------------------------------------------------------------------
+
+describe("generateAixyzRoute", () => {
+  test("generates minimal handler when app/ has no agent or tools", () => {
+    const dir = makeTempProject();
+    mkdirSync(join(dir, "app"), { recursive: true });
+
+    const routePath = generateAixyzRoute(dir);
+
+    expect(existsSync(routePath)).toBe(true);
+    const code = readFileSync(routePath, "utf-8");
+    expect(code).toContain(`import { createNextHandler } from "@aixyz/next"`);
+    expect(code).toContain("GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS");
+    expect(code).not.toContain("__agent");
+    expect(code).not.toContain("__tool_");
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("includes agent import when app/agent.ts exists", () => {
+    const dir = makeTempProject();
+    const appDir = join(dir, "app");
+    mkdirSync(appDir, { recursive: true });
+    writeFileSync(join(appDir, "agent.ts"), "export default {}; export const accepts = { scheme: 'free' };");
+
+    const routePath = generateAixyzRoute(dir);
+    const code = readFileSync(routePath, "utf-8");
+
+    expect(code).toContain("import * as __agent");
+    expect(code).toContain("agent.ts");
+    expect(code).toContain("agent: __agent");
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("includes agent import when app/agent.js exists", () => {
+    const dir = makeTempProject();
+    const appDir = join(dir, "app");
+    mkdirSync(appDir, { recursive: true });
+    writeFileSync(join(appDir, "agent.js"), "exports.default = {};");
+
+    const routePath = generateAixyzRoute(dir);
+    const code = readFileSync(routePath, "utf-8");
+
+    expect(code).toContain("agent.js");
+    expect(code).toContain("agent: __agent");
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("includes tool imports when app/tools/*.ts exist", () => {
+    const dir = makeTempProject();
+    const toolsDir = join(dir, "app", "tools");
+    mkdirSync(toolsDir, { recursive: true });
+    writeFileSync(join(toolsDir, "weather.ts"), "export default {};");
+    writeFileSync(join(toolsDir, "search.ts"), "export default {};");
+
+    const routePath = generateAixyzRoute(dir);
+    const code = readFileSync(routePath, "utf-8");
+
+    expect(code).toContain("__tool_weather");
+    expect(code).toContain("__tool_search");
+    expect(code).toContain(`name: "weather"`);
+    expect(code).toContain(`name: "search"`);
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("skips tool files starting with underscore", () => {
+    const dir = makeTempProject();
+    const toolsDir = join(dir, "app", "tools");
+    mkdirSync(toolsDir, { recursive: true });
+    writeFileSync(join(toolsDir, "weather.ts"), "export default {};");
+    writeFileSync(join(toolsDir, "_private.ts"), "export default {};");
+    writeFileSync(join(toolsDir, "_helper.ts"), "export default {};");
+
+    const routePath = generateAixyzRoute(dir);
+    const code = readFileSync(routePath, "utf-8");
+
+    expect(code).toContain("__tool_weather");
+    expect(code).not.toContain("_private");
+    expect(code).not.toContain("_helper");
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("generated code uses correct tool names for kebab-case files", () => {
+    const dir = makeTempProject();
+    const toolsDir = join(dir, "app", "tools");
+    mkdirSync(toolsDir, { recursive: true });
+    writeFileSync(join(toolsDir, "get-weather.ts"), "export default {};");
+
+    const routePath = generateAixyzRoute(dir);
+    const code = readFileSync(routePath, "utf-8");
+
+    // Identifier uses underscores; name stays kebab-case
+    expect(code).toContain("__tool_get_weather");
+    expect(code).toContain(`name: "get-weather"`);
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("generated file is written to .next/cache/aixyz/route.mjs", () => {
+    const dir = makeTempProject();
+    mkdirSync(join(dir, "app"), { recursive: true });
+
+    const routePath = generateAixyzRoute(dir);
+
+    expect(routePath).toContain(join(".next", "cache", "aixyz", "route.mjs"));
+    expect(existsSync(routePath)).toBe(true);
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
 
 // ---------------------------------------------------------------------------
 // createNextHandler — the high-level "magical" API

@@ -19,7 +19,8 @@
   "author": "AgentlyHQ",
   "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./route": "./route.ts"
   },
   "files": [
     "**/*.ts",
