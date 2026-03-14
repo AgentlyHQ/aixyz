@@ -88,6 +88,7 @@ docker run -p 3000:3000 \
 | ---------- | ------------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
 | Standalone | (default)                       | `.aixyz/output/server.js` | Single-file bundle, run with `bun`                                                |
 | Vercel     | `VERCEL=1` or `--output vercel` | `.vercel/output/`         | [Build Output API v3](https://vercel.com/docs/build-output-api/v3) for serverless |
+| Executable | `--output executable`           | `.aixyz/output/server`    | Self-contained binary, no Bun runtime required                                    |
 
 ## Verifying Your Deployment
 

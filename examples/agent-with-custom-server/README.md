@@ -44,13 +44,20 @@ export default tool({ ... });
 
 ```ts
 // app/server.ts
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
 import lookup from "./tools/lookup";
 
-const mcp = new AixyzMCP(server);
-await mcp.register("latestData", {
-  default: lookup,
-  accepts: { scheme: "exact", price: "$0.001" },
-});
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "latestData",
+      exports: {
+        default: lookup,
+        accepts: { scheme: "exact", price: "$0.001" },
+      },
+    },
+  ]),
+);
 ```
 
 ## Setup

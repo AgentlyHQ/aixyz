@@ -106,7 +106,8 @@ const AixyzConfigSchema = z.object({
         return `https://${process.env.VERCEL_URL}/`;
       }
 
-      return `http://localhost:3000/`;
+      const port = process.env.PORT || 3000;
+      return `http://localhost:${port}/`;
     })
     .pipe(z.url()),
   x402: z.object({

@@ -70,16 +70,16 @@ curl -X POST http://localhost:3000/agent \
   }'
 ```
 
-## Using the A2A Adapter
+## Using the A2A Plugin
 
-The `useA2A` function wires up both endpoints on your server:
+The `A2APlugin` wires up both endpoints on your server:
 
 ```typescript
-import { useA2A } from "aixyz/server/adapters/a2a";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
 
 // agentExports is `import * as agent from "./agent"`
 // reads both `default` (the ToolLoopAgent) and `accepts` (payment config)
-useA2A(server, agent);
+await server.withPlugin(new A2APlugin(agent));
 ```
 
 This registers:
@@ -95,9 +95,9 @@ Pass an optional `prefix` argument to mount a sub-agent under its own path:
 import * as research from "./agents/research";
 import * as implement from "./agents/implement";
 
-useA2A(server, agent); // → /agent
-useA2A(server, research, "research"); // → /research/agent
-useA2A(server, implement, "implement"); // → /implement/agent
+await server.withPlugin(new A2APlugin(agent)); // → /agent
+await server.withPlugin(new A2APlugin(research, "research")); // → /research/agent
+await server.withPlugin(new A2APlugin(implement, "implement")); // → /implement/agent
 ```
 
 Each sub-agent gets its own agent card at `/{prefix}/.well-known/agent-card.json` and its own JSON-RPC endpoint at `/{prefix}/agent`. When using `app/agents/`, the build pipeline generates these calls automatically.

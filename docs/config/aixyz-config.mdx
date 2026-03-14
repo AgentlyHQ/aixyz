@@ -62,9 +62,9 @@ export default config;
 
 If `url` is omitted, it is auto-detected in the following order:
 
-1. `https://${VERCEL_PROJECT_PRODUCTION_URL}` (Vercel production)
-2. `https://${VERCEL_URL}` (Vercel preview)
-3. `http://localhost:3000` (fallback)
+1. `https://${VERCEL_PROJECT_PRODUCTION_URL}/` (when `VERCEL_ENV` is `"production"`)
+2. `https://${VERCEL_URL}/` (Vercel preview/other environments)
+3. `http://localhost:${PORT}/` (fallback, default port 3000)
 
 ## Payment Networks
 

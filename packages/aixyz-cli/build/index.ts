@@ -63,21 +63,21 @@ export async function action(options: BuildOptions = {}): Promise<void> {
   const config = getAixyzConfig();
   const target = options.output ?? config.build?.output ?? (process.env.VERCEL === "1" ? "vercel" : "standalone");
   const appDir = options.appDir || "app";
-  const entrypoint = getEntrypointMayGenerate(cwd, appDir, "build");
+  const { path: entrypoint, isCustom } = getEntrypointMayGenerate(cwd, appDir, "build");
 
   if (target === "vercel") {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Vercel") + "...");
-    await buildVercel(entrypoint, config);
+    await buildVercel(entrypoint, config, isCustom);
   } else if (target === "executable") {
     console.log(chalk.cyan("▶") + " Building " + chalk.bold("Executable") + "...");
-    await buildExecutable(entrypoint);
+    await buildExecutable(entrypoint, isCustom);
   } else {
     console.log(chalk.cyan("▶") + " Building for " + chalk.bold("Standalone") + "...");
-    await buildBun(entrypoint);
+    await buildBun(entrypoint, isCustom);
   }
 }
 
-async function buildBun(entrypoint: string): Promise<void> {
+async function buildBun(entrypoint: string, isCustom: boolean): Promise<void> {
   const cwd = process.cwd();
 
   const outputDir = resolve(cwd, ".aixyz/output");
@@ -96,7 +96,7 @@ async function buildBun(entrypoint: string): Promise<void> {
       "process.env.NODE_ENV": JSON.stringify("production"),
       "process.env.AIXYZ_ENV": JSON.stringify("production"),
     },
-    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "standalone")],
+    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "standalone", isCustom)],
   });
 
   if (!result.success) {
@@ -136,7 +136,7 @@ async function buildBun(entrypoint: string): Promise<void> {
   console.log("To run: bun .aixyz/output/server.js");
 }
 
-async function buildExecutable(entrypoint: string): Promise<void> {
+async function buildExecutable(entrypoint: string, isCustom: boolean): Promise<void> {
   const cwd = process.cwd();
 
   const outputDir = resolve(cwd, ".aixyz/output");
@@ -156,7 +156,7 @@ async function buildExecutable(entrypoint: string): Promise<void> {
       "process.env.NODE_ENV": JSON.stringify("production"),
       "process.env.AIXYZ_ENV": JSON.stringify("production"),
     },
-    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "executable")],
+    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "executable", isCustom)],
   });
 
   if (!result.success) {
@@ -192,7 +192,11 @@ async function buildExecutable(entrypoint: string): Promise<void> {
   console.log("To run: ./.aixyz/output/server");
 }
 
-async function buildVercel(entrypoint: string, config: ReturnType<typeof getAixyzConfig>): Promise<void> {
+async function buildVercel(
+  entrypoint: string,
+  config: ReturnType<typeof getAixyzConfig>,
+  isCustom: boolean,
+): Promise<void> {
   const cwd = process.cwd();
 
   const outputDir = resolve(cwd, ".vercel/output");
@@ -213,7 +217,7 @@ async function buildVercel(entrypoint: string, config: ReturnType<typeof getAixy
       "process.env.NODE_ENV": JSON.stringify("production"),
       "process.env.AIXYZ_ENV": JSON.stringify("production"),
     },
-    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "vercel")],
+    plugins: [AixyzConfigPlugin(), AixyzServerPlugin(entrypoint, "vercel", isCustom)],
   });
 
   if (!result.success) {

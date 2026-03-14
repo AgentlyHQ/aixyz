@@ -1,0 +1,103 @@
+---
+title: "Express Integration Agent"
+description: "Template demonstrating mounting AixyzApp as Express middleware"
+---
+
+<Info>
+  **Source:** [`examples/agent-with-express`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/agent-with-express)
+</Info>
+
+## Overview
+
+This template demonstrates how to mount an `AixyzApp` on an Express server using the `toExpressMiddleware` adapter. Your own Express routes coexist alongside A2A, MCP, and x402 endpoints without conflict.
+
+## Project Structure
+
+```
+agent-with-express/
+├── aixyz.config.ts           # Agent metadata
+├── app/
+│   ├── server.ts             # Express + AixyzApp setup
+│   ├── server.test.ts        # End-to-end tests with testcontainers
+│   ├── agent.ts              # Agent definition
+│   ├── accepts.ts            # Custom x402 facilitator
+│   ├── tools/
+│   │   ├── temperature.ts    # Free tool
+│   │   └── premium-temperature.ts  # Paid tool
+│   └── icon.png              # Agent icon
+├── package.json
+└── vercel.json
+```
+
+## Custom Server
+
+The `app/server.ts` creates an Express app and mounts AixyzApp as middleware:
+
+```typescript title="app/server.ts"
+import express from "express";
+import { AixyzApp } from "aixyz/app";
+import { toExpressMiddleware } from "aixyz/app/adapters/express";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
+
+import { facilitator } from "./accepts";
+import * as agent from "./agent";
+import * as convertTemperature from "./tools/temperature";
+import * as premiumTemperature from "./tools/premium-temperature";
+
+// 1. Create AixyzApp with plugins
+const app = new AixyzApp(facilitator ? { facilitators: facilitator } : undefined);
+await app.withPlugin(new IndexPagePlugin());
+await app.withPlugin(new A2APlugin(agent));
+await app.withPlugin(
+  new MCPPlugin([
+    { name: "convertTemperature", exports: convertTemperature },
+    { name: "premiumTemperature", exports: premiumTemperature },
+  ]),
+);
+await app.initialize();
+
+// 2. Mount on Express
+const expressApp = express();
+
+// Custom Express routes
+expressApp.get("/health", (_req, res) => res.json({ status: "ok" }));
+expressApp.post("/echo", express.json(), (req, res) => res.json(req.body));
+
+// Mount AixyzApp — do NOT use express.json() before this
+expressApp.use(toExpressMiddleware(app));
+
+// 3. Start server
+const port = parseInt(process.env.PORT || "3000", 10);
+expressApp.listen(port);
+```
+
+## Key Features
+
+- **Express + AixyzApp coexistence** — Your own Express routes alongside A2A/MCP/x402
+- **`toExpressMiddleware` adapter** — Bridges web-standard `Request`/`Response` to Express middleware
+- **Mixed tool pricing** — Free and paid tools on the same MCP endpoint
+- **Custom facilitator** — BYO x402 facilitator via `app/accepts.ts`
+- **End-to-end tests** — Full payment flow tests using testcontainers
+
+<Warning>
+  Do not apply `express.json()` or other body-parsing middleware before `toExpressMiddleware`, as it needs access to the
+  raw request body stream.
+</Warning>
+
+## When to Use
+
+Use Express integration when you need to:
+
+- Add AixyzApp to an existing Express application
+- Mix custom REST endpoints with A2A/MCP protocol endpoints
+- Use Express-specific middleware for some routes
+
+## Running
+
+```bash
+cd examples/agent-with-express
+bun install
+bun run dev
+```

@@ -29,18 +29,18 @@ bun run dev
 
 ## Environment Variables
 
-| Variable                 | Description                        | Default                          |
-| ------------------------ | ---------------------------------- | -------------------------------- |
-| `OPENAI_API_KEY`         | OpenAI API key for GPT-4o-mini     | Required                         |
-| `PORT`                   | Server port                        | 3000                             |
-| `AGENT_URL`              | Public URL of the agent            | http://localhost:3000/           |
-| **x402 (Crypto)**        |                                    |                                  |
-| `X402_PAY_TO`            | Address to receive payments        | Required                         |
-| `X402_NETWORK`           | Blockchain network for payments    | eip155:84532                     |
-| `X402_FACILITATOR_URL`   | x402 facilitator URL               | https://www.x402.org/facilitator |
-| **Stripe (Credit Card)** |                                    |                                  |
-| `STRIPE_SECRET_KEY`      | Stripe secret key (enables Stripe) | -                                |
-| `STRIPE_PRICE_CENTS`     | Price per request in cents         | 100                              |
+| Variable                 | Description                        | Default                                  |
+| ------------------------ | ---------------------------------- | ---------------------------------------- |
+| `OPENAI_API_KEY`         | OpenAI API key for GPT-4o-mini     | Required                                 |
+| `PORT`                   | Server port                        | 3000                                     |
+| `AGENT_URL`              | Public URL of the agent            | http://localhost:3000/                   |
+| **x402 (Crypto)**        |                                    |                                          |
+| `X402_PAY_TO`            | Address to receive payments        | Required                                 |
+| `X402_NETWORK`           | Blockchain network for payments    | eip155:84532                             |
+| `X402_FACILITATOR_URL`   | x402 facilitator URL               | https://x402.use-agently.com/facilitator |
+| **Stripe (Credit Card)** |                                    |                                          |
+| `STRIPE_SECRET_KEY`      | Stripe secret key (enables Stripe) | -                                        |
+| `STRIPE_PRICE_CENTS`     | Price per request in cents         | 100                                      |
 
 ## API Endpoints
 

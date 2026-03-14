@@ -55,14 +55,14 @@ bun run build  # → aixyz build (bundles for deployment)
 
 ### Packages (`packages/*`)
 
-| Package            | npm name           | Description                                                                  |
-| ------------------ | ------------------ | ---------------------------------------------------------------------------- |
-| `aixyz`            | `aixyz`            | Main framework: server, adapters (A2A, MCP), x402 integration, Express-based |
-| `aixyz-cli`        | `@aixyz/cli`       | CLI: `dev`, `build`, `erc8004 register`, `erc8004 set-agent-uri`             |
-| `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files             |
-| `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                          |
-| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                                |
-| `aixyz-erc-8004`   | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, addresses, Zod schemas                               |
+| Package            | npm name           | Description                                                                |
+| ------------------ | ------------------ | -------------------------------------------------------------------------- |
+| `aixyz`            | `aixyz`            | Main framework: server, plugins (A2A, MCP), x402 integration, web-standard |
+| `aixyz-cli`        | `@aixyz/cli`       | CLI: `dev`, `build`, `erc-8004 register`, `erc-8004 update`                |
+| `aixyz-config`     | `@aixyz/config`    | Zod-validated config loading from `aixyz.config.ts` + .env files           |
+| `aixyz-stripe`     | `@aixyz/stripe`    | Experimental Stripe payment adapter                                        |
+| `create-aixyz-app` | `create-aixyz-app` | Project scaffolding (`bunx create-aixyz-app`)                              |
+| `aixyz-erc-8004`   | `@aixyz/erc-8004`  | ERC-8004 contract ABIs, addresses, Zod schemas                             |
 
 ### Examples (`examples/*`)
 
@@ -86,7 +86,7 @@ Mintlify documentation site (`mint dev` to preview locally). Structure:
 
 - `docs/getting-started/` — Installation, project structure, why Bun, agent and tools, payments (x402), deploying, testing
 - `docs/config/` — aixyz.config.ts reference, environment variables
-- `docs/api-reference/` — File-system conventions (agent.ts, agent.test.ts, tools/) and Functions (AixyzServer, useA2A, AixyzMCP, loadEnv, Accepts)
+- `docs/api-reference/` — File-system conventions (agent.ts, agent.test.ts, tools/) and Functions (AixyzApp, A2APlugin, MCPPlugin, loadEnv, Accepts)
 - `docs/protocols/` — A2A, MCP, x402, ERC-8004 (collapsed under Documentation tab)
 - `docs/packages/` — Package reference docs (collapsed under Documentation tab)
 - `docs/templates/` — Individual pages for each example template (separate Templates tab)
@@ -95,7 +95,7 @@ Mintlify documentation site (`mint dev` to preview locally). Structure:
 Protocols and Packages are groups within the Documentation tab (not separate tabs).
 Templates have their own tab with one page per example.
 
-Each `docs/templates/<name>.mdx` is a symlink to `examples/agent-*/TEMPLATE.mdx` (canonical files live in examples).
+Each `docs/templates/<name>.mdx` documents the corresponding `examples/agent-*/` example.
 
 ### Other
 
@@ -116,21 +116,26 @@ The `aixyz build` command in `packages/aixyz-cli/build/index.ts`:
 4. Output format:
    - **Vercel** (when `VERCEL=1` or `--output vercel`): `.vercel/output/` Build Output API v3
    - **Standalone** (default): `.aixyz/output/server.js`
+   - **Executable** (`--output executable`): `.aixyz/output/server` self-contained binary
 
 The `aixyz dev` command spawns a Bun worker process with file watching on `app/` and `aixyz.config.ts` (100ms debounce).
 
-### Server class hierarchy
+### Server architecture
 
-`AixyzServer` extends `x402ResourceServer` (from `@x402/express`), which wraps Express 5. Key methods:
+`AixyzApp` is a framework-agnostic server built on web-standard `Request`/`Response`. It uses a `PaymentGateway` for x402 payment verification (composition, not inheritance). Key methods:
 
-- `withX402Exact()` — Register payment-gated routes
-- `unstable_withIndexPage()` — Human-readable agent info page
+- `route()` — Register a route with an optional x402 payment requirement
+- `fetch()` — Dispatch a web-standard Request through payment verification, middleware, and route handler
+- `withPlugin()` — Register plugins (A2APlugin, MCPPlugin, IndexPagePlugin, etc.)
+- `use()` — Append middleware to the chain
 
-### Protocol adapters (`packages/aixyz/server/adapters/`)
+### Protocol adapters (`packages/aixyz/app/plugins/`)
 
-- **`a2a.ts`** — `useA2A(server, agent)`: Generates agent card at `/.well-known/agent-card.json`, JSON-RPC endpoint at
+- **`a2a.ts`** — `A2APlugin`: Generates agent card at `/.well-known/agent-card.json`, JSON-RPC endpoint at
   `/agent`
-- **`mcp.ts`** — `AixyzMCP`: Exposes tools at `/mcp` via `StreamableHTTPServerTransport`
+- **`mcp.ts`** — `MCPPlugin`: Exposes tools at `/mcp` via `WebStandardStreamableHTTPServerTransport`
+- **`index-page.ts`** — `IndexPagePlugin`: Human-readable agent info page
+- **`erc-8004.ts`** — `ERC8004Plugin`: Serves ERC-8004 identity at `/.well-known/erc-8004.json` and `/_aixyz/erc-8004.json`
 
 ### Config loading (`@aixyz/config`)
 
@@ -158,7 +163,7 @@ Agents/tools without `accepts` are not registered on payment-gated endpoints.
 
 ```
 aixyz → @aixyz/cli → @aixyz/config
-     → @a2a-js/sdk, @modelcontextprotocol/sdk, @x402/*, express, zod
+     → @a2a-js/sdk, @modelcontextprotocol/sdk, @x402/*, zod
      → ai (optional peer dep, Vercel AI SDK v6)
 ```
 

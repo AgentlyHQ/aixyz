@@ -6,14 +6,16 @@ import {
   StrictAgentRegistrationFile,
   StrictAgentRegistrationFileSchema,
 } from "@aixyz/erc-8004/schemas/registration";
-import { AixyzServer } from "../index";
+import { BasePlugin } from "../plugin";
+import type { AixyzApp } from "../index";
 
+/**
+ * Build an ERC-8004 agent registration file by merging user-provided data with
+ * runtime config defaults (name, description, image, services, etc.).
+ */
 export function getAgentRegistrationFile(
   data: unknown,
-  options: {
-    mcp: boolean;
-    a2a: string[];
-  },
+  options: { mcp: boolean; a2a: string[] },
 ): StrictAgentRegistrationFile {
   const config = getAixyzConfigRuntime();
   const services: StrictAgentRegistrationFile["services"] = [];
@@ -47,25 +49,18 @@ export function getAgentRegistrationFile(
   return withDefault.parse(data);
 }
 
-export function useERC8004(
-  server: AixyzServer,
-  exports: {
-    default: unknown;
-    options: {
-      mcp: boolean;
-      a2a: string[];
-    };
-  },
-): void {
-  const file = getAgentRegistrationFile(exports.default, exports.options);
+/** ERC-8004 identity plugin. Registers `/.well-known/erc-8004.json` and `/_aixyz/erc-8004.json` routes. */
+export class ERC8004Plugin extends BasePlugin {
+  readonly name = "erc-8004";
 
-  // GET /_aixyz/erc-8004.json
-  server.express.get("/_aixyz/erc-8004.json", (_req, res) => {
-    res.json(file);
-  });
+  constructor(private exports: { default: unknown; options: { mcp: boolean; a2a: string[] } }) {
+    super();
+  }
 
-  // GET /.well-known/erc-8004.json
-  server.express.get("/.well-known/erc-8004.json", (_req, res) => {
-    res.json(file);
-  });
+  register(app: AixyzApp): void {
+    const file = getAgentRegistrationFile(this.exports.default, this.exports.options);
+
+    app.route("GET", "/.well-known/erc-8004.json", () => Response.json(file));
+    app.route("GET", "/_aixyz/erc-8004.json", () => Response.json(file));
+  }
 }

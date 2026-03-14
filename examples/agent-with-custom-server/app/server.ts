@@ -1,34 +1,41 @@
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
-import { AixyzServer } from "aixyz/server";
-import { useA2A } from "aixyz/server/adapters/a2a";
-import { useERC8004 } from "aixyz/server/adapters/erc-8004";
+import { AixyzApp } from "aixyz/app";
+
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
+import { ERC8004Plugin } from "aixyz/app/plugins/erc-8004";
+import { facilitator } from "aixyz/accepts";
 
 import * as agent from "./agent";
 import lookup from "./tools/lookup";
 import erc8004 from "./erc-8004";
 
-const server = new AixyzServer();
-await server.initialize();
-server.unstable_withIndexPage();
+const app = new AixyzApp({ facilitators: facilitator });
+await app.withPlugin(new IndexPagePlugin());
+await app.withPlugin(new A2APlugin(agent));
+await app.withPlugin(
+  new MCPPlugin([
+    {
+      name: "latestData",
+      exports: {
+        default: lookup,
+        accepts: {
+          scheme: "exact",
+          price: "$0.001",
+        },
+      },
+    },
+  ]),
+);
+await app.withPlugin(
+  new ERC8004Plugin({
+    default: erc8004,
+    options: {
+      a2a: ["/.well-known/agent-card.json"],
+      mcp: true,
+    },
+  }),
+);
+await app.initialize();
 
-useA2A(server, agent);
-
-const mcp = new AixyzMCP(server);
-await mcp.register("latestData", {
-  default: lookup,
-  accepts: {
-    scheme: "exact",
-    price: "$0.001",
-  },
-});
-await mcp.connect();
-
-useERC8004(server, {
-  default: erc8004,
-  options: {
-    a2a: ["/.well-known/agent-card.json"],
-    mcp: true,
-  },
-});
-
-export default server;
+export default app;

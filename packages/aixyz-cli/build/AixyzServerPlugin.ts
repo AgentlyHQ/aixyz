@@ -1,9 +1,13 @@
 import type { BunPlugin } from "bun";
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "fs";
 import { resolve, relative, join } from "path";
 import { getAixyzConfig } from "@aixyz/config";
 
-export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalone" | "executable"): BunPlugin {
+export function AixyzServerPlugin(
+  entrypoint: string,
+  mode: "vercel" | "standalone" | "executable",
+  isCustom = false,
+): BunPlugin {
   return {
     name: "aixyz-entrypoint",
     setup(build) {
@@ -12,44 +16,58 @@ export function AixyzServerPlugin(entrypoint: string, mode: "vercel" | "standalo
 
         const source = await Bun.file(args.path).text();
 
-        if (mode === "vercel") {
-          // For Vercel, export server.express for serverless function
-          const transformed = source.replace(/export\s+default\s+(\w+)\s*;/, "export default $1.express;");
-          return { contents: transformed, loader: "ts" };
-        } else {
-          // For standalone and executable, keep the server export but add startup code
-          // TODO(@fuxingloh): use Bun.serve later.
-          const transformed = source.replace(
-            /export\s+default\s+(\w+)\s*;/,
-            `export default $1;
-
-// Auto-start server when run directly
-if (import.meta.main) {
-  const port = parseInt(process.env.PORT || "3000", 10);
-  $1.express.listen(port, () => {
-    console.log(\`Server listening on port \${port}\`);
-  });
-}`,
-          );
-          return { contents: transformed, loader: "ts" };
+        // Custom server.ts manages its own lifecycle — pass through as-is
+        if (isCustom || mode === "vercel") {
+          return { contents: source, loader: "ts" };
         }
+
+        // For generated entrypoints in standalone/executable, rewrite `export default ...` into Bun.serve().
+        // Supports both identifier exports (`export default app;`) and
+        // expression exports (`export default new AixyzApp({...});`).
+        const identifierRe = /export\s+default\s+(\w+)\s*;/;
+        const expressionRe = /export\s+default\s+/;
+
+        let transformed: string;
+        const identifierMatch = source.match(identifierRe);
+        if (identifierMatch) {
+          transformed = source.replace(
+            identifierRe,
+            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: ${identifierMatch[1]}.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`,
+          );
+        } else if (expressionRe.test(source)) {
+          transformed = source.replace(expressionRe, `const __app = `);
+          transformed += `\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: __app.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`;
+        } else {
+          throw new Error(
+            `[aixyz] Could not find \`export default\` in entrypoint ${args.path}. ` +
+              `Standalone and executable builds require the server entrypoint to use \`export default app;\` ` +
+              `or \`export default new AixyzApp({...});\`.`,
+          );
+        }
+        return { contents: transformed, loader: "ts" };
       });
     },
   };
 }
 
-export function getEntrypointMayGenerate(cwd: string, appDirName: string, mode: "dev" | "build"): string {
-  const appDir = resolve(cwd, appDirName);
+export type Entrypoint = { path: string; isCustom: boolean };
 
-  if (existsSync(resolve(appDir, "server.ts"))) {
-    return resolve(appDir, "server.ts");
+export function getEntrypointMayGenerate(cwd: string, appDirName: string, mode: "dev" | "build"): Entrypoint {
+  const appDir = resolve(cwd, appDirName);
+  const serverFile = resolve(appDir, "server.ts");
+
+  if (existsSync(serverFile)) {
+    const source = readFileSync(serverFile, "utf-8");
+    // assume that export default has `.fetch` typically `app`
+    const hasExportDefault = /export\s+default\s+/.test(source);
+    return { path: serverFile, isCustom: !hasExportDefault };
   }
 
   const devDir = resolve(cwd, join(".aixyz", mode));
   mkdirSync(devDir, { recursive: true });
   const entrypoint = resolve(devDir, "server.ts");
   writeFileSync(entrypoint, generateServer(appDir, devDir));
-  return entrypoint;
+  return { path: entrypoint, isCustom: false };
 }
 
 class AixyzGlob {
@@ -109,7 +127,8 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const imports: string[] = [];
   const body: string[] = [];
 
-  imports.push('import { AixyzServer } from "aixyz/server";');
+  imports.push('import { AixyzApp } from "aixyz/app";');
+  imports.push('import { IndexPagePlugin } from "aixyz/app/plugins/index-page";');
 
   const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
   if (hasAccepts) {
@@ -119,16 +138,15 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   const rootAgent = glob.hasRootAgent(appDir);
-  if (rootAgent) {
-    imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
-    imports.push(`import * as agent from "${importPrefix}/agent";`);
-  }
-
   const agentsDir = resolve(appDir, "agents");
   const subAgents = glob.getAgents(agentsDir);
+  const needsA2A = rootAgent || subAgents.length > 0;
 
-  if (!rootAgent && subAgents.length > 0) {
-    imports.push('import { useA2A } from "aixyz/server/adapters/a2a";');
+  if (needsA2A) {
+    imports.push('import { A2APlugin } from "aixyz/app/plugins/a2a";');
+  }
+  if (rootAgent) {
+    imports.push(`import * as agent from "${importPrefix}/agent";`);
   }
   for (const subAgent of subAgents) {
     imports.push(`import * as ${subAgent.identifier} from "${importPrefix}/agents/${subAgent.name}";`);
@@ -138,45 +156,49 @@ function generateServer(appDir: string, entrypointDir: string): string {
   const tools = glob.getTools(toolsDir);
 
   if (tools.length > 0) {
-    imports.push('import { AixyzMCP } from "aixyz/server/adapters/mcp";');
+    imports.push('import { MCPPlugin } from "aixyz/app/plugins/mcp";');
     for (const tool of tools) {
       imports.push(`import * as ${tool.identifier} from "${importPrefix}/tools/${tool.name}";`);
     }
   }
 
-  body.push("const server = new AixyzServer(facilitator);");
-  body.push("await server.initialize();");
-  body.push("server.unstable_withIndexPage();");
-
-  if (rootAgent) {
-    body.push("useA2A(server, agent);");
-  }
-
-  for (const subAgent of subAgents) {
-    body.push(`useA2A(server, ${subAgent.identifier}, "${subAgent.name}");`);
-  }
-  if (tools.length > 0) {
-    body.push("const mcp = new AixyzMCP(server);");
-    for (const tool of tools) {
-      body.push(`await mcp.register("${tool.name}", ${tool.identifier});`);
-    }
-    body.push("await mcp.connect();");
-  }
-
   // If app/erc-8004.ts exists, auto-register ERC-8004 endpoint
   const hasErc8004 = existsSync(resolve(appDir, "erc-8004.ts"));
   if (hasErc8004) {
-    imports.push('import { useERC8004 } from "aixyz/server/adapters/erc-8004";');
+    imports.push('import { ERC8004Plugin } from "aixyz/app/plugins/erc-8004";');
     imports.push(`import * as erc8004 from "${importPrefix}/erc-8004";`);
+  }
+
+  body.push("const app = new AixyzApp({ facilitators: facilitator });");
+  body.push("await app.withPlugin(new IndexPagePlugin());");
+
+  if (rootAgent) {
+    body.push("await app.withPlugin(new A2APlugin(agent));");
+  }
+  for (const subAgent of subAgents) {
+    body.push(`await app.withPlugin(new A2APlugin(${subAgent.identifier}, "${subAgent.name}"));`);
+  }
+
+  if (tools.length > 0) {
+    const toolEntries = tools.map((tool) => `  { name: "${tool.name}", exports: ${tool.identifier} },`);
+    body.push(`await app.withPlugin(new MCPPlugin([`);
+    for (const entry of toolEntries) {
+      body.push(entry);
+    }
+    body.push(`]));`);
+  }
+
+  if (hasErc8004) {
     const a2aPaths: string[] = [];
     if (rootAgent) a2aPaths.push("/.well-known/agent-card.json");
     for (const subAgent of subAgents) a2aPaths.push(`/${subAgent.name}/.well-known/agent-card.json`);
     body.push(
-      `useERC8004(server, { default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } });`,
+      `await app.withPlugin(new ERC8004Plugin({ default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } }));`,
     );
   }
 
-  body.push("export default server;");
+  body.push("await app.initialize();");
+  body.push("export default app;");
 
   return [...imports, "", ...body].join("\n");
 }

@@ -32,38 +32,44 @@ agent-with-custom-server/
 The `app/server.ts` file gives you full control:
 
 ```typescript title="app/server.ts"
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
-import { AixyzServer } from "aixyz/server";
-import { useA2A } from "aixyz/server/adapters/a2a";
+import { AixyzApp } from "aixyz/app";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
 
 import * as agent from "./agent";
 import lookup from "./tools/lookup";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
+
+await server.withPlugin(new IndexPagePlugin());
+await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "latestData",
+      exports: {
+        default: lookup,
+        accepts: {
+          scheme: "exact",
+          price: "$0.001",
+        },
+      },
+    },
+  ]),
+);
+
 await server.initialize();
-server.unstable_withIndexPage();
-
-useA2A(server, agent);
-
-const mcp = new AixyzMCP(server);
-await mcp.register("latestData", {
-  default: lookup,
-  accepts: {
-    scheme: "exact",
-    price: "$0.001",
-  },
-});
-await mcp.connect();
 
 export default server;
 ```
 
 ## Key Features
 
-- **Manual A2A setup** — `useA2A(server, agent)` registers agent card and JSON-RPC endpoint
-- **Manual MCP setup** — Register tools individually with custom names and pricing
+- **Manual A2A setup** — `A2APlugin` registers agent card and JSON-RPC endpoint
+- **Manual MCP setup** — `MCPPlugin` registers tools with custom names and pricing
 - **Per-tool pricing** — Set different x402 prices for each MCP tool
-- **Index page** — `unstable_withIndexPage()` adds a human-readable landing page
+- **Index page** — `IndexPagePlugin` adds a human-readable landing page
 
 ## When to Use
 

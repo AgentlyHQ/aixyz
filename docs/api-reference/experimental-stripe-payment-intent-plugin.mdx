@@ -1,12 +1,12 @@
 ---
-title: "experimental_useStripePaymentIntent"
+title: "experimental_StripePaymentIntentPlugin"
 description: "Add Stripe PaymentIntent-based payments to your agent server"
 ---
 
-Adds Stripe PaymentIntent creation and validation to an `AixyzServer`, providing an alternative payment method alongside [x402](/protocols/x402).
+Adds Stripe PaymentIntent creation and validation to an `AixyzApp`, providing an alternative payment method alongside [x402](/protocols/x402).
 
 ```typescript
-import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
+import { experimental_StripePaymentIntentPlugin } from "@aixyz/stripe";
 ```
 
 <Warning>This API is experimental and may change significantly in future releases.</Warning>
@@ -17,15 +17,11 @@ import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
 bun add @aixyz/stripe
 ```
 
-## Signature
+## Usage
 
 ```typescript
-function experimental_useStripePaymentIntent(app: AixyzServer): void;
+await server.withPlugin(new experimental_StripePaymentIntentPlugin());
 ```
-
-| Parameter | Type          | Description         |
-| --------- | ------------- | ------------------- |
-| `app`     | `AixyzServer` | The server instance |
 
 ## Environment Variables
 
@@ -53,7 +49,7 @@ Creates a new Stripe PaymentIntent for the configured price.
 
 ## Payment Middleware
 
-After calling `experimental_useStripePaymentIntent`, the server checks incoming requests for the `x-stripe-payment-intent-id` header:
+After registering the `experimental_StripePaymentIntentPlugin`, the server checks incoming requests for the `x-stripe-payment-intent-id` header:
 
 1. If the header is present, it validates the PaymentIntent:
    - Status must be `succeeded`
@@ -68,24 +64,27 @@ After calling `experimental_useStripePaymentIntent`, the server checks incoming 
 Use in a [custom server](/api-reference/agent) (`app/server.ts`):
 
 ```typescript title="app/server.ts"
-import { AixyzServer } from "aixyz/server";
-import { useA2A } from "aixyz/server/adapters/a2a";
-import { experimental_useStripePaymentIntent } from "@aixyz/stripe";
+import { AixyzApp } from "aixyz/app";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { experimental_StripePaymentIntentPlugin } from "@aixyz/stripe";
 import * as agent from "./agent";
 
-const server = new AixyzServer();
+const server = new AixyzApp();
+
+await server.withPlugin(new IndexPagePlugin());
+
+// Register Stripe before other plugins so the Stripe middleware runs first
+await server.withPlugin(new experimental_StripePaymentIntentPlugin());
+
+await server.withPlugin(new A2APlugin(agent));
+
 await server.initialize();
-server.unstable_withIndexPage();
-
-// Register Stripe before other routes
-experimental_useStripePaymentIntent(server);
-
-useA2A(server, agent);
 
 export default server;
 ```
 
 <Note>
-  Call `experimental_useStripePaymentIntent` **before** registering A2A or MCP routes so the Stripe middleware runs
+  Register the `experimental_StripePaymentIntentPlugin` **before** A2A or MCP plugins so the Stripe middleware runs
   first. If a valid Stripe payment is found, x402 verification is skipped.
 </Note>

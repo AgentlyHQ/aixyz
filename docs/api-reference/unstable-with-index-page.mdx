@@ -1,27 +1,15 @@
 ---
-title: "unstable_withIndexPage"
+title: "IndexPagePlugin"
 description: "Add a human-readable text page to your agent server"
 ---
 
-Adds a human-readable plain text page to your `AixyzServer` showing agent name, description, version, and skills.
+Adds a human-readable plain text page to your `AixyzApp` showing agent name, description, version, and skills.
 
 ```typescript
-server.unstable_withIndexPage();
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+
+await server.withPlugin(new IndexPagePlugin());
 ```
-
-<Warning>This API is unstable and may change in future releases.</Warning>
-
-## Signature
-
-```typescript
-server.unstable_withIndexPage(path?: string): AixyzServer
-```
-
-| Parameter | Type     | Default | Description                      |
-| --------- | -------- | ------- | -------------------------------- |
-| `path`    | `string` | `"/"`   | Route path (must start with `/`) |
-
-Returns `this` for chaining.
 
 ## Behavior
 
@@ -52,19 +40,18 @@ The output includes:
 
 ## Usage
 
-The auto-generated server calls `unstable_withIndexPage()` automatically at `"/"`. In a custom server, call it explicitly:
+The auto-generated server registers the `IndexPagePlugin` automatically at `"/"`. In a custom server, register it explicitly:
 
 ```typescript title="app/server.ts"
-import { AixyzServer } from "aixyz/server";
+import { AixyzApp } from "aixyz/app";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 
-const server = new AixyzServer();
-await server.initialize();
+const server = new AixyzApp();
 
 // Mount at root (default)
-server.unstable_withIndexPage();
+await server.withPlugin(new IndexPagePlugin());
 
-// Or mount at a custom path
-server.unstable_withIndexPage("/info");
+await server.initialize();
 
 export default server;
 ```

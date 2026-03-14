@@ -117,26 +117,36 @@ That's it. Run `bun run dev` and aixyz auto-generates the server, wires up A2A +
 For full control, create `app/server.ts` instead. This takes precedence over auto-generation:
 
 ```ts
-import { AixyzServer } from "aixyz/server";
-import { useA2A } from "aixyz/server/adapters/a2a";
-import { AixyzMCP } from "aixyz/server/adapters/mcp";
+import { AixyzApp } from "aixyz/app";
+import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
 
 import * as agent from "./agent";
 import lookup from "./tools/lookup";
 
-const server = new AixyzServer();
-await server.initialize();
+const server = new AixyzApp();
+
+// Index page: human-readable agent info
+await server.withPlugin(new IndexPagePlugin());
 
 // A2A: agent discovery + JSON-RPC endpoint
-useA2A(server, agent);
+await server.withPlugin(new A2APlugin(agent));
 
 // MCP: expose tools to MCP clients
-const mcp = new AixyzMCP(server);
-await mcp.register("lookup", {
-  default: lookup,
-  accepts: { scheme: "exact", price: "$0.001" },
-});
-await mcp.connect();
+await server.withPlugin(
+  new MCPPlugin([
+    {
+      name: "lookup",
+      exports: {
+        default: lookup,
+        accepts: { scheme: "exact", price: "$0.001" },
+      },
+    },
+  ]),
+);
+
+await server.initialize();
 
 export default server;
 ```
@@ -151,7 +161,7 @@ export default server;
 | `url`          | `string`       | No       | Agent base URL. Auto-detected on Vercel            |
 | `x402.payTo`   | `string`       | Yes      | EVM address to receive payments                    |
 | `x402.network` | `string`       | Yes      | Payment network (`eip155:8453` for Base)           |
-| `skills`       | `AgentSkill[]` | Yes      | Skills your agent exposes (used in A2A agent card) |
+| `skills`       | `AgentSkill[]` | No       | Skills your agent exposes (used in A2A agent card) |
 
 Environment variables are loaded in the same order as Next.js: `.env`, `.env.local`, `.env.$(NODE_ENV)`,
 `.env.$(NODE_ENV).local`.
@@ -188,11 +198,14 @@ aixyz dev -p 4000  # custom port
 Bundles your agent for deployment. Default output goes to `.aixyz/output/server.js`.
 
 ```bash
-aixyz build                    # standalone (default), outputs to .aixyz/output/server.js
-bun .aixyz/output/server.js    # run the standalone build
+aixyz build                      # standalone (default), outputs to .aixyz/output/server.js
+bun .aixyz/output/server.js      # run the standalone build
 
-aixyz build --output vercel    # Vercel Build Output API v3, outputs to .vercel/output/
-vercel deploy                  # deploy the Vercel build
+aixyz build --output vercel      # Vercel Build Output API v3, outputs to .vercel/output/
+vercel deploy                    # deploy the Vercel build
+
+aixyz build --output executable  # self-contained binary, no Bun runtime required
+./.aixyz/output/server           # run directly
 ```
 
 ### `aixyz erc-8004 register`
@@ -219,7 +232,7 @@ aixyz erc-8004 update --url "https://new-domain.example.com" --broadcast
 `/agent`. Protocol version 0.3.0. Other agents discover yours and send tasks via JSON-RPC.
 
 **MCP (Model Context Protocol)** — Exposes your tools at `/mcp` using
-`StreamableHTTPServerTransport`. Any MCP client (Claude Desktop, VS Code, Cursor) can connect and call your tools.
+`WebStandardStreamableHTTPServerTransport`. Any MCP client (Claude Desktop, VS Code, Cursor) can connect and call your tools.
 
 **x402** — HTTP 402 micropayments. Clients pay per-request with an
 `X-Payment` header containing cryptographic payment proof. No custodial wallets, no subscriptions. Payments are verified on-chain via a facilitator.
@@ -245,28 +258,32 @@ my-agent/
 
 ## Environment Variables
 
-| Variable               | Description                                                      |
-| ---------------------- | ---------------------------------------------------------------- |
-| `X402_PAY_TO`          | Default payment recipient address                                |
-| `X402_NETWORK`         | Default payment network (e.g. `eip155:8453`)                     |
-| `X402_FACILITATOR_URL` | Custom facilitator (default: `https://www.x402.org/facilitator`) |
-| `CDP_API_KEY_ID`       | Coinbase CDP API key ID (uses Coinbase facilitator)              |
-| `CDP_API_KEY_SECRET`   | Coinbase CDP API key secret                                      |
-| `STRIPE_SECRET_KEY`    | Enable experimental Stripe payment adapter                       |
-| `OPENAI_API_KEY`       | OpenAI API key (for agents using OpenAI models)                  |
+| Variable               | Description                                                              |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `X402_PAY_TO`          | Default payment recipient address                                        |
+| `X402_NETWORK`         | Default payment network (e.g. `eip155:8453`)                             |
+| `X402_FACILITATOR_URL` | Custom facilitator (default: `https://x402.use-agently.com/facilitator`) |
+| `CDP_API_KEY_ID`       | Coinbase CDP API key ID (uses Coinbase facilitator)                      |
+| `CDP_API_KEY_SECRET`   | Coinbase CDP API key secret                                              |
+| `STRIPE_SECRET_KEY`    | Enable experimental Stripe payment adapter                               |
+| `OPENAI_API_KEY`       | OpenAI API key (for agents using OpenAI models)                          |
 
 ## Examples
 
-| Example                    | Description                             |
-| -------------------------- | --------------------------------------- |
-| `agent-boilerplate`        | Minimal starter (auto-generated server) |
-| `agent-price-oracle`       | CoinGecko price feeds                   |
-| `agent-chainlink`          | Chainlink data feeds with custom server |
-| `agent-job-hunter`         | Remote job search                       |
-| `agent-travel`             | Flight search with Stripe payments      |
-| `agent-byo-facilitator`    | Bring-your-own x402 facilitator         |
-| `agent-with-custom-server` | Custom server setup                     |
-| `agent-with-tests`         | Agent with test examples                |
+| Example                    | Description                                     |
+| -------------------------- | ----------------------------------------------- |
+| `agent-boilerplate`        | Minimal starter (auto-generated server)         |
+| `agent-price-oracle`       | CoinGecko price feeds                           |
+| `agent-chainlink`          | Chainlink data feeds with custom server         |
+| `agent-job-hunter`         | Remote job search                               |
+| `agent-travel`             | Flight search with Stripe payments              |
+| `agent-local-llm`          | Local LLM via Docker (no external API)          |
+| `agent-byo-facilitator`    | Bring-your-own x402 facilitator                 |
+| `agent-with-custom-server` | Custom server setup                             |
+| `agent-with-express`       | Express middleware integration                  |
+| `agent-with-sub-agents`    | Multiple A2A endpoints from one deployment      |
+| `agent-with-tests`         | Agent with test examples                        |
+| `agent-fake-model`         | Fully deterministic testing with `fake()` model |
 
 ## Contributing
 

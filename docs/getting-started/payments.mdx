@@ -87,11 +87,11 @@ x402: {
 
 Payment verification is handled by a facilitator service:
 
-| Facilitator  | Activation                   | URL                                |
-| ------------ | ---------------------------- | ---------------------------------- |
-| Default      | Always available             | `https://www.x402.org/facilitator` |
-| Coinbase CDP | When `CDP_API_KEY_ID` is set | Auto-configured                    |
-| Custom       | Set `X402_FACILITATOR_URL`   | Your custom URL                    |
+| Facilitator  | Activation                   | URL                                        |
+| ------------ | ---------------------------- | ------------------------------------------ |
+| Default      | Always available             | `https://x402.use-agently.com/facilitator` |
+| Coinbase CDP | When `CDP_API_KEY_ID` is set | Auto-configured                            |
+| Custom       | Set `X402_FACILITATOR_URL`   | Your custom URL                            |
 
 ### Custom Facilitator
 
@@ -101,7 +101,7 @@ Create `app/accepts.ts` to provide a custom facilitator:
 import { HTTPFacilitatorClient } from "aixyz/accepts";
 
 export const facilitator = new HTTPFacilitatorClient({
-  url: process.env.X402_FACILITATOR_URL ?? "https://www.x402.org/facilitator",
+  url: process.env.X402_FACILITATOR_URL ?? "https://x402.use-agently.com/facilitator",
 });
 ```
 
