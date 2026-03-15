@@ -2,18 +2,17 @@ import { describe, expect, test } from "bun:test";
 import {
   ERC8004_REGISTRATION_TYPE,
   AgentRegistrationFileSchema,
-  StrictAgentRegistrationFileSchema,
   TrustMechanismSchema,
   ServiceSchema,
   RegistrationEntrySchema,
-  getServices,
-  hasX402Support,
 } from "./registration";
 
 const minimalValid = {
+  type: ERC8004_REGISTRATION_TYPE,
   name: "Agently Price Feed",
   description: "Real-time cryptocurrency price feed agent with x402 payment support",
   image: "ipfs://QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
+  services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
 };
 
 const fullValid = {
@@ -170,24 +169,9 @@ describe("RawAgentRegistrationFileSchema", () => {
     expect(result.did).toBe("did:pkh:eip155:11155111:0x1234567890abcdef1234567890abcdef12345678");
   });
 
-  test("type field is optional", () => {
-    const result = AgentRegistrationFileSchema.parse(minimalValid);
-    expect(result.type).toBeUndefined();
-  });
-
-  test("accepts endpoints as legacy field", () => {
-    const result = AgentRegistrationFileSchema.parse({
-      ...minimalValid,
-      endpoints: [{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }],
-    });
-    expect(result.endpoints).toHaveLength(1);
-  });
-
-  test("accepts both x402support casings", () => {
-    const r1 = AgentRegistrationFileSchema.parse({ ...minimalValid, x402support: true });
-    const r2 = AgentRegistrationFileSchema.parse({ ...minimalValid, x402Support: true });
-    expect(r1.x402support).toBe(true);
-    expect(r2.x402Support).toBe(true);
+  test("accepts x402support", () => {
+    const result = AgentRegistrationFileSchema.parse({ ...minimalValid, x402support: true });
+    expect(result.x402support).toBe(true);
   });
 
   test("rejects missing name", () => {
@@ -209,58 +193,6 @@ describe("RawAgentRegistrationFileSchema", () => {
   });
 });
 
-describe("StrictAgentRegistrationFileSchema", () => {
-  const strictValid = {
-    ...minimalValid,
-    type: ERC8004_REGISTRATION_TYPE,
-    services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
-  };
-
-  test("accepts valid strict file", () => {
-    const result = StrictAgentRegistrationFileSchema.parse(strictValid);
-    expect(result.type).toBe(ERC8004_REGISTRATION_TYPE);
-    expect(result.services).toHaveLength(1);
-  });
-
-  test("rejects missing type", () => {
-    expect(() =>
-      StrictAgentRegistrationFileSchema.parse({
-        ...minimalValid,
-        services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
-      }),
-    ).toThrow();
-  });
-
-  test("rejects wrong type literal", () => {
-    expect(() =>
-      StrictAgentRegistrationFileSchema.parse({
-        ...minimalValid,
-        type: "wrong-type",
-        services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
-      }),
-    ).toThrow();
-  });
-
-  test("rejects empty services array", () => {
-    expect(() =>
-      StrictAgentRegistrationFileSchema.parse({
-        ...minimalValid,
-        type: ERC8004_REGISTRATION_TYPE,
-        services: [],
-      }),
-    ).toThrow();
-  });
-
-  test("rejects missing services", () => {
-    expect(() =>
-      StrictAgentRegistrationFileSchema.parse({
-        ...minimalValid,
-        type: ERC8004_REGISTRATION_TYPE,
-      }),
-    ).toThrow();
-  });
-});
-
 describe("AgentRegistrationFileSchema.safeParse", () => {
   test("returns success for valid data", () => {
     const result = AgentRegistrationFileSchema.safeParse(minimalValid);
@@ -275,82 +207,5 @@ describe("AgentRegistrationFileSchema.safeParse", () => {
   test("returns failure for null", () => {
     const result = AgentRegistrationFileSchema.safeParse(null);
     expect(result.success).toBe(false);
-  });
-});
-
-describe("StrictAgentRegistrationFileSchema.safeParse", () => {
-  test("returns success for strict-valid data", () => {
-    const result = StrictAgentRegistrationFileSchema.safeParse({
-      ...minimalValid,
-      type: ERC8004_REGISTRATION_TYPE,
-      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
-    });
-    expect(result.success).toBe(true);
-  });
-
-  test("returns failure when type is missing", () => {
-    const result = StrictAgentRegistrationFileSchema.safeParse({
-      ...minimalValid,
-      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/price-feed" }],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  test("returns failure when services is empty", () => {
-    const result = StrictAgentRegistrationFileSchema.safeParse({
-      ...minimalValid,
-      type: ERC8004_REGISTRATION_TYPE,
-      services: [],
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
-describe("getServices", () => {
-  test("returns services when present", () => {
-    const file = {
-      ...minimalValid,
-      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }],
-    };
-    expect(getServices(file)).toEqual([{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }]);
-  });
-
-  test("falls back to endpoints", () => {
-    const file = {
-      ...minimalValid,
-      endpoints: [{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }],
-    };
-    expect(getServices(file)).toEqual([{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }]);
-  });
-
-  test("prefers services over endpoints", () => {
-    const file = {
-      ...minimalValid,
-      services: [{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }],
-      endpoints: [{ name: "legacy-mcp", endpoint: "https://mcp.acme-agents.com/v0/translate" }],
-    };
-    expect(getServices(file)).toEqual([{ name: "mcp-server", endpoint: "https://mcp.acme-agents.com/v1/translate" }]);
-  });
-
-  test("returns empty array when neither present", () => {
-    expect(getServices(minimalValid as any)).toEqual([]);
-  });
-});
-
-describe("hasX402Support", () => {
-  test("returns true for x402support: true", () => {
-    expect(hasX402Support({ ...minimalValid, x402support: true })).toBe(true);
-  });
-
-  test("returns true for x402Support: true", () => {
-    expect(hasX402Support({ ...minimalValid, x402Support: true })).toBe(true);
-  });
-
-  test("returns false when both are false", () => {
-    expect(hasX402Support({ ...minimalValid, x402support: false, x402Support: false })).toBe(false);
-  });
-
-  test("returns false when neither is set", () => {
-    expect(hasX402Support(minimalValid as any)).toBe(false);
   });
 });

@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { getAixyzConfigRuntime } from "@aixyz/config";
 import {
+  AgentRegistrationFile,
+  AgentRegistrationFileSchema,
   ERC8004_REGISTRATION_TYPE,
   ServiceSchema,
-  StrictAgentRegistrationFile,
-  StrictAgentRegistrationFileSchema,
 } from "@aixyz/erc-8004/schemas/registration";
 import { BasePlugin } from "../plugin";
 import type { AixyzApp } from "../index";
@@ -16,9 +16,9 @@ import type { AixyzApp } from "../index";
 export function getAgentRegistrationFile(
   data: unknown,
   options: { mcp: boolean; a2a: string[] },
-): StrictAgentRegistrationFile {
+): AgentRegistrationFile {
   const config = getAixyzConfigRuntime();
-  const services: StrictAgentRegistrationFile["services"] = [];
+  const services: AgentRegistrationFile["services"] = [];
 
   for (const path of options.a2a) {
     services.push({
@@ -36,12 +36,12 @@ export function getAgentRegistrationFile(
     });
   }
 
-  const withDefault = StrictAgentRegistrationFileSchema.extend({
+  const withDefault = AgentRegistrationFileSchema.extend({
     type: z.literal(ERC8004_REGISTRATION_TYPE).default(ERC8004_REGISTRATION_TYPE),
     name: z.string().default(config.name),
     description: z.string().default(config.description),
     image: z.string().default(new URL("/icon.png", config.url).toString()),
-    services: z.array(ServiceSchema).min(1).default(services),
+    services: z.array(ServiceSchema).default(services),
     active: z.boolean().default(true),
     x402support: z.boolean().default(true),
   });
