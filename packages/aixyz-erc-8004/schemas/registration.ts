@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-/**
- * ERC-8004 Raw Agent Registration File Schema
- * For parsing raw registration files fetched from IPFS/URIs
- *
- * Based on: https://github.com/erc-8004/erc-8004-contracts/blob/093d7b91eb9c22048d411896ed397d695742a5f8/ERC8004SPEC.md#agent-uri-and-agent-registration-file
- */
-
 export const ERC8004_REGISTRATION_TYPE = "https://eips.ethereum.org/EIPS/eip-8004#registration-v1";
 
 /**
@@ -50,12 +43,14 @@ export const RegistrationEntrySchema = z.object({
 });
 
 /**
- * Raw Agent Registration File Schema
- * For parsing registration files fetched from IPFS/URIs
+ * ERC-8004 Raw Agent Registration File Schema
+ * For parsing raw registration files fetched from IPFS/URIs
+ *
+ * Based on: https://github.com/erc-8004/erc-8004-contracts/blob/093d7b91eb9c22048d411896ed397d695742a5f8/ERC8004SPEC.md#agent-uri-and-agent-registration-file
  */
 export const AgentRegistrationFileSchema = z.object({
   // Schema identifiers
-  type: z.string().optional(),
+  type: z.literal(ERC8004_REGISTRATION_TYPE),
   $schema: z.string().optional(),
 
   // ERC-721 metadata compatibility (required)
@@ -64,13 +59,11 @@ export const AgentRegistrationFileSchema = z.object({
   image: z.string(),
 
   // Service endpoints
-  services: z.array(ServiceSchema).optional(),
-  endpoints: z.array(ServiceSchema).optional(), // Legacy field name
+  services: z.array(ServiceSchema).min(1, "at least one service endpoint is required"),
 
   // Agent configuration
   active: z.boolean().optional(),
   x402support: z.boolean().optional(),
-  x402Support: z.boolean().optional(), // Alternative casing
 
   // Cross-chain & identity
   registrations: z.array(RegistrationEntrySchema).optional(),
@@ -79,35 +72,7 @@ export const AgentRegistrationFileSchema = z.object({
   did: z.string().optional(),
 });
 
-/**
- * Strict Schema - for creating new registration files
- * Requires correct type literal and at least one service
- */
-export const StrictAgentRegistrationFileSchema = AgentRegistrationFileSchema.extend({
-  type: z.literal(ERC8004_REGISTRATION_TYPE),
-  services: z.array(ServiceSchema).min(1, "At least one service endpoint is required"),
-});
-
 export type TrustMechanism = z.infer<typeof TrustMechanismSchema>;
 export type Service = z.infer<typeof ServiceSchema>;
 export type RegistrationEntry = z.infer<typeof RegistrationEntrySchema>;
 export type AgentRegistrationFile = z.infer<typeof AgentRegistrationFileSchema>;
-export type StrictAgentRegistrationFile = z.infer<typeof StrictAgentRegistrationFileSchema>;
-
-/**
- * Get services from a registration file
- * Handles both `services` (new) and `endpoints` (legacy) field names
- * @default TODO: parse and merge both fields
- */
-export function getServices(file: AgentRegistrationFile | StrictAgentRegistrationFile): Service[] {
-  return file.services ?? file.endpoints ?? [];
-}
-
-/**
- * Check if agent supports x402 payment protocol
- * Handles both `x402support` and `x402Support` casing variants
- * @deprecated TODO: parse and merge both fields
- */
-export function hasX402Support(file: AgentRegistrationFile | StrictAgentRegistrationFile): boolean {
-  return file.x402support === true || file.x402Support === true;
-}

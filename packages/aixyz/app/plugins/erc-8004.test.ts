@@ -24,7 +24,7 @@ import { AixyzApp } from "../index";
 import { ERC8004Plugin, getAgentRegistrationFile } from "./erc-8004";
 
 import {
-  StrictAgentRegistrationFileSchema,
+  AgentRegistrationFileSchema,
   ServiceSchema,
   ERC8004_REGISTRATION_TYPE,
 } from "@aixyz/erc-8004/schemas/registration";
@@ -70,16 +70,16 @@ describe("ERC8004Plugin", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Schema validation — responses must conform to StrictAgentRegistrationFileSchema
+  // Schema validation — responses must conform to AgentRegistrationFileSchema
   // ---------------------------------------------------------------------------
 
   describe("schema validation", () => {
-    test("response validates against StrictAgentRegistrationFileSchema", async () => {
+    test("response validates against AgentRegistrationFileSchema", async () => {
       const app = createApp({ name: "My Agent", description: "Does things" });
 
       const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
 
-      const result = StrictAgentRegistrationFileSchema.safeParse(json);
+      const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
     });
 
@@ -88,7 +88,7 @@ describe("ERC8004Plugin", () => {
 
       const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
 
-      const result = StrictAgentRegistrationFileSchema.safeParse(json);
+      const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
     });
 
@@ -97,7 +97,7 @@ describe("ERC8004Plugin", () => {
 
       const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
 
-      const result = StrictAgentRegistrationFileSchema.safeParse(json);
+      const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
     });
 
@@ -106,7 +106,7 @@ describe("ERC8004Plugin", () => {
 
       const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
 
-      const result = StrictAgentRegistrationFileSchema.safeParse(json);
+      const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
     });
 
@@ -118,7 +118,7 @@ describe("ERC8004Plugin", () => {
 
       const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
 
-      const result = StrictAgentRegistrationFileSchema.safeParse(json);
+      const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
       expect(json.services).toHaveLength(3); // 2 A2A + 1 MCP
     });
@@ -260,7 +260,7 @@ describe("ERC8004Plugin", () => {
         { mcp: true, a2a: [] },
       );
 
-      const result = StrictAgentRegistrationFileSchema.safeParse(file);
+      const result = AgentRegistrationFileSchema.safeParse(file);
       expect(result.success).toBe(true);
       expect(file.ens).toBe("agent.eth");
       expect(file.did).toBe("did:example:123");
