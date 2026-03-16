@@ -10,17 +10,31 @@ import {
 } from "@a2a-js/sdk/server";
 import { AgentCard, Message, Task, TaskArtifactUpdateEvent, TaskStatusUpdateEvent, TextPart } from "@a2a-js/sdk";
 import type { ToolLoopAgent, ToolSet } from "ai";
+import { z } from "zod";
 import { getAixyzConfigRuntime } from "../../config";
 import { BasePlugin } from "../plugin";
 import type { AixyzApp } from "../index";
 import { Accepts, AcceptsScheme } from "../../accepts";
+
+export const CapabilitiesSchema = z.object({
+  streaming: z.boolean().optional(),
+  pushNotifications: z.boolean().optional(),
+  stateTransitionHistory: z.boolean().optional(),
+});
+
+export type Capabilities = z.infer<typeof CapabilitiesSchema>;
+
+const DEFAULT_CAPABILITIES: Capabilities = { streaming: true, pushNotifications: false };
 
 /**
  * Wraps a Vercel AI SDK ToolLoopAgent into the A2A AgentExecutor interface.
  * Streams text chunks as artifact updates and publishes task lifecycle events.
  */
 export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements AgentExecutor {
-  constructor(private agent: ToolLoopAgent<never, TOOLS>) {}
+  constructor(
+    private agent: ToolLoopAgent<never, TOOLS>,
+    private streaming = true,
+  ) {}
 
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus): Promise<void> {
     const { taskId, contextId, userMessage, task } = requestContext;
@@ -48,25 +62,41 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
       };
       eventBus.publish(workingUpdate);
 
-      const result = await this.agent.stream({ prompt });
       const artifactId = randomUUID();
-      let firstChunk = true;
 
-      for await (const chunk of result.textStream) {
-        if (chunk) {
-          const artifactUpdate: TaskArtifactUpdateEvent = {
-            kind: "artifact-update",
-            taskId,
-            contextId,
-            artifact: {
-              artifactId,
-              parts: [{ kind: "text", text: chunk }],
-            },
-            append: !firstChunk,
-          };
-          eventBus.publish(artifactUpdate);
-          firstChunk = false;
+      if (this.streaming) {
+        const result = await this.agent.stream({ prompt });
+        let firstChunk = true;
+
+        for await (const chunk of result.textStream) {
+          if (chunk) {
+            const artifactUpdate: TaskArtifactUpdateEvent = {
+              kind: "artifact-update",
+              taskId,
+              contextId,
+              artifact: {
+                artifactId,
+                parts: [{ kind: "text", text: chunk }],
+              },
+              append: !firstChunk,
+            };
+            eventBus.publish(artifactUpdate);
+            firstChunk = false;
+          }
         }
+      } else {
+        const result = await this.agent.generate({ prompt });
+        const artifactUpdate: TaskArtifactUpdateEvent = {
+          kind: "artifact-update",
+          taskId,
+          contextId,
+          artifact: {
+            artifactId,
+            parts: [{ kind: "text", text: result.text }],
+          },
+          append: false,
+        };
+        eventBus.publish(artifactUpdate);
       }
 
       const completedUpdate: TaskStatusUpdateEvent = {
@@ -102,7 +132,7 @@ export class ToolLoopAgentExecutor<TOOLS extends ToolSet = ToolSet> implements A
 }
 
 /** Build an A2A AgentCard from the runtime config, pointing to the given agent endpoint path. */
-export function getAgentCard(agentPath = "/agent"): AgentCard {
+export function getAgentCard(agentPath = "/agent", capabilities?: Capabilities): AgentCard {
   const config = getAixyzConfigRuntime();
   return {
     name: config.name,
@@ -110,7 +140,7 @@ export function getAgentCard(agentPath = "/agent"): AgentCard {
     protocolVersion: "0.3.0",
     version: config.version,
     url: new URL(agentPath, config.url).toString(),
-    capabilities: { streaming: true, pushNotifications: false },
+    capabilities: capabilities ?? DEFAULT_CAPABILITIES,
     defaultInputModes: ["text/plain"],
     defaultOutputModes: ["text/plain"],
     skills: config.skills,
@@ -126,7 +156,7 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
   readonly name = "a2a";
 
   constructor(
-    private exports: { default: ToolLoopAgent<never, TOOLS>; accepts?: Accepts },
+    private exports: { default: ToolLoopAgent<never, TOOLS>; accepts?: Accepts; capabilities?: Capabilities },
     private prefix?: string,
     private taskStore: TaskStore = new InMemoryTaskStore(),
   ) {
@@ -140,13 +170,20 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
       return;
     }
 
+    const parsed = this.exports.capabilities ? CapabilitiesSchema.safeParse(this.exports.capabilities) : undefined;
+    const capabilities = parsed?.success ? parsed.data : DEFAULT_CAPABILITIES;
+
     const agentPath: `/${string}` = this.prefix ? `/${this.prefix}/agent` : "/agent";
     const wellKnownPath: `/${string}` = this.prefix
       ? `/${this.prefix}/.well-known/agent-card.json`
       : "/.well-known/agent-card.json";
 
-    const agentExecutor = new ToolLoopAgentExecutor(this.exports.default);
-    const requestHandler = new DefaultRequestHandler(getAgentCard(agentPath), this.taskStore, agentExecutor);
+    const agentExecutor = new ToolLoopAgentExecutor(this.exports.default, capabilities.streaming ?? true);
+    const requestHandler = new DefaultRequestHandler(
+      getAgentCard(agentPath, capabilities),
+      this.taskStore,
+      agentExecutor,
+    );
     const jsonRpcTransport = new JsonRpcTransportHandler(requestHandler);
 
     // Agent card — pure web-standard handler

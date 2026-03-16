@@ -1,5 +1,7 @@
 import { fake } from "aixyz/model";
 import { ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import type { Capabilities } from "aixyz/app/plugins/a2a";
 
 /**
  * A palindrome-checker model powered by `fake()`.
@@ -17,6 +19,15 @@ export const model = fake((lastMessage, prompt) => {
   }
   return `"${lastMessage}" reversed is "${reversed}" (turn ${turn})`;
 });
+
+export const accepts: Accepts = {
+  scheme: "free",
+};
+
+export const capabilities: Capabilities = {
+  streaming: false,
+  pushNotifications: false,
+};
 
 export default new ToolLoopAgent({
   model,

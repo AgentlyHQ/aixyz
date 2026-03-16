@@ -52,8 +52,8 @@
         "typescript": "^5",
       },
     },
-    "examples/flights-search": {
-      "name": "@examples/flights-search",
+    "examples/flight-search": {
+      "name": "@examples/flight-search",
       "dependencies": {
         "@ai-sdk/openai": "^3",
         "@aixyz/stripe": "^0",
@@ -288,7 +288,7 @@
 
     "@examples/fake-llm": ["@examples/fake-llm@workspace:examples/fake-llm"],
 
-    "@examples/flights-search": ["@examples/flights-search@workspace:examples/flights-search"],
+    "@examples/flight-search": ["@examples/flight-search@workspace:examples/flight-search"],
 
     "@examples/local-llm": ["@examples/local-llm@workspace:examples/local-llm"],
 

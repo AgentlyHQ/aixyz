@@ -27,12 +27,12 @@ mock.module("@aixyz/config", () => ({
   }),
 }));
 
-import { ToolLoopAgentExecutor, A2APlugin, getAgentCard } from "./a2a";
+import { ToolLoopAgentExecutor, A2APlugin, getAgentCard, CapabilitiesSchema } from "./a2a";
 import { AixyzApp } from "../index";
 import type { ToolLoopAgent } from "ai";
 import { DefaultExecutionEventBus } from "@a2a-js/sdk/server";
 import type { AgentExecutionEvent } from "@a2a-js/sdk/server";
-import type { Task, TaskStatusUpdateEvent } from "@a2a-js/sdk";
+import type { Task, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 import type { RequestContext } from "@a2a-js/sdk/server";
 
 function makeRequestContext(overrides?: Partial<RequestContext>): RequestContext {
@@ -73,13 +73,14 @@ function createServer(
   agent: ToolLoopAgent<never> = makeMockAgent(),
   accepts: { scheme: "free" } | { scheme: "exact"; price: string } = { scheme: "free" },
   prefix?: string,
+  capabilities?: { streaming?: boolean; pushNotifications?: boolean; stateTransitionHistory?: boolean },
 ) {
   const server = Bun.serve({ port: 0, fetch: () => new Response("") });
   const url = `http://localhost:${server.port}`;
   const prevUrl = testUrl;
   testUrl = url;
   const app = new AixyzApp();
-  new A2APlugin({ default: agent, accepts }, prefix).register(app);
+  new A2APlugin({ default: agent, accepts, capabilities }, prefix).register(app);
   server.reload({ fetch: app.fetch.bind(app) });
   testUrl = prevUrl;
   return { server, url, app };
@@ -117,6 +118,60 @@ describe("ToolLoopAgentExecutor", () => {
     const completedUpdate = events[events.length - 1] as TaskStatusUpdateEvent;
     expect(completedUpdate.status.state).toBe("completed");
     expect(completedUpdate.final).toBe(true);
+  });
+
+  test("non-streaming executor uses generate and publishes single artifact", async () => {
+    const STREAMING = false;
+    const mockAgent = {
+      generate: async () => ({ text: "Hello world" }),
+      stream: async () => {
+        throw new Error("stream should not be called");
+      },
+    } as unknown as ToolLoopAgent<never>;
+
+    const executor = new ToolLoopAgentExecutor(mockAgent, STREAMING);
+    const eventBus = new DefaultExecutionEventBus();
+    const events: AgentExecutionEvent[] = [];
+    eventBus.on("event", (event) => events.push(event));
+
+    await executor.execute(makeRequestContext(), eventBus);
+
+    const initialTask = events[0] as Task;
+    expect(initialTask.kind).toBe("task");
+    expect(initialTask.status.state).toBe("submitted");
+
+    const workingUpdate = events[1] as TaskStatusUpdateEvent;
+    expect(workingUpdate.status.state).toBe("working");
+
+    const artifactUpdate = events[2] as TaskArtifactUpdateEvent;
+    expect(artifactUpdate.kind).toBe("artifact-update");
+    expect(artifactUpdate.artifact.parts[0]).toEqual({ kind: "text", text: "Hello world" });
+    expect(artifactUpdate.append).toBe(false);
+
+    const completedUpdate = events[3] as TaskStatusUpdateEvent;
+    expect(completedUpdate.status.state).toBe("completed");
+    expect(completedUpdate.final).toBe(true);
+  });
+
+  test("publishes error message when generate throws in non-streaming mode", async () => {
+    const STREAMING = false;
+    const failingAgent = {
+      generate: async () => {
+        throw new Error("generate failed");
+      },
+    } as unknown as ToolLoopAgent<never>;
+
+    const executor = new ToolLoopAgentExecutor(failingAgent, STREAMING);
+    const eventBus = new DefaultExecutionEventBus();
+    const events: AgentExecutionEvent[] = [];
+    eventBus.on("event", (event) => events.push(event));
+
+    await executor.execute(makeRequestContext(), eventBus);
+
+    expect(events.length).toBe(3);
+    const errorMsg = events[2] as any;
+    expect(errorMsg.kind).toBe("message");
+    expect(errorMsg.parts[0].text).toContain("generate failed");
   });
 
   test("publishes error message when streaming throws", async () => {
@@ -164,6 +219,38 @@ describe("getAgentCard", () => {
   test("accepts custom agent path", () => {
     const card = getAgentCard("/custom/agent");
     expect(card.url).toBe("http://localhost:3000/custom/agent");
+  });
+
+  test("uses default capabilities when none provided", () => {
+    const card = getAgentCard();
+    expect(card.capabilities).toEqual({ streaming: true, pushNotifications: false });
+  });
+
+  test("uses custom capabilities when provided", () => {
+    const card = getAgentCard("/agent", { streaming: false, pushNotifications: true });
+    expect(card.capabilities).toEqual({ streaming: false, pushNotifications: true });
+  });
+});
+
+describe("CapabilitiesSchema", () => {
+  test("accepts valid capabilities", () => {
+    const result = CapabilitiesSchema.parse({ streaming: true, pushNotifications: false });
+    expect(result).toEqual({ streaming: true, pushNotifications: false });
+  });
+
+  test("accepts partial capabilities", () => {
+    const result = CapabilitiesSchema.parse({ streaming: false });
+    expect(result).toEqual({ streaming: false });
+  });
+
+  test("accepts empty object", () => {
+    const result = CapabilitiesSchema.parse({});
+    expect(result).toEqual({});
+  });
+
+  test("rejects invalid types", () => {
+    const result = CapabilitiesSchema.safeParse({ streaming: "yes" });
+    expect(result.success).toBe(false);
   });
 });
 
@@ -226,6 +313,31 @@ describe("A2APlugin", () => {
         description: "Does testing",
         tags: ["test"],
       });
+    });
+
+    test("getA2ACard falls back to defaults for invalid capabilities", async () => {
+      const { server, url } = createServer(makeMockAgent(), { scheme: "free" }, undefined, { streaming: "yes" } as any);
+      try {
+        const card = await getA2ACard(url);
+        expect(card.capabilities.streaming).toBe(true);
+        expect(card.capabilities.pushNotifications).toBe(false);
+      } finally {
+        server.stop(true);
+      }
+    });
+
+    test("getA2ACard reflects custom capabilities", async () => {
+      const { server, url } = createServer(makeMockAgent(), { scheme: "free" }, undefined, {
+        streaming: false,
+        pushNotifications: true,
+      });
+      try {
+        const card = await getA2ACard(url);
+        expect(card.capabilities.streaming).toBe(false);
+        expect(card.capabilities.pushNotifications).toBe(true);
+      } finally {
+        server.stop(true);
+      }
     });
 
     test("getA2ACard works with prefixed well-known path", async () => {
