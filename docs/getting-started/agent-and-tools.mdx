@@ -43,6 +43,25 @@ The optional `accepts` named export controls [x402 payment](/getting-started/pay
 - Agents **with** `accepts` are registered on payment-gated A2A endpoints
 - Agents **without** `accepts` are not registered
 
+### `capabilities` Export
+
+The optional `capabilities` named export configures the A2A agent card's capabilities and controls how the executor runs your agent:
+
+```typescript title="app/agent.ts"
+import type { Capabilities } from "aixyz/app/plugins/a2a";
+
+export const capabilities: Capabilities = {
+  streaming: false,
+  pushNotifications: false,
+};
+```
+
+- `streaming` (default: `true`) — When `false`, the executor uses `generate()` instead of `stream()`, returning the full response as a single artifact
+- `pushNotifications` (default: `false`) — Advertises push notification support in the agent card
+- `stateTransitionHistory` — Advertises state transition history support in the agent card
+
+If omitted, the agent defaults to `{ streaming: true, pushNotifications: false }`. See the [agent.ts reference](/api-reference/agent#capabilities) for details.
+
 ## Sub-Agents (`app/agents/*.ts`)
 
 Place additional agent files in `app/agents/` to expose multiple A2A endpoints from a single deployment. Each file follows the same format as `app/agent.ts` and is automatically registered on its own path.

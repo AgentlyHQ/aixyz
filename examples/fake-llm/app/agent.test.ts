@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { model } from "./agent";
+import { model, accepts, capabilities } from "./agent";
 
 describe("palindrome checker (fake model)", () => {
   test("detects a palindrome", async () => {
@@ -39,5 +39,13 @@ describe("palindrome checker (fake model)", () => {
       prompt: [{ role: "user", content: [{ type: "text", text: "madam" }] }],
     });
     expect(result.finishReason).toEqual({ unified: "stop", raw: undefined });
+  });
+
+  test("exports accepts config", () => {
+    expect(accepts).toEqual({ scheme: "free" });
+  });
+
+  test("exports capabilities with streaming disabled", () => {
+    expect(capabilities).toEqual({ streaming: false, pushNotifications: false });
   });
 });
