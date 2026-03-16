@@ -200,13 +200,39 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
         const body = await request.json();
         const result = await jsonRpcTransport.handle(body);
 
-        // If result is an AsyncGenerator (streaming), collect all chunks
+        // If result is an AsyncGenerator (streaming), return as SSE
         if (Symbol.asyncIterator in Object(result)) {
-          const chunks: unknown[] = [];
-          for await (const chunk of result as AsyncGenerator) {
-            chunks.push(chunk);
-          }
-          return Response.json(chunks[chunks.length - 1]);
+          const stream = result as AsyncGenerator;
+          const readable = new ReadableStream({
+            async start(controller) {
+              const encoder = new TextEncoder();
+              try {
+                for await (const event of stream) {
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+                }
+              } catch (error) {
+                const errorResponse = {
+                  jsonrpc: "2.0",
+                  id: body?.id || null,
+                  error: {
+                    code: -32603,
+                    message: error instanceof Error ? error.message : "Streaming error.",
+                  },
+                };
+                controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify(errorResponse)}\n\n`));
+              } finally {
+                controller.close();
+              }
+            },
+          });
+          return new Response(readable, {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              Connection: "keep-alive",
+              "X-Accel-Buffering": "no",
+            },
+          });
         }
 
         return Response.json(result);
