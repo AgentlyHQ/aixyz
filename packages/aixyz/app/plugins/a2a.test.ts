@@ -1,6 +1,13 @@
 import { afterAll, beforeAll, describe, expect, mock, test, setDefaultTimeout } from "bun:test";
 import { createFixture, type X402Fixture } from "../../test/x402-fixture";
-import { sendA2AMessage, getA2ACard, DryRunPaymentRequired, PayTransaction } from "@use-agently/sdk";
+import {
+  sendA2AMessage,
+  sendA2AMessageStream,
+  extractStreamEventText,
+  getA2ACard,
+  DryRunPaymentRequired,
+  PayTransaction,
+} from "@use-agently/sdk";
 
 setDefaultTimeout(30_000);
 
@@ -417,7 +424,7 @@ describe("A2APlugin", () => {
   });
 
   describe("message/stream", () => {
-    test("message/stream returns collected result", async () => {
+    test("message/stream returns SSE response", async () => {
       const res = await fetch(`${mainUrl}/agent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -436,10 +443,44 @@ describe("A2APlugin", () => {
         }),
       });
       expect(res.status).toBe(200);
-      const json = await res.json();
-      expect(json.jsonrpc).toBe("2.0");
-      expect(json.id).toBe(1);
-      expect(json.result).toBeDefined();
+      expect(res.headers.get("Content-Type")?.startsWith("text/event-stream")).toBe(true);
+
+      const text = await res.text();
+      const events = text
+        .split("\n\n")
+        .filter((line) => line.startsWith("data: "))
+        .map((line) => JSON.parse(line.replace("data: ", "")));
+      expect(events.length).toBeGreaterThan(0);
+
+      const lastEvent = events[events.length - 1];
+      expect(lastEvent.jsonrpc).toBe("2.0");
+      expect(lastEvent.id).toBe(1);
+      expect(lastEvent.result).toBeDefined();
+    });
+
+    test("sendA2AMessageStream receives streamed events with correct text", async () => {
+      const stream = await sendA2AMessageStream(mainUrl, "stream hello");
+      const events: unknown[] = [];
+      let text = "";
+      for await (const event of stream) {
+        events.push(event);
+        text += extractStreamEventText(event);
+      }
+      expect(events.length).toBeGreaterThan(0);
+
+      // Should contain status and artifact updates
+      const kinds = events.map((e: any) => e.kind);
+      expect(kinds).toContain("status-update");
+      expect(kinds).toContain("artifact-update");
+
+      // Collected text should match the agent's streamed output
+      expect(text).toBe("Hello world");
+
+      // Final event should be a completed status update
+      const lastEvent = events[events.length - 1] as any;
+      expect(lastEvent.kind).toBe("status-update");
+      expect(lastEvent.status.state).toBe("completed");
+      expect(lastEvent.final).toBe(true);
     });
   });
 
