@@ -65,6 +65,16 @@ jobs:
           sed -i 's/"workspace:\*"/"'"$VERSION"'"/g' packages/*/package.json
           sed -i 's/"workspace:\*"/"'"$VERSION"'"/g' packages/create-aixyz-app/templates/*/package.json
 
+      - name: Copy root README.md to packages missing one
+        run: |
+          for pkg in packages/*/; do
+            [ -f "$pkg/package.json" ] || continue
+            if [ ! -f "$pkg/README.md" ]; then
+              cp README.md "$pkg/README.md"
+              echo "Copied README.md to $pkg"
+            fi
+          done
+
       - name: Publish all packages
         run: |
           for pkg in packages/*/; do
