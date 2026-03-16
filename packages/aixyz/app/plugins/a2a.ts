@@ -213,7 +213,7 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
               } catch (error) {
                 const errorResponse = {
                   jsonrpc: "2.0",
-                  id: body?.id || null,
+                  id: body?.id ?? null,
                   error: {
                     code: -32603,
                     message: error instanceof Error ? error.message : "Streaming error.",
@@ -224,12 +224,14 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
                 controller.close();
               }
             },
+            cancel() {
+              stream.return?.(undefined);
+            },
           });
           return new Response(readable, {
             headers: {
               "Content-Type": "text/event-stream",
               "Cache-Control": "no-cache",
-              Connection: "keep-alive",
               "X-Accel-Buffering": "no",
             },
           });

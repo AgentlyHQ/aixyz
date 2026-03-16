@@ -443,7 +443,7 @@ describe("A2APlugin", () => {
         }),
       });
       expect(res.status).toBe(200);
-      expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+      expect(res.headers.get("Content-Type")?.startsWith("text/event-stream")).toBe(true);
 
       const text = await res.text();
       const events = text
@@ -451,8 +451,6 @@ describe("A2APlugin", () => {
         .filter((line) => line.startsWith("data: "))
         .map((line) => JSON.parse(line.replace("data: ", "")));
       expect(events.length).toBeGreaterThan(0);
-
-      console.log(text);
 
       const lastEvent = events[events.length - 1];
       expect(lastEvent.jsonrpc).toBe("2.0");
