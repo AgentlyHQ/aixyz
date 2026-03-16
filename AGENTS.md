@@ -146,8 +146,10 @@ The `aixyz dev` command spawns a Bun worker process with file watching on `app/`
 ### Agent executor pattern
 
 Agents are wrapped into `AgentExecutor` interface. The primary adapter is
-`ToolLoopAgentExecutor` for Vercel AI SDK agents (imported from `ai`). Agents export a default `ToolLoopAgent` + an
-`accepts` object for payment config.
+`ToolLoopAgentExecutor` for Vercel AI SDK agents (imported from `ai`). Agents export a default `ToolLoopAgent`, an
+optional `accepts` object for payment config, and an optional `capabilities` object for A2A agent card configuration
+(streaming, pushNotifications, stateTransitionHistory). When `capabilities.streaming` is `false`, the executor uses
+`generate()` instead of `stream()`.
 
 ### Payment model
 

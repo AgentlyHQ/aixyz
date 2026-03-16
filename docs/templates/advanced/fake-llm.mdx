@@ -29,6 +29,9 @@ Import `fake` from `aixyz/model` and pass a transform function:
 
 ```typescript title="app/agent.ts"
 import { fake } from "aixyz/model";
+import { ToolLoopAgent } from "ai";
+import type { Accepts } from "aixyz/accepts";
+import type { Capabilities } from "aixyz/app/plugins/a2a";
 
 export const model = fake((lastMessage, prompt) => {
   const reversed = [...lastMessage].reverse().join("");
@@ -40,6 +43,15 @@ export const model = fake((lastMessage, prompt) => {
   }
   return `"${lastMessage}" reversed is "${reversed}" (turn ${turn})`;
 });
+
+export const accepts: Accepts = {
+  scheme: "free",
+};
+
+export const capabilities: Capabilities = {
+  streaming: false,
+  pushNotifications: false,
+};
 
 export default new ToolLoopAgent({
   model,

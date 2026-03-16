@@ -3,17 +3,23 @@ title: "agent.ts"
 description: "Define your agent with Vercel AI SDK"
 ---
 
-The agent definition file. Must export a default `ToolLoopAgent` and optionally an `accepts` for payment gating.
+The agent definition file. Must export a default `ToolLoopAgent` and optionally `accepts` for payment gating and `capabilities` for A2A agent card configuration.
 
 ```typescript title="app/agent.ts"
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
+import type { Capabilities } from "aixyz/app/plugins/a2a";
 import weather from "./tools/weather";
 
 export const accepts: Accepts = {
   scheme: "exact",
   price: "$0.005",
+};
+
+export const capabilities: Capabilities = {
+  streaming: false,
+  pushNotifications: false,
 };
 
 export default new ToolLoopAgent({
@@ -26,9 +32,32 @@ export default new ToolLoopAgent({
 
 ## Exports
 
-| Export    | Type            | Required | Description                                   |
-| --------- | --------------- | -------- | --------------------------------------------- |
-| `default` | `ToolLoopAgent` | Yes      | The agent instance                            |
-| `accepts` | `Accepts`       | No       | Payment config — gates the A2A `/agent` route |
+| Export         | Type            | Required | Description                                                         |
+| -------------- | --------------- | -------- | ------------------------------------------------------------------- |
+| `default`      | `ToolLoopAgent` | Yes      | The agent instance                                                  |
+| `accepts`      | `Accepts`       | No       | Payment config — gates the A2A `/agent` route                       |
+| `capabilities` | `Capabilities`  | No       | A2A capabilities — controls streaming and push notification support |
 
 When `accepts` is exported, the `/agent` endpoint requires x402 payment. Without it, the agent is not registered on the A2A endpoint.
+
+## Capabilities
+
+The optional `capabilities` export controls the A2A agent card's `capabilities` field and the executor's behavior:
+
+```typescript
+import type { Capabilities } from "aixyz/app/plugins/a2a";
+
+export const capabilities: Capabilities = {
+  streaming: false, // default: true
+  pushNotifications: false, // default: false
+  stateTransitionHistory: false, // default: undefined
+};
+```
+
+| Field                    | Type      | Default     | Description                                          |
+| ------------------------ | --------- | ----------- | ---------------------------------------------------- |
+| `streaming`              | `boolean` | `true`      | Whether the agent streams responses via `textStream` |
+| `pushNotifications`      | `boolean` | `false`     | Whether the agent supports push notifications        |
+| `stateTransitionHistory` | `boolean` | `undefined` | Whether the agent exposes state transition history   |
+
+When `streaming` is set to `false`, the executor uses `agent.generate()` instead of `agent.stream()`, returning the full response as a single artifact rather than streaming chunks. This is useful for agents backed by models or APIs that don't support streaming.

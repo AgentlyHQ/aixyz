@@ -95,6 +95,18 @@ export const accepts: Accepts = { scheme: "exact", price: "$0.005" };
 No `accepts` export → endpoint is not exposed. `scheme: "free"` → explicitly free.
 See [aixyz.sh/getting-started/payments](https://aixyz.sh/getting-started/payments) for full details.
 
+### A2A capabilities
+
+Export `capabilities` from `app/agent.ts` to configure the A2A agent card and executor behavior:
+
+```ts
+import type { Capabilities } from "aixyz/app/plugins/a2a";
+
+export const capabilities: Capabilities = { streaming: false, pushNotifications: false };
+```
+
+Defaults to `{ streaming: true, pushNotifications: false }`. When `streaming: false`, the executor uses `generate()` instead of `stream()`.
+
 ### On-chain identity (ERC-8004)
 
 Register your agent on-chain with:

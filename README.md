@@ -64,17 +64,23 @@ export default config;
 
 ### 2. Agent
 
-`app/agent.ts` defines your agent and its payment price:
+`app/agent.ts` defines your agent, its payment price, and A2A capabilities:
 
 ```ts
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import type { Accepts } from "aixyz/accepts";
+import type { Capabilities } from "aixyz/app/plugins/a2a";
 import weather from "./tools/weather";
 
 export const accepts: Accepts = {
   scheme: "exact",
   price: "$0.005",
+};
+
+export const capabilities: Capabilities = {
+  streaming: true, // default: true — set to false to use generate() instead of stream()
+  pushNotifications: false, // default: false
 };
 
 export default new ToolLoopAgent({

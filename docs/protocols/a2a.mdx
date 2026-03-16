@@ -32,7 +32,7 @@ Example response:
   "version": "0.1.0",
   "url": "https://my-agent.vercel.app/agent",
   "capabilities": {
-    "streaming": false,
+    "streaming": true,
     "pushNotifications": false
   },
   "defaultInputModes": ["text/plain"],
@@ -70,6 +70,21 @@ curl -X POST http://localhost:3000/agent \
   }'
 ```
 
+## Capabilities
+
+The agent card's `capabilities` field is configured via the `capabilities` export from your agent file. If omitted, defaults to `{ streaming: true, pushNotifications: false }`.
+
+```typescript title="app/agent.ts"
+import type { Capabilities } from "aixyz/app/plugins/a2a";
+
+export const capabilities: Capabilities = {
+  streaming: false,
+  pushNotifications: false,
+};
+```
+
+When `streaming` is `false`, the executor uses `agent.generate()` instead of `agent.stream()`, returning a single artifact with the full response. See [agent.ts — Capabilities](/api-reference/agent#capabilities) for the full reference.
+
 ## Using the A2A Plugin
 
 The `A2APlugin` wires up both endpoints on your server:
@@ -78,7 +93,7 @@ The `A2APlugin` wires up both endpoints on your server:
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 
 // agentExports is `import * as agent from "./agent"`
-// reads both `default` (the ToolLoopAgent) and `accepts` (payment config)
+// reads `default` (the ToolLoopAgent), `accepts` (payment config), and `capabilities`
 await server.withPlugin(new A2APlugin(agent));
 ```
 
