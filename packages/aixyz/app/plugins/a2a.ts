@@ -140,7 +140,7 @@ export function getAgentCard(agentPath = "/agent", capabilities?: Capabilities):
     protocolVersion: "0.3.0",
     version: config.version,
     url: new URL(agentPath, config.url).toString(),
-    capabilities: capabilities ?? DEFAULT_CAPABILITIES,
+    capabilities: { ...DEFAULT_CAPABILITIES, ...capabilities },
     defaultInputModes: ["text/plain"],
     defaultOutputModes: ["text/plain"],
     skills: config.skills,
@@ -171,7 +171,7 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
     }
 
     const parsed = this.exports.capabilities ? CapabilitiesSchema.safeParse(this.exports.capabilities) : undefined;
-    const capabilities = parsed?.success ? parsed.data : DEFAULT_CAPABILITIES;
+    const capabilities = parsed?.success ? { ...DEFAULT_CAPABILITIES, ...parsed.data } : DEFAULT_CAPABILITIES;
 
     const agentPath: `/${string}` = this.prefix ? `/${this.prefix}/agent` : "/agent";
     const wellKnownPath: `/${string}` = this.prefix

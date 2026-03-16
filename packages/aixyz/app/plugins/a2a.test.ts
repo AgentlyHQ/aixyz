@@ -230,6 +230,16 @@ describe("getAgentCard", () => {
     const card = getAgentCard("/agent", { streaming: false, pushNotifications: true });
     expect(card.capabilities).toEqual({ streaming: false, pushNotifications: true });
   });
+
+  test("merges partial capabilities with defaults", () => {
+    const card = getAgentCard("/agent", { streaming: false });
+    expect(card.capabilities).toEqual({ streaming: false, pushNotifications: false });
+  });
+
+  test("merges empty capabilities with defaults", () => {
+    const card = getAgentCard("/agent", {});
+    expect(card.capabilities).toEqual({ streaming: true, pushNotifications: false });
+  });
 });
 
 describe("CapabilitiesSchema", () => {
@@ -335,6 +345,17 @@ describe("A2APlugin", () => {
         const card = await getA2ACard(url);
         expect(card.capabilities.streaming).toBe(false);
         expect(card.capabilities.pushNotifications).toBe(true);
+      } finally {
+        server.stop(true);
+      }
+    });
+
+    test("getA2ACard merges partial capabilities with defaults", async () => {
+      const { server, url } = createServer(makeMockAgent(), { scheme: "free" }, undefined, { streaming: false });
+      try {
+        const card = await getA2ACard(url);
+        expect(card.capabilities.streaming).toBe(false);
+        expect(card.capabilities.pushNotifications).toBe(false);
       } finally {
         server.stop(true);
       }
