@@ -120,7 +120,9 @@
   "footer": {
     "socials": {
       "github": "https://github.com/AgentlyHQ",
-      "x": "https://x.com/AgentlyHQ"
+      "x": "https://x.com/AgentlyHQ",
+      "discord": "https://discord.gg/Fyp7XZQZ",
+      "telegram": "https://t.me/useagently"
     }
   }
 }
