@@ -8,8 +8,8 @@ export default tool({
     invoice: z.string().describe("BOLT11 Lightning invoice string (starts with lnbc)"),
   }),
   execute: async ({ invoice }) => {
-    const decoded = await lw(["decode-invoice", invoice]);
-    const payment = await lw(["pay-invoice", invoice]);
+    const decoded = await lw(["decode", invoice]);
+    const payment = await lw(["pay", invoice]);
     return { decoded, payment };
   },
 });
