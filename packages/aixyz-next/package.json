@@ -1,0 +1,49 @@
+{
+  "name": "@aixyz/next",
+  "version": "0.0.0",
+  "description": "Next.js adapter for AixyzApp",
+  "keywords": [
+    "ai",
+    "agent",
+    "aixyz",
+    "next",
+    "nextjs"
+  ],
+  "homepage": "https://aixyz.sh",
+  "bugs": "https://github.com/AgentlyHQ/aixyz/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentlyHQ/aixyz.git"
+  },
+  "license": "MIT",
+  "author": "AgentlyHQ",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./route": "./route.ts"
+  },
+  "files": [
+    "**/*.ts",
+    "!**/*.test.ts"
+  ],
+  "scripts": {
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@aixyz/config": "workspace:*",
+    "ai": "^6",
+    "aixyz": "workspace:*",
+    "typescript": "^5.9.3",
+    "zod": "^4"
+  },
+  "peerDependencies": {
+    "ai": "^6",
+    "aixyz": "workspace:*",
+    "next": ">=14"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    }
+  }
+}
