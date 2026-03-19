@@ -86,6 +86,11 @@ export class AixyzApp {
     return this.middlewares;
   }
 
+  /** Find a registered plugin by name. Returns a read-only reference. */
+  getPlugin<T extends BasePlugin>(name: string): Readonly<T> | undefined {
+    return this.plugins.find((p) => p.name === name) as Readonly<T> | undefined;
+  }
+
   /** Dispatch a web-standard Request through payment verification, middleware, and route handler. */
   fetch = async (request: Request): Promise<Response> => {
     const response = await this.dispatch(request);
