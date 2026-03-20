@@ -542,6 +542,18 @@ describe("IndexPagePlugin", () => {
       expect(res.headers.get("content-type")).toContain("text/html");
     });
 
+    test("includes Vary: Accept header for HTML response", async () => {
+      const app = await createApp({ a2a: true });
+      const res = await app.fetch(new Request("http://localhost/", { headers: htmlHeaders }));
+      expect(res.headers.get("vary")).toBe("Accept");
+    });
+
+    test("includes Vary: Accept header for markdown response", async () => {
+      const app = await createApp({ a2a: true });
+      const res = await app.fetch(new Request("http://localhost/"));
+      expect(res.headers.get("vary")).toBe("Accept");
+    });
+
     test("markdown Accept header with other types still returns markdown", async () => {
       const app = await createApp({ a2a: true });
       const res = await app.fetch(

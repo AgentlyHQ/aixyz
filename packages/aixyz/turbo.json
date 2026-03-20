@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "inputs": ["tsconfig.json", "./**/*.ts"],
+      "inputs": ["tsconfig.json", "./**/*.ts", "./**/*.tsx"],
       "outputs": ["./**/*.js", "./**/*.d.ts", "./**/*.d.ts.map"],
       "dependsOn": ["^build"]
     }

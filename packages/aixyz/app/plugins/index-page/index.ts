@@ -121,11 +121,11 @@ export class IndexPagePlugin extends BasePlugin {
     app.route("GET", this.path, (request: Request) => {
       if (prefersHtml(request)) {
         return new Response(renderHtml(config, this.protocols), {
-          headers: { "Content-Type": "text/html; charset=utf-8" },
+          headers: { "Content-Type": "text/html; charset=utf-8", Vary: "Accept" },
         });
       }
       return new Response(renderMarkdown(config, this.protocols), {
-        headers: { "Content-Type": "text/markdown; charset=utf-8" },
+        headers: { "Content-Type": "text/markdown; charset=utf-8", Vary: "Accept" },
       });
     });
   }
