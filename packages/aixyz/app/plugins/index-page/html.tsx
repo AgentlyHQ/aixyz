@@ -612,14 +612,14 @@ export function renderHtml(config: AixyzConfigRuntime, protocols: ProtocolInfo):
             <footer class="mt-14 pb-6 anim" style="animation-delay: 120ms">
               <Separator />
               <div class="flex items-center justify-center gap-1.5 mt-5">
+                <span class="text-[11px] text-muted-foreground/60">powered by</span>
                 <a
                   href="https://aixyz.sh"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="flex items-center gap-1.5 no-underline"
+                  class="text-[11px] text-primary font-semibold no-underline"
                 >
-                  <span class="text-[11px] text-muted-foreground/60">powered by</span>
-                  <span class="text-[11px] text-primary font-semibold">aixyz</span>
+                  aixyz
                 </a>
               </div>
             </footer>
