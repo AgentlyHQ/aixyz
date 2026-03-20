@@ -488,17 +488,11 @@ export function renderHtml(config: AixyzConfigRuntime, protocols: ProtocolInfo):
           <meta name="viewport" content="width=device-width,initial-scale=1" />
           <title>{Html.escapeHtml(config.name)}</title>
           <link rel="icon" href="/favicon.ico" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&family=JetBrains+Mono:wght@400;500&display=swap"
-            rel="stylesheet"
-          />
           <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
           <style type="text/tailwindcss">{`
             @theme {
-              --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
-              --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+              --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+              --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", "Fira Code", monospace;
               --radius: 0.625rem;
 
               --color-background: hsl(240 6% 6%);
