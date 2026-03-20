@@ -23,11 +23,13 @@
     "./app": "./app/index.ts",
     "./app/*": "./app/*.ts",
     "./app/adapters/*": "./app/adapters/*.ts",
+    "./app/plugins/index-page": "./app/plugins/index-page/index.ts",
     "./app/plugins/*": "./app/plugins/*.ts"
   },
   "bin": "bin.js",
   "files": [
     "**/*.ts",
+    "**/*.tsx",
     "!**/*.test.ts",
     "!test/**"
   ],
@@ -39,6 +41,7 @@
     "@aixyz/cli": "workspace:*",
     "@aixyz/config": "workspace:*",
     "@aixyz/erc-8004": "workspace:*",
+    "@kitajs/html": "^4.2.13",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@next/env": "^16.1.6",
     "@x402/core": "^2.3.1",
