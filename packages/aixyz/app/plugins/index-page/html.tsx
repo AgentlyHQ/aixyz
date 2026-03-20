@@ -429,7 +429,7 @@ function buildContinuation(
 ): { label: string; protocol: string; text: string; hasMessage: boolean } {
   if (entry.protocol === "a2a") {
     const prefix = entry.path.slice(1, -"/agent".length);
-    const uri = prefix ? `${agentUrl}${prefix}/` : agentUrl;
+    const uri = prefix ? new URL(`${prefix}/`, agentUrl).toString() : agentUrl;
     const label = prefix || configName;
     return {
       label,
@@ -440,8 +440,8 @@ function buildContinuation(
       hasMessage: true,
     };
   }
-  const uri = agentUrl.replace(/\/$/, "") + entry.path;
-  const args = entry.inputSchema ? JSON.stringify(entry.inputSchema) : "{}";
+  const uri = new URL(entry.path, agentUrl).toString();
+  const args = (entry.inputSchema ? JSON.stringify(entry.inputSchema) : "{}").replaceAll("'", "'\\''");
   return {
     label: entry.name,
     protocol: "MCP",

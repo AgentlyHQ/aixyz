@@ -24,7 +24,8 @@ export interface ProtocolInfo {
 
 function prefersHtml(request: Request): boolean {
   const accept = request.headers.get("accept") ?? "";
-  return accept.includes("text/html");
+  if (!/text\/html/i.test(accept)) return false;
+  return !/text\/html\s*;\s*q\s*=\s*0(\.0*)?\s*(,|$)/i.test(accept);
 }
 
 function renderMarkdown(config: AixyzConfigRuntime, protocols: ProtocolInfo): string {

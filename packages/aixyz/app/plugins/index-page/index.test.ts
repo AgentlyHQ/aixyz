@@ -17,7 +17,7 @@ const defaultConfig = {
   name: "Test Agent",
   description: "A test agent",
   version: "1.0.0",
-  url: "http://localhost:3000",
+  url: "http://localhost:3000/",
   x402: { payTo: "0x0000000000000000000000000000000000000000", network: "eip155:8453" },
   build: { tools: [], agents: [], excludes: [], poweredByHeader: true },
   vercel: { maxDuration: 30 },
@@ -28,7 +28,7 @@ const defaultRuntimeConfig = {
   name: "Test Agent",
   description: "A test agent",
   version: "1.0.0",
-  url: "http://localhost:3000",
+  url: "http://localhost:3000/",
   skills: defaultSkills,
 };
 
@@ -106,8 +106,8 @@ describe("IndexPagePlugin", () => {
       const md = await res.text();
 
       expect(md).toContain("A2A");
-      expect(md).toContain("npx use-agently a2a send --uri http://localhost:3000 -m 'Plan a trip to Paris'");
-      expect(md).toContain("npx use-agently a2a card --uri http://localhost:3000");
+      expect(md).toContain("npx use-agently a2a send --uri http://localhost:3000/ -m 'Plan a trip to Paris'");
+      expect(md).toContain("npx use-agently a2a card --uri http://localhost:3000/");
       expect(md).not.toContain("mcp tools");
     });
   });
@@ -135,7 +135,7 @@ describe("IndexPagePlugin", () => {
       const md = await res.text();
 
       expect(md).toContain("MCP");
-      expect(md).toContain("npx use-agently mcp tools --uri http://localhost:3000");
+      expect(md).toContain("npx use-agently mcp tools --uri http://localhost:3000/");
       expect(md).not.toContain("a2a send");
       expect(md).not.toContain("Plan a trip to Paris");
     });
@@ -248,7 +248,7 @@ describe("IndexPagePlugin", () => {
       const res = await app.fetch(new Request("http://localhost/", { headers: htmlHeaders }));
       const html = await res.text();
 
-      expect(html).toContain("http://localhost:3000assistant/");
+      expect(html).toContain("http://localhost:3000/assistant/");
       expect(html).toContain("assistant");
     });
 
@@ -528,6 +528,20 @@ describe("IndexPagePlugin", () => {
       expect(md).toContain("Travel Planner");
     });
 
+    test("serves markdown when text/html is explicitly rejected with q=0", async () => {
+      const app = await createApp({ a2a: true });
+      const res = await app.fetch(
+        new Request("http://localhost/", { headers: { Accept: "text/html;q=0, text/markdown" } }),
+      );
+      expect(res.headers.get("content-type")).toContain("text/markdown");
+    });
+
+    test("serves HTML for case-insensitive Accept header", async () => {
+      const app = await createApp({ a2a: true });
+      const res = await app.fetch(new Request("http://localhost/", { headers: { Accept: "Text/HTML" } }));
+      expect(res.headers.get("content-type")).toContain("text/html");
+    });
+
     test("markdown Accept header with other types still returns markdown", async () => {
       const app = await createApp({ a2a: true });
       const res = await app.fetch(
@@ -545,7 +559,7 @@ describe("IndexPagePlugin", () => {
     expect(html).toContain("System Prompt");
     expect(html).toContain("paste into any LLM");
     expect(html).toContain(
-      "You have access to an AI agent called &quot;Test Agent&quot; at http://localhost:3000 — a test agent.",
+      "You have access to an AI agent called &quot;Test Agent&quot; at http://localhost:3000/ — a test agent.",
     );
     expect(html).toContain("- Travel Planner: Plans trips and itineraries");
     expect(html).toContain("You can send multiple messages to follow up or refine.");
