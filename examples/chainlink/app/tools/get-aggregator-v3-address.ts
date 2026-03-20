@@ -12,7 +12,7 @@ const publicClient = createPublicClient({
 
 export const accepts: Accepts = {
   scheme: "exact",
-  price: "$0.00001",
+  price: "$0.0001",
 };
 
 export default tool({

@@ -78,7 +78,7 @@ async function executeLookup({ symbol }: { symbol: string }) {
 
 export const accepts: Accepts = {
   scheme: "exact",
-  price: "$0.01",
+  price: "$0.0001",
 };
 
 export default tool({
