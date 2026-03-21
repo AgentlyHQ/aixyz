@@ -4,6 +4,7 @@ import * as p from "@clack/prompts";
 import { Command } from "commander";
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { generateAgentFiles } from "./generate-agent-files.js";
 import { generateIcon } from "./generate-icon.js";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +21,7 @@ program
   .option("--openai-api-key <key>", "Set OpenAI API Key in .env.local")
   .option("--pay-to <address>", "x402 payTo Ethereum address", DEFAULT_PAY_TO)
   .option("--no-install", "Skip dependency installation")
+  .option("--no-agents-md", "Skip generating AGENTS.md and CLAUDE.md")
   .addHelpText(
     "after",
     `
@@ -37,6 +39,7 @@ const opts = program.opts<{
   openaiApiKey?: string;
   payTo: string;
   install: boolean;
+  agentsMd: boolean;
 }>();
 
 // Check if Bun is installed
@@ -189,6 +192,11 @@ cpSync(templateDir, targetDir, { recursive: true });
 // Generate a random icon.svg (overwrites the static template placeholder)
 generateIcon(join(targetDir, "app", "icon.svg"));
 
+// Generate AGENTS.md and CLAUDE.md
+if (opts.agentsMd) {
+  generateAgentFiles(targetDir);
+}
+
 // Remove erc-8004.ts if user opted out
 if (!includeErc8004) {
   const erc8004Path = join(targetDir, "app", "erc-8004.ts");
@@ -236,6 +244,16 @@ if (!opts.install) {
     s.stop("Dependencies installed.");
   } catch {
     s.stop("Failed to install dependencies. You can run `bun install` manually.");
+  }
+
+  // Install use-agently CLI globally
+  const ag = p.spinner();
+  ag.start("Installing use-agently...");
+  try {
+    execSync("npm install -g use-agently@latest", { stdio: "ignore" });
+    ag.stop("use-agently installed globally.");
+  } catch {
+    ag.stop("Failed to install use-agently. You can run `npm install -g use-agently@latest` manually.");
   }
 }
 

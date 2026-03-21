@@ -31,7 +31,9 @@
     "**/*.ts",
     "**/*.tsx",
     "!**/*.test.ts",
-    "!test/**"
+    "!test/**",
+    "docs/**",
+    "examples/**"
   ],
   "scripts": {
     "test": "bun test"
