@@ -70,7 +70,6 @@ jobs:
 
       - name: Copy examples into aixyz package
         run: |
-          mkdir -p packages/aixyz/examples
           for example in boilerplate with-custom-facilitator with-express; do
             rsync -a --exclude node_modules --exclude .aixyz --exclude .turbo "examples/$example" "packages/aixyz/examples/"
           done

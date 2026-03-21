@@ -245,16 +245,6 @@ if (!opts.install) {
   } catch {
     s.stop("Failed to install dependencies. You can run `bun install` manually.");
   }
-
-  // Install use-agently CLI globally
-  const ag = p.spinner();
-  ag.start("Installing use-agently...");
-  try {
-    execSync("npm install -g use-agently@latest", { stdio: "ignore" });
-    ag.stop("use-agently installed globally.");
-  } catch {
-    ag.stop("Failed to install use-agently. You can run `npm install -g use-agently@latest` manually.");
-  }
 }
 
 p.note(
