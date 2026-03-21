@@ -4,7 +4,11 @@ import { type HttpMethod, type RouteHandler, type Middleware, type RouteEntry } 
 import { PaymentGateway } from "./payment/payment";
 import { Network } from "@x402/core/types";
 import { getAixyzConfig } from "@aixyz/config";
+import { loadEnvConfig } from "@next/env";
 import { BasePlugin } from "./plugin";
+
+// Load .env and .env.production files at runtime (local files are excluded at build time).
+loadEnvConfig(process.cwd());
 
 export { BasePlugin };
 export type { HttpMethod, RouteHandler, Middleware, RouteEntry };

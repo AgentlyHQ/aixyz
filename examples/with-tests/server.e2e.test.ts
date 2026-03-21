@@ -31,10 +31,12 @@ beforeAll(async () => {
     throw new Error("standalone build failed");
   }
 
-  // Start the built server on the designated test port
+  // Start the built server from the output directory so loadEnvConfig picks up the copied .env files.
+  // Exclude TEST_ENV_VAR from the inherited env to verify it is loaded from .env at runtime.
+  const { TEST_ENV_VAR: _, ...envWithout } = process.env;
   serverProcess = Bun.spawn(["bun", SERVER_JS], {
-    cwd: AGENT_DIR,
-    env: { ...process.env, PORT },
+    cwd: OUTPUT_DIR,
+    env: { ...envWithout, PORT },
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -62,6 +64,7 @@ describe("standalone output e2e", () => {
   test("build produces expected output files", () => {
     expect(existsSync(SERVER_JS)).toBe(true);
     expect(existsSync(resolve(OUTPUT_DIR, "package.json"))).toBe(true);
+    expect(existsSync(resolve(OUTPUT_DIR, ".env"))).toBe(true);
   });
 
   test("index page responds with agent info", async () => {
@@ -120,5 +123,36 @@ describe("standalone output e2e", () => {
     const serverInfo = result.serverInfo as Record<string, unknown>;
     expect(serverInfo.name).toBe("Unit Conversion Agent");
     expect(serverInfo.version).toBe("0.1.0");
+  });
+
+  test("runtime loads .env files via loadEnvConfig", async () => {
+    // Call echo-env tool directly — the stateless MCP transport creates a fresh server per request.
+    const res = await fetch(`${BASE_URL}/mcp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "tools/call",
+        params: {
+          name: "echo-env",
+          arguments: {},
+        },
+        id: 1,
+      }),
+    });
+
+    expect(res.ok).toBe(true);
+    const text = await res.text();
+    const [message] = parseSseData(text) as Array<Record<string, unknown>>;
+
+    expect(message).toBeDefined();
+    expect(message.id).toBe(1);
+
+    const result = message.result as { content: Array<{ type: string; text: string }> };
+    const content = JSON.parse(result.content[0].text);
+    expect(content.value).toBe("hello-agent");
   });
 });

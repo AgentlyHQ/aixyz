@@ -124,6 +124,9 @@ async function buildBun(entrypoint: string, isCustom: boolean): Promise<void> {
     await generateFavicon(iconFile, resolve(outputDir, "public/favicon.ico"));
   }
 
+  // Copy .env files for runtime env loading
+  const copiedEnvFiles = copyEnvFiles(cwd, outputDir);
+
   // Log summary
   console.log("");
   console.log("Build complete! Output:");
@@ -131,6 +134,9 @@ async function buildBun(entrypoint: string, isCustom: boolean): Promise<void> {
   console.log("  .aixyz/output/package.json");
   if (existsSync(publicDir) || iconFile) {
     console.log("  .aixyz/output/public/ and assets");
+  }
+  for (const envFile of copiedEnvFiles) {
+    console.log(`  .aixyz/output/${envFile}`);
   }
   console.log("");
   console.log("To run: bun .aixyz/output/server.js");
@@ -181,12 +187,18 @@ async function buildExecutable(entrypoint: string, isCustom: boolean): Promise<v
     await generateFavicon(iconFile, resolve(outputDir, "public/favicon.ico"));
   }
 
+  // Copy .env files for runtime env loading
+  const copiedEnvFiles = copyEnvFiles(cwd, outputDir);
+
   // Log summary
   console.log("");
   console.log("Build complete! Output:");
   console.log("  .aixyz/output/server");
   if (existsSync(publicDir) || iconFile) {
     console.log("  .aixyz/output/public/ and assets");
+  }
+  for (const envFile of copiedEnvFiles) {
+    console.log(`  .aixyz/output/${envFile}`);
   }
   console.log("");
   console.log("To run: ./.aixyz/output/server");
@@ -284,4 +296,23 @@ async function buildVercel(
   console.log("  .vercel/output/config.json");
   console.log("  .vercel/output/functions/index.func/server.js");
   console.log("  .vercel/output/static/");
+}
+
+/**
+ * Copy .env and .env.production to the output directory for runtime env loading.
+ * .env.local and .env.production.local are excluded — those are for local development only.
+ */
+function copyEnvFiles(cwd: string, outputDir: string): string[] {
+  const envFiles = [".env", ".env.production"];
+  const copied: string[] = [];
+
+  for (const envFile of envFiles) {
+    const src = resolve(cwd, envFile);
+    if (existsSync(src)) {
+      cpSync(src, resolve(outputDir, envFile));
+      copied.push(envFile);
+    }
+  }
+
+  return copied;
 }
