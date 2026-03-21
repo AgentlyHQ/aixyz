@@ -65,6 +65,15 @@ jobs:
           sed -i 's/"workspace:\*"/"'"$VERSION"'"/g' packages/*/package.json
           sed -i 's/"workspace:\*"/"'"$VERSION"'"/g' packages/create-aixyz-app/templates/*/package.json
 
+      - name: Copy docs into aixyz package
+        run: rsync -a --include='*/' --include='*.mdx' --exclude='*' docs/ packages/aixyz/docs/
+
+      - name: Copy examples into aixyz package
+        run: |
+          for example in boilerplate with-custom-facilitator with-express; do
+            rsync -a --exclude node_modules --exclude .aixyz --exclude .turbo "examples/$example" "packages/aixyz/examples/"
+          done
+
       - name: Copy root README.md to packages missing one
         run: |
           for pkg in packages/*/; do

@@ -20,6 +20,20 @@ Open [http://localhost:3000/.well-known/agent-card.json](http://localhost:3000/.
 
 You can start editing the agent by modifying `app/agent.ts`. The server hot-reloads as you edit the file.
 
+## Testing
+
+Start the dev server:
+
+```bash
+bun run dev
+```
+
+Then in another terminal, use [use-agently](https://github.com/use-agently/cli) to interact with your agent via A2A:
+
+```bash
+bun use-agently a2a send --uri http://localhost:3000/ -m "Convert 100 meters to feet"
+```
+
 ## Learn More
 
 To learn more about aixyz, take a look at the following resources:

@@ -97,6 +97,25 @@ describe("create-aixyz-app", () => {
     expect(existsSync(join(projectDir, "tsconfig.json"))).toBe(true);
   });
 
+  test("generates AGENTS.md and CLAUDE.md by default", () => {
+    expect(existsSync(join(projectDir, "AGENTS.md"))).toBe(true);
+    expect(existsSync(join(projectDir, "CLAUDE.md"))).toBe(true);
+  });
+
+  test("--no-agents-md skips AGENTS.md and CLAUDE.md", () => {
+    const noAgentsDir = join(tmpDir, "no-agents-test");
+    Bun.spawnSync(["bun", CLI_PATH, "--yes", "--no-install", "--no-agents-md", "no-agents-test"], {
+      cwd: tmpDir,
+      stdout: "inherit",
+      stderr: "inherit",
+      env: { ...process.env, npm_config_user_agent: "bun/1.0.0" },
+    });
+
+    expect(existsSync(join(noAgentsDir, "package.json"))).toBe(true);
+    expect(existsSync(join(noAgentsDir, "AGENTS.md"))).toBe(false);
+    expect(existsSync(join(noAgentsDir, "CLAUDE.md"))).toBe(false);
+  });
+
   test("placeholders are replaced", () => {
     const config = readFileSync(join(projectDir, "aixyz.config.ts"), "utf8");
     expect(config).not.toContain("{{AGENT_NAME}}");

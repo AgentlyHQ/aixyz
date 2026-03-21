@@ -22,8 +22,7 @@ You are a helpful unit conversion assistant that accurately converts values betw
 `.trim();
 
 export const accepts: Accepts = {
-  scheme: "exact",
-  price: "$0.001",
+  scheme: "free",
 };
 
 export default new ToolLoopAgent({

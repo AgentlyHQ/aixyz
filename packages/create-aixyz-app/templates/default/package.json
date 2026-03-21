@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@types/bun": "^1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "use-agently": "latest"
   }
 }
