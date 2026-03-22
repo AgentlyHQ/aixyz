@@ -49,24 +49,14 @@ function createApp(data: unknown = {}, options = { mcp: true, a2a: ["/.well-know
 // ---------------------------------------------------------------------------
 
 describe("ERC8004Plugin", () => {
-  test("registers two GET routes returning the registration file as JSON", async () => {
+  test("registers GET route returning the registration file as JSON", async () => {
     const app = createApp({ name: "Test", description: "Test agent" });
 
-    expect(app.routes.has("GET /.well-known/erc-8004.json")).toBe(true);
     expect(app.routes.has("GET /_aixyz/erc-8004.json")).toBe(true);
 
-    const { res } = await fetchJson(app, "/.well-known/erc-8004.json");
+    const { res } = await fetchJson(app, "/_aixyz/erc-8004.json");
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("application/json");
-  });
-
-  test("both routes return identical JSON", async () => {
-    const app = createApp({ name: "Test", description: "Test agent" });
-
-    const { json: json1 } = await fetchJson(app, "/.well-known/erc-8004.json");
-    const { json: json2 } = await fetchJson(app, "/_aixyz/erc-8004.json");
-
-    expect(json1).toEqual(json2);
   });
 
   // ---------------------------------------------------------------------------
@@ -77,7 +67,7 @@ describe("ERC8004Plugin", () => {
     test("response validates against AgentRegistrationFileSchema", async () => {
       const app = createApp({ name: "My Agent", description: "Does things" });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
@@ -86,7 +76,7 @@ describe("ERC8004Plugin", () => {
     test("response with config defaults validates against schema", async () => {
       const app = createApp({});
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
@@ -95,7 +85,7 @@ describe("ERC8004Plugin", () => {
     test("response with MCP only validates against schema", async () => {
       const app = createApp({}, { mcp: true, a2a: [] });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
@@ -104,7 +94,7 @@ describe("ERC8004Plugin", () => {
     test("response with A2A only validates against schema", async () => {
       const app = createApp({}, { mcp: false, a2a: ["/agent"] });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
@@ -116,7 +106,7 @@ describe("ERC8004Plugin", () => {
         { mcp: true, a2a: ["/.well-known/agent-card.json", "/v2/.well-known/agent-card.json"] },
       );
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       const result = AgentRegistrationFileSchema.safeParse(json);
       expect(result.success).toBe(true);
@@ -126,7 +116,7 @@ describe("ERC8004Plugin", () => {
     test("type field is the ERC-8004 registration literal", async () => {
       const app = createApp({});
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.type).toBe(ERC8004_REGISTRATION_TYPE);
     });
@@ -134,7 +124,7 @@ describe("ERC8004Plugin", () => {
     test("each service validates against ServiceSchema", async () => {
       const app = createApp({}, { mcp: true, a2a: ["/.well-known/agent-card.json"] });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       for (const service of json.services) {
         const result = ServiceSchema.safeParse(service);
@@ -145,7 +135,7 @@ describe("ERC8004Plugin", () => {
     test("service endpoints are valid URLs", async () => {
       const app = createApp({}, { mcp: true, a2a: ["/.well-known/agent-card.json"] });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       for (const service of json.services) {
         expect(() => new URL(service.endpoint)).not.toThrow();
@@ -161,7 +151,7 @@ describe("ERC8004Plugin", () => {
     test("custom registration data is reflected", async () => {
       const app = createApp({ name: "My Agent", description: "Does things" });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.name).toBe("My Agent");
       expect(json.description).toBe("Does things");
@@ -173,7 +163,7 @@ describe("ERC8004Plugin", () => {
     test("A2A service has correct fields", async () => {
       const app = createApp({}, { mcp: false, a2a: ["/.well-known/agent-card.json"] });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.services).toHaveLength(1);
       expect(json.services[0]).toEqual({
@@ -186,7 +176,7 @@ describe("ERC8004Plugin", () => {
     test("MCP service has correct fields", async () => {
       const app = createApp({}, { mcp: true, a2a: [] });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.services).toHaveLength(1);
       expect(json.services[0]).toEqual({
@@ -199,7 +189,7 @@ describe("ERC8004Plugin", () => {
     test("combined A2A + MCP services in correct order", async () => {
       const app = createApp({}, { mcp: true, a2a: ["/.well-known/agent-card.json"] });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.services).toHaveLength(2);
       expect(json.services[0].name).toBe("A2A");
@@ -209,7 +199,7 @@ describe("ERC8004Plugin", () => {
     test("config defaults applied for empty registration", async () => {
       const app = createApp({});
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.name).toBe("Test Agent");
       expect(json.description).toBe("A test agent");
@@ -227,7 +217,7 @@ describe("ERC8004Plugin", () => {
         x402support: false,
       });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.name).toBe("Custom Name");
       expect(json.description).toBe("Custom desc");
@@ -272,12 +262,10 @@ describe("ERC8004Plugin", () => {
   // Unregistered routes
   // ---------------------------------------------------------------------------
 
-  test("POST to well-known returns 404", async () => {
+  test("POST to erc-8004 endpoint returns 404", async () => {
     const app = createApp({});
 
-    const res = await app.fetch(
-      new Request("http://localhost/.well-known/erc-8004.json", { method: "POST", body: "{}" }),
-    );
+    const res = await app.fetch(new Request("http://localhost/_aixyz/erc-8004.json", { method: "POST", body: "{}" }));
     expect(res.status).toBe(404);
   });
 });
