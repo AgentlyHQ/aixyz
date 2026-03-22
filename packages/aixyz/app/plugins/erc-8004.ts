@@ -49,7 +49,7 @@ export function getAgentRegistrationFile(
   return withDefault.parse(data);
 }
 
-/** ERC-8004 identity plugin. Registers `/.well-known/erc-8004.json` and `/_aixyz/erc-8004.json` routes. */
+/** ERC-8004 identity plugin. Registers the `/_aixyz/erc-8004.json` route. */
 export class ERC8004Plugin extends BasePlugin {
   readonly name = "erc-8004";
 
@@ -60,7 +60,6 @@ export class ERC8004Plugin extends BasePlugin {
   register(app: AixyzApp): void {
     const file = getAgentRegistrationFile(this.exports.default, this.exports.options);
 
-    app.route("GET", "/.well-known/erc-8004.json", () => Response.json(file));
     app.route("GET", "/_aixyz/erc-8004.json", () => Response.json(file));
   }
 }

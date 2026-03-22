@@ -135,7 +135,7 @@ The `aixyz dev` command spawns a Bun worker process with file watching on `app/`
   `/agent`
 - **`mcp.ts`** — `MCPPlugin`: Exposes tools at `/mcp` via `WebStandardStreamableHTTPServerTransport`
 - **`index-page.ts`** — `IndexPagePlugin`: Human-readable agent info page
-- **`erc-8004.ts`** — `ERC8004Plugin`: Serves ERC-8004 identity at `/.well-known/erc-8004.json` and `/_aixyz/erc-8004.json`
+- **`erc-8004.ts`** — `ERC8004Plugin`: Serves ERC-8004 identity at `/_aixyz/erc-8004.json`
 
 ### Config loading (`@aixyz/config`)
 

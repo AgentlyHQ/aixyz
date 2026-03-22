@@ -9,9 +9,8 @@ const metadata: ERC8004Registration = {
 };
 
 /**
- * Declaring `export default registration`, two endpoints will be available:
+ * Declaring `export default metadata` will expose ERC-8004 metadata at:
  *
  * GET /_aixyz/erc-8004.json
- * GET /.well-known/erc-8004.json
  */
 export default metadata;
