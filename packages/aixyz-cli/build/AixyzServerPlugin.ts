@@ -129,6 +129,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
 
   imports.push('import { AixyzApp } from "aixyz/app";');
   imports.push('import { IndexPagePlugin } from "aixyz/app/plugins/index-page";');
+  imports.push('import { MetadataPlugin } from "aixyz/app/plugins/metadata";');
 
   const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
   if (hasAccepts) {
@@ -171,6 +172,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
 
   body.push("const app = new AixyzApp({ facilitators: facilitator });");
   body.push("await app.withPlugin(new IndexPagePlugin());");
+  body.push("await app.withPlugin(new MetadataPlugin());");
 
   if (rootAgent) {
     body.push("await app.withPlugin(new A2APlugin(agent));");
