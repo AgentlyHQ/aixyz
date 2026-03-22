@@ -14,7 +14,7 @@ const metadata: ERC8004Registration = {
 };
 
 /**
- * Declaring `export default registration`, two endpoints will be available:
+ * Declaring `export default registration` will make the following endpoint available:
  *
  * GET /_aixyz/erc-8004.json
  */
