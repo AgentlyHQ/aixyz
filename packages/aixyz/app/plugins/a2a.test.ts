@@ -333,6 +333,20 @@ describe("A2APlugin", () => {
       expect(plugin.registeredRoutes.has("POST /v1/agent")).toBe(true);
     });
 
+    test("throws with agent identifier for invalid accepts config (named agent)", async () => {
+      const app = new AixyzApp();
+      const plugin = new A2APlugin([
+        { name: "broken", exports: { default: makeMockAgent(), accepts: { scheme: "invalid" } as any } },
+      ]);
+      expect(app.withPlugin(plugin)).rejects.toThrow(/Invalid accepts config for agent "broken"/);
+    });
+
+    test("throws with 'root' identifier for invalid accepts config (unnamed agent)", async () => {
+      const app = new AixyzApp();
+      const plugin = new A2APlugin([{ exports: { default: makeMockAgent(), accepts: { scheme: "invalid" } as any } }]);
+      expect(app.withPlugin(plugin)).rejects.toThrow(/Invalid accepts config for agent "root"/);
+    });
+
     test("skips agents without accepts while registering others", async () => {
       const app = new AixyzApp();
       const plugin = new A2APlugin([

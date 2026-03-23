@@ -66,6 +66,9 @@ export class AixyzApp {
   /** Register a plugin with a scoped RegisterContext that auto-tracks registered routes. */
   async withPlugin<B extends BasePlugin>(plugin: B): Promise<this> {
     this.plugins.push(plugin);
+    // clear registered routes for this plugin before registration, in case of hot reload or multiple registrations
+    plugin.registeredRoutes.clear();
+
     const ctx: RegisterContext = {
       route: (method, path, handler, options) => {
         this.route(method, path, handler, options);

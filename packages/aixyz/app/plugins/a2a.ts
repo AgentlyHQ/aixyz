@@ -26,6 +26,8 @@ export type Capabilities = z.infer<typeof CapabilitiesSchema>;
 export interface A2AAgentEntry {
   name?: string;
   exports: { default: ToolLoopAgent; accepts?: Accepts; capabilities?: Capabilities };
+  /** Optional task store override. Defaults to a per-agent InMemoryTaskStore for isolation. */
+  taskStore?: TaskStore;
 }
 
 const DEFAULT_CAPABILITIES: Capabilities = { streaming: true, pushNotifications: false };
@@ -159,10 +161,7 @@ export function getAgentCard(agentPath = "/agent", capabilities?: Capabilities):
 export class A2APlugin extends BasePlugin {
   readonly name = "a2a";
 
-  constructor(
-    private agents: A2AAgentEntry[],
-    private taskStore: TaskStore = new InMemoryTaskStore(),
-  ) {
+  constructor(private agents: A2AAgentEntry[]) {
     super();
   }
 
@@ -174,7 +173,11 @@ export class A2APlugin extends BasePlugin {
 
   private registerAgent(ctx: RegisterContext, entry: A2AAgentEntry): void {
     if (entry.exports.accepts) {
-      AcceptsScheme.parse(entry.exports.accepts);
+      const result = AcceptsScheme.safeParse(entry.exports.accepts);
+      if (!result.success) {
+        const id = entry.name ?? "root";
+        throw new Error(`Invalid accepts config for agent "${id}": ${result.error.message}`);
+      }
     } else {
       return;
     }
@@ -188,12 +191,9 @@ export class A2APlugin extends BasePlugin {
       ? `/${prefix}/.well-known/agent-card.json`
       : "/.well-known/agent-card.json";
 
+    const taskStore = entry.taskStore ?? new InMemoryTaskStore();
     const agentExecutor = new ToolLoopAgentExecutor(entry.exports.default, capabilities.streaming ?? true);
-    const requestHandler = new DefaultRequestHandler(
-      getAgentCard(agentPath, capabilities),
-      this.taskStore,
-      agentExecutor,
-    );
+    const requestHandler = new DefaultRequestHandler(getAgentCard(agentPath, capabilities), taskStore, agentExecutor);
     const jsonRpcTransport = new JsonRpcTransportHandler(requestHandler);
 
     // Agent card — pure web-standard handler
