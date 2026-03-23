@@ -31,8 +31,8 @@ export function getOasfRecord(app: AixyzApp) {
     locators.push({ type: service.type, urls: [service.url] });
   }
 
-  // Map config skills to OASF skill format
-  const skills = config.skills.map((s) => ({ name: s.name }));
+  // Map config skills with OASF catalog info to OASF skill format
+  const skills = config.skills.filter((s) => s.oasf).map((s) => s.oasf!);
 
   return {
     name: config.name,
@@ -42,7 +42,7 @@ export function getOasfRecord(app: AixyzApp) {
     authors: [],
     // NOTE: created_at is required by OASF schema, but not in aixyz config. We use transient value here since it doesn't make sense to persist it in the config file.
     created_at: new Date().toISOString(),
-    domains: [],
+    domains: config.domains,
     skills,
     modules: [],
     locators,

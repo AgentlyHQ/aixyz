@@ -77,10 +77,16 @@ export type AixyzConfig = {
   };
   skills?: InferredAixyzConfig["skills"];
   /**
+   * OASF domain categories for the agent.
+   * Uses the OASF domain catalog identifiers (e.g. `"finance_and_business"`, `"technology/blockchain"`).
+   * @see https://schema.oasf.outshift.com/1.0.0/domain_categories
+   */
+  domains?: InferredAixyzConfig["domains"];
+  /**
    * External services to advertise (e.g. OpenAPI, GraphQL).
    * Each entry becomes an OASF locator and optionally an ERC-8004 service.
    */
-  services?: Array<{ type: string; url: string; [key: string]: any }>;
+  services?: InferredAixyzConfig["services"];
 };
 
 const NetworkSchema = z.custom<Network>((val) => {
@@ -96,6 +102,7 @@ const defaultConfig = {
   },
   vercel: { maxDuration: 60 },
   skills: [],
+  domains: [],
   services: [],
 };
 
@@ -161,9 +168,23 @@ const AixyzConfigSchema = z.object({
         inputModes: z.array(z.string()).optional(),
         outputModes: z.array(z.string()).optional(),
         security: z.array(z.record(z.string(), z.array(z.string()))).optional(),
+        oasf: z
+          .object({
+            name: z.string().nonempty(),
+            id: z.number().int().positive(),
+          })
+          .optional(),
       }),
     )
     .default(defaultConfig.skills),
+  domains: z
+    .array(
+      z.object({
+        name: z.string().nonempty(),
+        id: z.number().int().positive(),
+      }),
+    )
+    .default(defaultConfig.domains),
   services: z
     .array(
       z.object({
@@ -189,6 +210,7 @@ export type AixyzConfigRuntime = {
   version: AixyzConfig["version"];
   url: AixyzConfig["url"];
   skills: NonNullable<AixyzConfig["skills"]>;
+  domains: NonNullable<AixyzConfig["domains"]>;
   services: NonNullable<AixyzConfig["services"]>;
 };
 
@@ -240,6 +262,7 @@ export function getAixyzConfigRuntime(): AixyzConfigRuntime {
     version: config.version,
     url: config.url,
     skills: config.skills,
+    domains: config.domains,
     services: config.services,
   };
 }

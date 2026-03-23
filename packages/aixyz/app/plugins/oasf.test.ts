@@ -9,6 +9,7 @@ const DEFAULT_CONFIG = {
   build: { tools: [], agents: [], excludes: [], poweredByHeader: true },
   vercel: { maxDuration: 30 },
   skills: [],
+  domains: [],
   services: [],
 };
 
@@ -18,10 +19,15 @@ const DEFAULT_RUNTIME_CONFIG = {
   version: "1.0.0",
   url: "http://localhost:3000",
   skills: [],
+  domains: [],
   services: [],
 };
 
-function setMockConfig(overrides?: { skills?: unknown[]; services?: unknown[] }) {
+function setMockConfig(overrides?: {
+  skills?: unknown[];
+  services?: unknown[];
+  domains?: Array<{ name: string; id: number }>;
+}) {
   mock.module("@aixyz/config", () => ({
     getAixyzConfig: () => ({ ...DEFAULT_CONFIG, ...overrides }),
     getAixyzConfigRuntime: () => ({ ...DEFAULT_RUNTIME_CONFIG, ...overrides }),
@@ -218,7 +224,7 @@ describe("OASFPlugin", () => {
   // ---------------------------------------------------------------------------
 
   describe("skills", () => {
-    test("maps config skills to OASF skill format", () => {
+    test("excludes skills without OASF catalog info", () => {
       setMockConfig({
         skills: [
           { id: "trading", name: "Trading", description: "Execute trades", tags: ["finance"] },
@@ -229,7 +235,57 @@ describe("OASFPlugin", () => {
       const app = new AixyzApp();
       const record = getOasfRecord(app);
 
-      expect(record.skills).toEqual([{ name: "Trading" }, { name: "Market Analysis" }]);
+      expect(record.skills).toEqual([]);
+    });
+
+    test("maps skills with OASF catalog info", () => {
+      setMockConfig({
+        skills: [
+          {
+            id: "trading",
+            name: "Trading",
+            description: "Execute trades",
+            tags: ["finance"],
+            oasf: { name: "finance_and_business/trading", id: 201 },
+          },
+          { id: "analysis", name: "Market Analysis", description: "Analyze markets", tags: ["finance"] },
+        ],
+      });
+
+      const app = new AixyzApp();
+      const record = getOasfRecord(app);
+
+      expect(record.skills).toEqual([{ name: "finance_and_business/trading", id: 201 }]);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Domains mapping
+  // ---------------------------------------------------------------------------
+
+  describe("domains", () => {
+    test("maps config domains to OASF domains", () => {
+      setMockConfig({
+        domains: [
+          { name: "finance_and_business", id: 2 },
+          { name: "technology/blockchain", id: 109 },
+        ],
+      });
+
+      const app = new AixyzApp();
+      const record = getOasfRecord(app);
+
+      expect(record.domains).toEqual([
+        { name: "finance_and_business", id: 2 },
+        { name: "technology/blockchain", id: 109 },
+      ]);
+    });
+
+    test("defaults to empty array when no domains configured", () => {
+      const app = new AixyzApp();
+      const record = getOasfRecord(app);
+
+      expect(record.domains).toEqual([]);
     });
   });
 
