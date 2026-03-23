@@ -290,6 +290,56 @@ describe("OASFPlugin", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Modules auto-detection
+  // ---------------------------------------------------------------------------
+
+  describe("modules", () => {
+    test("A2A plugin registered → modules includes integration/a2a with card data", async () => {
+      const app = await createApp({ a2a: true });
+
+      const { json } = await fetchJson(app, "/_aixyz/oasf.json");
+
+      const a2aModule = json.modules.find((m: any) => m.name === "integration/a2a");
+      expect(a2aModule).toBeDefined();
+      expect(a2aModule.id).toBe(203);
+      expect(a2aModule.data.card_schema_version).toBe("0.3.0");
+      expect(a2aModule.data.card_data).toBeDefined();
+      expect(a2aModule.data.card_data.name).toBe("Test Agent");
+      expect(a2aModule.data.card_data.protocolVersion).toBe("0.3.0");
+    });
+
+    test("MCP plugin registered → modules includes integration/mcp with connection", async () => {
+      const app = await createApp({ mcp: true });
+
+      const { json } = await fetchJson(app, "/_aixyz/oasf.json");
+
+      const mcpModule = json.modules.find((m: any) => m.name === "integration/mcp");
+      expect(mcpModule).toBeDefined();
+      expect(mcpModule.id).toBe(202);
+      expect(mcpModule.data.name).toBe("Test Agent");
+      expect(mcpModule.data.connections).toEqual([{ type: "streamable-http", url: "http://localhost:3000/mcp" }]);
+    });
+
+    test("both plugins → both modules present", async () => {
+      const app = await createApp({ a2a: true, mcp: true });
+
+      const { json } = await fetchJson(app, "/_aixyz/oasf.json");
+
+      expect(json.modules).toHaveLength(2);
+      expect(json.modules.find((m: any) => m.name === "integration/a2a")).toBeDefined();
+      expect(json.modules.find((m: any) => m.name === "integration/mcp")).toBeDefined();
+    });
+
+    test("no plugins → modules is empty", async () => {
+      const app = await createApp();
+
+      const { json } = await fetchJson(app, "/_aixyz/oasf.json");
+
+      expect(json.modules).toEqual([]);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Unregistered routes
   // ---------------------------------------------------------------------------
 

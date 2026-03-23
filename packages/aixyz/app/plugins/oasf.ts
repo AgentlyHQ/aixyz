@@ -1,6 +1,8 @@
 import { getAixyzConfigRuntime } from "@aixyz/config";
 import { BasePlugin } from "../plugin";
 import type { AixyzApp } from "../index";
+import { getAgentCard } from "./a2a";
+import type { MCPPlugin } from "./mcp";
 
 type OASFLocator = { type: string; urls: string[] };
 
@@ -44,9 +46,57 @@ export function getOasfRecord(app: AixyzApp) {
     created_at: new Date().toISOString(),
     domains: config.domains,
     skills,
-    modules: [],
+    modules: buildModules(app, config, a2aUrls),
     locators,
   };
+}
+
+/**
+ * @see https://schema.oasf.outshift.com/1.0.0/module_categories for constants
+ */
+const OASF_A2A_MODULE = { name: "integration/a2a", id: 203 } as const;
+const OASF_MCP_MODULE = { name: "integration/mcp", id: 202 } as const;
+
+type OASFModule = { name: string; id: number; data: Record<string, unknown> };
+
+function buildModules(
+  app: AixyzApp,
+  config: ReturnType<typeof getAixyzConfigRuntime>,
+  a2aUrls: string[],
+): OASFModule[] {
+  const modules: OASFModule[] = [];
+
+  // A2A module
+  if (a2aUrls.length > 0) {
+    modules.push({
+      ...OASF_A2A_MODULE,
+      data: {
+        // TODO(kevin): read dynamically from a2a plugin exports instead of duplicating the same info here
+        card_data: getAgentCard(),
+        card_schema_version: "0.3.0",
+      },
+    });
+  }
+
+  // MCP module
+  const mcpPlugin = app.getPlugin<MCPPlugin>("mcp");
+  if (mcpPlugin) {
+    // @see https://schema.oasf.outshift.com/1.0.0/objects/mcp_data for more format
+    const data: Record<string, unknown> = {
+      name: config.name,
+      connections: [{ type: "streamable-http", url: new URL("/mcp", config.url).toString() }],
+    };
+    if (mcpPlugin.registeredTools?.length) {
+      // @see https://schema.oasf.outshift.com/1.0.0/objects/mcp_server_tool for more format
+      data.tools = mcpPlugin.registeredTools.map((t) => ({
+        name: t.name,
+        description: t.tool.description,
+      }));
+    }
+    modules.push({ ...OASF_MCP_MODULE, data });
+  }
+
+  return modules;
 }
 
 /** OASF identity plugin. Registers `GET /_aixyz/oasf.json`. */
