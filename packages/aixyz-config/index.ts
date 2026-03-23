@@ -76,6 +76,11 @@ export type AixyzConfig = {
     maxDuration?: number;
   };
   skills?: InferredAixyzConfig["skills"];
+  /**
+   * External services to advertise (e.g. OpenAPI, GraphQL).
+   * Each entry becomes an OASF locator and optionally an ERC-8004 service.
+   */
+  services?: Array<{ type: string; url: string; [key: string]: any }>;
 };
 
 const NetworkSchema = z.custom<Network>((val) => {
@@ -91,6 +96,7 @@ const defaultConfig = {
   },
   vercel: { maxDuration: 60 },
   skills: [],
+  services: [],
 };
 
 const AixyzConfigSchema = z.object({
@@ -158,6 +164,14 @@ const AixyzConfigSchema = z.object({
       }),
     )
     .default(defaultConfig.skills),
+  services: z
+    .array(
+      z.object({
+        type: z.string().nonempty(),
+        url: z.string().url(),
+      }),
+    )
+    .default(defaultConfig.services),
 });
 
 type InferredAixyzConfig = z.infer<typeof AixyzConfigSchema>;
@@ -175,6 +189,7 @@ export type AixyzConfigRuntime = {
   version: AixyzConfig["version"];
   url: AixyzConfig["url"];
   skills: NonNullable<AixyzConfig["skills"]>;
+  services: NonNullable<AixyzConfig["services"]>;
 };
 
 /**
@@ -225,5 +240,6 @@ export function getAixyzConfigRuntime(): AixyzConfigRuntime {
     version: config.version,
     url: config.url,
     skills: config.skills,
+    services: config.services,
   };
 }
