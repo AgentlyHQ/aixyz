@@ -100,13 +100,12 @@ describe("ERC8004Plugin", () => {
     expect(res.headers.get("content-type")).toContain("application/json");
   });
 
-  test("both routes return identical JSON", async () => {
+  test("route returns valid ERC-8004 JSON", async () => {
     const app = await createApp({ name: "Test", description: "Test agent" });
 
-    const { json: json1 } = await fetchJson(app, "/.well-known/erc-8004.json");
-    const { json: json2 } = await fetchJson(app, "/_aixyz/erc-8004.json");
+    const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
-    expect(json1).toEqual(json2);
+    expect(json.type).toBe("https://eips.ethereum.org/EIPS/eip-8004#registration-v1");
   });
 
   // ---------------------------------------------------------------------------
@@ -282,7 +281,7 @@ describe("ERC8004Plugin", () => {
     test("detects A2A, MCP, and OASF plugins", async () => {
       const app = await createApp({}, { a2a: true, mcp: true, oasf: true });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.services).toHaveLength(3);
       expect(json.services[0].name).toBe("A2A");
@@ -293,7 +292,7 @@ describe("ERC8004Plugin", () => {
     test("no services when no plugins registered", async () => {
       const app = await createApp({});
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.services).toHaveLength(0);
     });
@@ -301,7 +300,7 @@ describe("ERC8004Plugin", () => {
     test("OASF service has correct fields", async () => {
       const app = await createApp({}, { oasf: true });
 
-      const { json } = await fetchJson(app, "/.well-known/erc-8004.json");
+      const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.services).toHaveLength(1);
       expect(json.services[0]).toEqual({
