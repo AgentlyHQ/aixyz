@@ -41,6 +41,9 @@ export function getAgentRegistrationFile(
       name: "OASF",
       endpoint: new URL("/_aixyz/oasf.json", config.url).toString(),
       version: "1.0.0",
+      // TODO(kevin): support OASF skills and domains here.
+      domains: [],
+      skills: [],
     });
   }
 

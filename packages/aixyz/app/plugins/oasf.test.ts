@@ -122,7 +122,7 @@ describe("OASFPlugin", () => {
       expect(json.schema_version).toBe("1.0.0");
       expect(json.authors).toEqual([]);
       expect(typeof json.created_at).toBe("string");
-      expect(() => new Date(json.created_at)).not.toThrow();
+      expect(Number.isNaN(Date.parse(json.created_at))).toBe(false);
       expect(json.domains).toEqual([]);
       expect(json.skills).toEqual([]);
       expect(json.modules).toEqual([]);
