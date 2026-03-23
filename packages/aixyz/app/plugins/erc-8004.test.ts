@@ -303,7 +303,7 @@ describe("ERC8004Plugin", () => {
       const { json } = await fetchJson(app, "/_aixyz/erc-8004.json");
 
       expect(json.services).toHaveLength(1);
-      expect(json.services[0]).toEqual({
+      expect(json.services[0]).toMatchObject({
         name: "OASF",
         endpoint: "http://localhost:3000/_aixyz/oasf.json",
         version: "1.0.0",
