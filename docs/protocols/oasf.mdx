@@ -1,0 +1,160 @@
+---
+title: "OASF"
+description: "Open Agent Service Framework for standardized agent discovery"
+---
+
+## Overview
+
+[OASF (Open Agent Service Framework)](https://schema.oasf.outshift.com/1.0.0/) is a standardized format for describing AI agents, their capabilities, and integrations. It enables agent discovery across the Open Agent Service ecosystem.
+
+aixyz automatically generates an OASF record from your `aixyz.config.ts` and registered plugins. The `OASFPlugin` is always included in the build pipeline — no setup required.
+
+## Endpoint
+
+| Endpoint            | Method | Description                                      |
+| ------------------- | ------ | ------------------------------------------------ |
+| `/_aixyz/oasf.json` | GET    | OASF record with metadata, modules, and locators |
+
+```bash
+curl http://localhost:3000/_aixyz/oasf.json
+```
+
+Example response:
+
+```json
+{
+  "name": "Weather Agent",
+  "description": "Get current weather for any location worldwide.",
+  "version": "0.1.0",
+  "schema_version": "1.0.0",
+  "authors": [],
+  "created_at": "2026-03-23T12:00:00.000Z",
+  "domains": [{ "name": "technology/ai", "id": 1 }],
+  "skills": [{ "name": "weather/forecast", "id": 101 }],
+  "modules": [
+    {
+      "name": "integration/a2a",
+      "id": 203,
+      "data": {
+        "card_data": { "name": "Weather Agent", "...": "..." },
+        "card_schema_version": "0.3.0"
+      }
+    },
+    {
+      "name": "integration/mcp",
+      "id": 202,
+      "data": {
+        "name": "Weather Agent",
+        "connections": [{ "type": "streamable-http", "url": "https://my-agent.vercel.app/mcp" }],
+        "tools": [{ "name": "getWeather", "description": "Get weather for a city" }]
+      }
+    }
+  ],
+  "locators": [
+    { "type": "a2a", "urls": ["https://my-agent.vercel.app/.well-known/agent-card.json"] },
+    { "type": "mcp", "urls": ["https://my-agent.vercel.app/mcp"] }
+  ]
+}
+```
+
+## Auto-Detection
+
+The OASF record is assembled automatically from your registered plugins and config:
+
+**Modules** — detected from registered plugins:
+
+| Module            | ID  | Detected When               | Data Included                                |
+| ----------------- | --- | --------------------------- | -------------------------------------------- |
+| `integration/a2a` | 203 | A2A agent card route exists | Full agent card data, schema version `0.3.0` |
+| `integration/mcp` | 202 | MCP plugin registered       | Connection info, registered tools            |
+
+**Locators** — service endpoints for agent discovery:
+
+| Source          | Type      | URLs                                      |
+| --------------- | --------- | ----------------------------------------- |
+| A2A plugin      | `a2a`     | All `/.well-known/agent-card.json` routes |
+| MCP plugin      | `mcp`     | `/mcp` endpoint                           |
+| Config services | Per entry | From `services` array in config           |
+
+## Configuration
+
+OASF-specific fields in `aixyz.config.ts`:
+
+```typescript title="aixyz.config.ts"
+import type { AixyzConfig } from "aixyz/config";
+
+const config: AixyzConfig = {
+  name: "Weather Agent",
+  description: "Get current weather for any location worldwide.",
+  version: "0.1.0",
+  url: "https://my-agent.vercel.app",
+  x402: { payTo: "0x...", network: "eip155:8453" },
+  skills: [
+    {
+      id: "get-weather",
+      name: "Get Weather",
+      description: "Get current weather conditions for any city",
+      tags: ["weather"],
+      examples: ["What's the weather in Tokyo?"],
+      // OASF catalog metadata — only skills with this field appear in the OASF record
+      oasf: { name: "weather/forecast", id: 101 },
+    },
+  ],
+  // OASF domain categories
+  domains: [{ name: "technology/ai", id: 1 }],
+  // Additional service locators (e.g. OpenAPI, GraphQL)
+  services: [{ type: "openapi", url: "https://my-agent.vercel.app/openapi.json" }],
+};
+
+export default config;
+```
+
+### `domains`
+
+OASF domain categories describing the agent's area of expertise. Each entry has a `name` and `id` from the [OASF domain catalog](https://schema.oasf.outshift.com/1.0.0/domain_categories). Defaults to `[]`.
+
+### `services`
+
+External service endpoints to advertise. Each entry becomes an OASF locator (and optionally an ERC-8004 service). Defaults to `[]`.
+
+### `skills[].oasf`
+
+Optional OASF catalog metadata on each skill. Skills without this field are excluded from the OASF record. The `name` and `id` come from the [OASF skill catalog](https://schema.oasf.outshift.com/1.0.0/skill_categories).
+
+## Using the OASF Plugin
+
+The `OASFPlugin` is auto-registered in all generated servers. For custom servers:
+
+```typescript title="app/server.ts"
+import { OASFPlugin } from "aixyz/app/plugins/oasf";
+
+await server.withPlugin(new OASFPlugin());
+```
+
+The plugin uses a two-phase lifecycle:
+
+1. **Register** — creates the `GET /_aixyz/oasf.json` route
+2. **Initialize** — builds and caches the OASF record after all other plugins are registered, ensuring A2A and MCP integrations are detected
+
+## Integration with ERC-8004
+
+When both OASF and ERC-8004 plugins are active, the ERC-8004 agent registration file automatically includes an OASF service entry:
+
+```json
+{
+  "name": "OASF",
+  "endpoint": "https://my-agent.vercel.app/_aixyz/oasf.json",
+  "version": "1.0.0"
+}
+```
+
+This links on-chain agent identity to the OASF discovery endpoint.
+
+<CardGroup cols={2}>
+  <Card title="A2A Protocol" icon="diagram-project" href="/protocols/a2a">
+    Agent discovery with A2A agent cards.
+  </Card>
+  <Card title="ERC-8004 Identity" icon="id-card" href="/protocols/erc-8004">
+    On-chain agent identity standard.
+  </Card>
+</CardGroup>

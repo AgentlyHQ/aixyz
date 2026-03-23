@@ -26,8 +26,11 @@ const config: AixyzConfig = {
       description: "Get current weather conditions for any city",
       tags: ["weather"],
       examples: ["What's the weather in Tokyo?"],
+      oasf: { name: "weather/forecast", id: 101 },
     },
   ],
+  domains: [{ name: "technology/ai", id: 1 }],
+  services: [{ type: "openapi", url: "https://my-agent.vercel.app/openapi.json" }],
 };
 
 export default config;
@@ -35,28 +38,45 @@ export default config;
 
 ## Config Fields
 
-| Field          | Type           | Required | Description                              |
-| -------------- | -------------- | -------- | ---------------------------------------- |
-| `name`         | `string`       | Yes      | Agent display name                       |
-| `description`  | `string`       | Yes      | What the agent does                      |
-| `version`      | `string`       | Yes      | Semver version                           |
-| `url`          | `string`       | No       | Agent base URL (auto-detected on Vercel) |
-| `x402`         | `object`       | Yes      | Payment configuration                    |
-| `x402.payTo`   | `string`       | Yes      | EVM address to receive payments          |
-| `x402.network` | `string`       | Yes      | CAIP-2 chain ID (e.g., `eip155:8453`)    |
-| `skills`       | `AgentSkill[]` | Yes      | Skills exposed in the A2A agent card     |
+| Field          | Type           | Required | Description                                  |
+| -------------- | -------------- | -------- | -------------------------------------------- |
+| `name`         | `string`       | Yes      | Agent display name                           |
+| `description`  | `string`       | Yes      | What the agent does                          |
+| `version`      | `string`       | Yes      | Semver version                               |
+| `url`          | `string`       | No       | Agent base URL (auto-detected on Vercel)     |
+| `x402`         | `object`       | Yes      | Payment configuration                        |
+| `x402.payTo`   | `string`       | Yes      | EVM address to receive payments              |
+| `x402.network` | `string`       | Yes      | CAIP-2 chain ID (e.g., `eip155:8453`)        |
+| `skills`       | `AgentSkill[]` | Yes      | Skills exposed in the A2A agent card         |
+| `domains`      | `Domain[]`     | No       | OASF domain categories (defaults to `[]`)    |
+| `services`     | `Service[]`    | No       | External service locators (defaults to `[]`) |
 
 ### `AgentSkill`
 
-| Field         | Type       | Required | Description             |
-| ------------- | ---------- | -------- | ----------------------- |
-| `id`          | `string`   | Yes      | Unique skill identifier |
-| `name`        | `string`   | Yes      | Skill display name      |
-| `description` | `string`   | Yes      | What the skill does     |
-| `tags`        | `string[]` | Yes      | Categorization tags     |
-| `examples`    | `string[]` | No       | Example prompts         |
-| `inputModes`  | `string[]` | No       | Input MIME types        |
-| `outputModes` | `string[]` | No       | Output MIME types       |
+| Field         | Type       | Required | Description                                                          |
+| ------------- | ---------- | -------- | -------------------------------------------------------------------- |
+| `id`          | `string`   | Yes      | Unique skill identifier                                              |
+| `name`        | `string`   | Yes      | Skill display name                                                   |
+| `description` | `string`   | Yes      | What the skill does                                                  |
+| `tags`        | `string[]` | Yes      | Categorization tags                                                  |
+| `examples`    | `string[]` | No       | Example prompts                                                      |
+| `inputModes`  | `string[]` | No       | Input MIME types                                                     |
+| `outputModes` | `string[]` | No       | Output MIME types                                                    |
+| `oasf`        | `object`   | No       | OASF catalog metadata (`{ name, id }`) — see [OASF](/protocols/oasf) |
+
+### `Domain`
+
+| Field  | Type     | Required | Description                                                                                          |
+| ------ | -------- | -------- | ---------------------------------------------------------------------------------------------------- |
+| `name` | `string` | Yes      | Domain name from the [OASF domain catalog](https://schema.oasf.outshift.com/1.0.0/domain_categories) |
+| `id`   | `number` | Yes      | Domain ID from the OASF domain catalog                                                               |
+
+### `Service`
+
+| Field  | Type     | Required | Description                                  |
+| ------ | -------- | -------- | -------------------------------------------- |
+| `type` | `string` | Yes      | Service type (e.g. `"openapi"`, `"graphql"`) |
+| `url`  | `string` | Yes      | Service endpoint URL                         |
 
 ## URL Resolution
 
