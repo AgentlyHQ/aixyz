@@ -240,7 +240,12 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
         return Response.json(result);
       },
       {
-        payment: this.exports.accepts.scheme === "exact" ? this.exports.accepts : undefined,
+        payment: this.exports.accepts.scheme === "exact"
+          ? {
+              x402: this.exports.accepts,
+              mppAmount: this.exports.accepts.price.replace(/^\$/, ""),
+            }
+          : undefined,
       },
     );
   }

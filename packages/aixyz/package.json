@@ -61,10 +61,14 @@
   },
   "peerDependencies": {
     "@ai-sdk/provider": "^3",
-    "ai": "^6"
+    "ai": "^6",
+    "mppx": "^1"
   },
   "peerDependenciesMeta": {
     "ai": {
+      "optional": true
+    },
+    "mppx": {
       "optional": true
     }
   },
