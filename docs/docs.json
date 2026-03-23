@@ -51,7 +51,7 @@
           },
           {
             "group": "Protocols",
-            "pages": ["protocols/a2a", "protocols/mcp", "protocols/x402", "protocols/erc-8004"]
+            "pages": ["protocols/a2a", "protocols/mcp", "protocols/x402", "protocols/erc-8004", "protocols/oasf"]
           }
         ]
       },

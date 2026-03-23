@@ -169,6 +169,9 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push(`import * as erc8004 from "${importPrefix}/erc-8004";`);
   }
 
+  // Always register OASF endpoint (derives from aixyz.config.ts)
+  imports.push('import { OASFPlugin } from "aixyz/app/plugins/oasf";');
+
   body.push("const app = new AixyzApp({ facilitators: facilitator });");
   body.push("await app.withPlugin(new IndexPagePlugin());");
 
@@ -189,13 +192,10 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   if (hasErc8004) {
-    const a2aPaths: string[] = [];
-    if (rootAgent) a2aPaths.push("/.well-known/agent-card.json");
-    for (const subAgent of subAgents) a2aPaths.push(`/${subAgent.name}/.well-known/agent-card.json`);
-    body.push(
-      `await app.withPlugin(new ERC8004Plugin({ default: erc8004.default, options: { mcp: ${tools.length > 0}, a2a: ${JSON.stringify(a2aPaths)} } }));`,
-    );
+    body.push(`await app.withPlugin(new ERC8004Plugin({ default: erc8004.default }));`);
   }
+
+  body.push(`await app.withPlugin(new OASFPlugin());`);
 
   body.push("await app.initialize();");
   body.push("export default app;");

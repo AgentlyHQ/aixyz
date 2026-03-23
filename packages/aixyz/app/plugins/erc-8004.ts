@@ -15,7 +15,7 @@ import type { AixyzApp } from "../index";
  */
 export function getAgentRegistrationFile(
   data: unknown,
-  options: { mcp: boolean; a2a: string[] },
+  options: { mcp: boolean; a2a: string[]; oasf: boolean },
 ): AgentRegistrationFile {
   const config = getAixyzConfigRuntime();
   const services: AgentRegistrationFile["services"] = [];
@@ -36,6 +36,17 @@ export function getAgentRegistrationFile(
     });
   }
 
+  if (options.oasf) {
+    services.push({
+      name: "OASF",
+      endpoint: new URL("/_aixyz/oasf.json", config.url).toString(),
+      version: "1.0.0",
+      // TODO(kevin): support OASF skills and domains here.
+      domains: [],
+      skills: [],
+    });
+  }
+
   const withDefault = AgentRegistrationFileSchema.extend({
     type: z.literal(ERC8004_REGISTRATION_TYPE).default(ERC8004_REGISTRATION_TYPE),
     name: z.string().default(config.name),
@@ -53,13 +64,28 @@ export function getAgentRegistrationFile(
 export class ERC8004Plugin extends BasePlugin {
   readonly name = "erc-8004";
 
-  constructor(private exports: { default: unknown; options: { mcp: boolean; a2a: string[] } }) {
+  private _file: AgentRegistrationFile | undefined;
+
+  constructor(private exports: { default: unknown }) {
     super();
   }
 
   register(app: AixyzApp): void {
-    const file = getAgentRegistrationFile(this.exports.default, this.exports.options);
+    app.route("GET", "/_aixyz/erc-8004.json", () => Response.json(this._file));
+  }
 
-    app.route("GET", "/_aixyz/erc-8004.json", () => Response.json(file));
+  initialize(app: AixyzApp): void {
+    // Detect A2A agent card routes
+    const a2a: string[] = [];
+    for (const key of app.routes.keys()) {
+      const match = key.match(/^GET (\/.*\.well-known\/agent-card\.json)$/);
+      if (match) a2a.push(match[1]);
+    }
+
+    this._file = getAgentRegistrationFile(this.exports.default, {
+      a2a,
+      mcp: !!app.getPlugin("mcp"),
+      oasf: !!app.getPlugin("oasf"),
+    });
   }
 }
