@@ -12,7 +12,7 @@ import erc8004 from "./erc-8004";
 
 const app = new AixyzApp({ facilitators: facilitator });
 await app.withPlugin(new IndexPagePlugin());
-await app.withPlugin(new A2APlugin(agent));
+await app.withPlugin(new A2APlugin([{ exports: agent }]));
 await app.withPlugin(
   new MCPPlugin([
     {

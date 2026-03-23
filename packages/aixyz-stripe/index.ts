@@ -1,6 +1,5 @@
 import Stripe from "stripe";
-import { BasePlugin } from "aixyz/app/plugin";
-import type { AixyzApp } from "aixyz/app";
+import { BasePlugin, type RegisterContext } from "aixyz/app/plugin";
 
 let stripe: Stripe | null = null;
 
@@ -94,7 +93,7 @@ async function validateAndConsumePaymentIntent(
 export class experimental_StripePaymentIntentPlugin extends BasePlugin {
   readonly name = "stripe-payment-intent";
 
-  register(app: AixyzApp): void {
+  register(ctx: RegisterContext): void {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     const priceInCents = Number(process.env.STRIPE_PRICE_CENTS) || 100;
 
@@ -106,7 +105,7 @@ export class experimental_StripePaymentIntentPlugin extends BasePlugin {
     initializeStripe(secretKey);
 
     // Endpoint to create payment intents
-    app.route("POST", "/stripe/create-payment-intent", async () => {
+    ctx.route("POST", "/stripe/create-payment-intent", async () => {
       try {
         const result = await createPaymentIntent({ priceInCents });
         return Response.json(result);
@@ -118,7 +117,7 @@ export class experimental_StripePaymentIntentPlugin extends BasePlugin {
     });
 
     // Stripe payment validation middleware
-    app.use(async (request: Request, next: () => Promise<Response>) => {
+    ctx.use(async (request: Request, next: () => Promise<Response>) => {
       if (!stripe) return next();
 
       const stripePaymentIntentId = request.headers.get("x-stripe-payment-intent-id");

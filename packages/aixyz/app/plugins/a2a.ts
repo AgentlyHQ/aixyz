@@ -12,8 +12,7 @@ import { AgentCard, Message, Task, TaskArtifactUpdateEvent, TaskStatusUpdateEven
 import type { ToolLoopAgent, ToolSet } from "ai";
 import { z } from "zod";
 import { getAixyzConfigRuntime } from "../../config";
-import { BasePlugin } from "../plugin";
-import type { AixyzApp } from "../index";
+import { BasePlugin, type RegisterContext } from "../plugin";
 import { Accepts, AcceptsScheme } from "../../accepts";
 
 export const CapabilitiesSchema = z.object({
@@ -23,6 +22,11 @@ export const CapabilitiesSchema = z.object({
 });
 
 export type Capabilities = z.infer<typeof CapabilitiesSchema>;
+
+export interface A2AAgentEntry {
+  name?: string;
+  exports: { default: ToolLoopAgent; accepts?: Accepts; capabilities?: Capabilities };
+}
 
 const DEFAULT_CAPABILITIES: Capabilities = { streaming: true, pushNotifications: false };
 
@@ -148,37 +152,43 @@ export function getAgentCard(agentPath = "/agent", capabilities?: Capabilities):
 }
 
 /**
- * A2A protocol plugin. Registers the well-known agent card endpoint
- * and a JSON-RPC endpoint that delegates to the given ToolLoopAgent.
- * Routes are only registered if the agent exports a valid `accepts` payment config.
+ * A2A protocol plugin. Registers well-known agent card endpoints
+ * and JSON-RPC endpoints for one or more agents.
+ * Routes are only registered for agents that export a valid `accepts` payment config.
  */
-export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
+export class A2APlugin extends BasePlugin {
   readonly name = "a2a";
 
   constructor(
-    private exports: { default: ToolLoopAgent<never, TOOLS>; accepts?: Accepts; capabilities?: Capabilities },
-    private prefix?: string,
+    private agents: A2AAgentEntry[],
     private taskStore: TaskStore = new InMemoryTaskStore(),
   ) {
     super();
   }
 
-  register(app: AixyzApp): void {
-    if (this.exports.accepts) {
-      AcceptsScheme.parse(this.exports.accepts);
+  register(ctx: RegisterContext): void {
+    for (const entry of this.agents) {
+      this.registerAgent(ctx, entry);
+    }
+  }
+
+  private registerAgent(ctx: RegisterContext, entry: A2AAgentEntry): void {
+    if (entry.exports.accepts) {
+      AcceptsScheme.parse(entry.exports.accepts);
     } else {
       return;
     }
 
-    const parsed = this.exports.capabilities ? CapabilitiesSchema.safeParse(this.exports.capabilities) : undefined;
+    const parsed = entry.exports.capabilities ? CapabilitiesSchema.safeParse(entry.exports.capabilities) : undefined;
     const capabilities = parsed?.success ? { ...DEFAULT_CAPABILITIES, ...parsed.data } : DEFAULT_CAPABILITIES;
 
-    const agentPath: `/${string}` = this.prefix ? `/${this.prefix}/agent` : "/agent";
-    const wellKnownPath: `/${string}` = this.prefix
-      ? `/${this.prefix}/.well-known/agent-card.json`
+    const prefix = entry.name;
+    const agentPath: `/${string}` = prefix ? `/${prefix}/agent` : "/agent";
+    const wellKnownPath: `/${string}` = prefix
+      ? `/${prefix}/.well-known/agent-card.json`
       : "/.well-known/agent-card.json";
 
-    const agentExecutor = new ToolLoopAgentExecutor(this.exports.default, capabilities.streaming ?? true);
+    const agentExecutor = new ToolLoopAgentExecutor(entry.exports.default, capabilities.streaming ?? true);
     const requestHandler = new DefaultRequestHandler(
       getAgentCard(agentPath, capabilities),
       this.taskStore,
@@ -187,13 +197,13 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
     const jsonRpcTransport = new JsonRpcTransportHandler(requestHandler);
 
     // Agent card — pure web-standard handler
-    app.route("GET", wellKnownPath, async () => {
+    ctx.route("GET", wellKnownPath, async () => {
       const card = await requestHandler.getAgentCard();
       return Response.json(card);
     });
 
     // JSON-RPC endpoint — pure web-standard handler using JsonRpcTransportHandler
-    app.route(
+    ctx.route(
       "POST",
       agentPath,
       async (request: Request) => {
@@ -240,7 +250,7 @@ export class A2APlugin<TOOLS extends ToolSet = ToolSet> extends BasePlugin {
         return Response.json(result);
       },
       {
-        payment: this.exports.accepts.scheme === "exact" ? this.exports.accepts : undefined,
+        payment: entry.exports.accepts.scheme === "exact" ? entry.exports.accepts : undefined,
       },
     );
   }

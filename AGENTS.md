@@ -126,8 +126,11 @@ The `aixyz dev` command spawns a Bun worker process with file watching on `app/`
 
 - `route()` — Register a route with an optional x402 payment requirement
 - `fetch()` — Dispatch a web-standard Request through payment verification, middleware, and route handler
-- `withPlugin()` — Register plugins (A2APlugin, MCPPlugin, IndexPagePlugin, etc.)
+- `withPlugin()` — Register a plugin with a scoped `RegisterContext` (exposes `route()` + `use()` only). Routes
+  registered via the context are auto-tracked in `plugin.registeredRoutes`
 - `use()` — Append middleware to the chain
+- `initialize()` — Finalize payment gateway, then call each plugin's `initialize(ctx)` with an `InitializeContext`
+  (adds read access to `routes`, `getPlugin()`, `payment` for cross-plugin discovery)
 
 ### Protocol adapters (`packages/aixyz/app/plugins/`)
 

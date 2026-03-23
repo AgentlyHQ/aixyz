@@ -1,7 +1,6 @@
 import { getAixyzConfigRuntime } from "@aixyz/config";
 import { z } from "zod";
-import { BasePlugin } from "../../plugin";
-import type { AixyzApp } from "../../index";
+import { BasePlugin, type RegisterContext, type InitializeContext } from "../../plugin";
 import type { MCPPlugin } from "../mcp";
 import { renderHtml } from "./html";
 
@@ -111,14 +110,14 @@ export class IndexPagePlugin extends BasePlugin {
     super();
   }
 
-  register(app: AixyzApp): void {
+  register(ctx: RegisterContext): void {
     const config = getAixyzConfigRuntime();
     if (!this.path.startsWith("/")) {
       throw new Error(`Invalid path: ${this.path}. Path must start with "/"`);
     }
 
     // Default to serve markdown, else explicitly asked for HTML (which browsers do by default)
-    app.route("GET", this.path, (request: Request) => {
+    ctx.route("GET", this.path, (request: Request) => {
       if (prefersHtml(request)) {
         return new Response(renderHtml(config, this.protocols), {
           headers: { "Content-Type": "text/html; charset=utf-8", Vary: "Accept" },
@@ -130,11 +129,11 @@ export class IndexPagePlugin extends BasePlugin {
     });
   }
 
-  initialize(app: AixyzApp): void {
+  initialize(ctx: InitializeContext): void {
     const entrypoints: Entrypoint[] = [];
 
     // Detect A2A agents from routes (POST */agent pattern)
-    for (const [key, entry] of app.routes) {
+    for (const [key, entry] of ctx.routes) {
       if (key.startsWith("POST ") && entry.path.endsWith("/agent")) {
         const prefix = entry.path.slice(1, -"/agent".length); // e.g. "" or "foo"
         const name = prefix || "agent";
@@ -148,7 +147,7 @@ export class IndexPagePlugin extends BasePlugin {
     }
 
     // Detect MCP tools from MCPPlugin
-    const mcpPlugin = app.getPlugin<MCPPlugin>("mcp");
+    const mcpPlugin = ctx.getPlugin<MCPPlugin>("mcp");
     if (mcpPlugin?.registeredTools) {
       for (const tool of mcpPlugin.registeredTools) {
         let inputSchema: Record<string, unknown> | undefined;

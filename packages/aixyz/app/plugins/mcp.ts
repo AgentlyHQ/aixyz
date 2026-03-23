@@ -2,8 +2,7 @@ import { type Tool } from "ai";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createPaymentWrapper } from "@x402/mcp";
-import { BasePlugin } from "../plugin";
-import type { AixyzApp } from "../index";
+import { BasePlugin, type RegisterContext, type InitializeContext } from "../plugin";
 import type { Accepts } from "../../accepts";
 import { AcceptsScheme } from "../../accepts";
 import { getAixyzConfig, getAixyzConfigRuntime } from "../../config";
@@ -53,7 +52,7 @@ export class MCPPlugin extends BasePlugin {
     return mcpServer;
   }
 
-  async register(app: AixyzApp): Promise<void> {
+  async register(ctx: RegisterContext): Promise<void> {
     for (const t of this.tools) {
       if (t.exports.accepts) {
         AcceptsScheme.parse(t.exports.accepts);
@@ -74,16 +73,16 @@ export class MCPPlugin extends BasePlugin {
       return transport.handleRequest(request);
     };
 
-    app.route("POST", "/mcp", mcpHandler);
-    app.route("GET", "/mcp", mcpHandler);
-    app.route("DELETE", "/mcp", mcpHandler);
+    ctx.route("POST", "/mcp", mcpHandler);
+    ctx.route("GET", "/mcp", mcpHandler);
+    ctx.route("DELETE", "/mcp", mcpHandler);
   }
 
-  async initialize(app: AixyzApp): Promise<void> {
-    if (!app.payment) return;
+  async initialize(ctx: InitializeContext): Promise<void> {
+    if (!ctx.payment) return;
 
     const config = getAixyzConfig();
-    const resourceServer = app.payment.resourceServer;
+    const resourceServer = ctx.payment.resourceServer;
 
     for (const { name, accepts } of this.registeredTools) {
       if (accepts?.scheme !== "exact") continue;

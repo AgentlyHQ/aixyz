@@ -76,7 +76,7 @@ function makeMockAgent(chunks: string[] = ["Hello", " world"]): ToolLoopAgent<ne
 }
 
 /** Spin up a real Bun server with an A2APlugin-backed AixyzApp. */
-function createServer(
+async function createServer(
   agent: ToolLoopAgent<never> = makeMockAgent(),
   accepts: { scheme: "free" } | { scheme: "exact"; price: string } = { scheme: "free" },
   prefix?: string,
@@ -87,7 +87,7 @@ function createServer(
   const prevUrl = testUrl;
   testUrl = url;
   const app = new AixyzApp();
-  new A2APlugin({ default: agent, accepts, capabilities }, prefix).register(app);
+  await app.withPlugin(new A2APlugin([{ name: prefix, exports: { default: agent, accepts, capabilities } }]));
   server.reload({ fetch: app.fetch.bind(app) });
   testUrl = prevUrl;
   return { server, url, app };
@@ -277,12 +277,12 @@ describe("A2APlugin", () => {
   let prefixedServer: ReturnType<typeof Bun.serve>;
   let prefixedUrl: string;
 
-  beforeAll(() => {
-    const main = createServer();
+  beforeAll(async () => {
+    const main = await createServer();
     mainServer = main.server;
     mainUrl = main.url;
 
-    const prefixed = createServer(makeMockAgent(), { scheme: "free" }, "v1");
+    const prefixed = await createServer(makeMockAgent(), { scheme: "free" }, "v1");
     prefixedServer = prefixed.server;
     prefixedUrl = prefixed.url;
   });
@@ -293,24 +293,62 @@ describe("A2APlugin", () => {
   });
 
   describe("route registration", () => {
-    test("registers GET well-known and POST agent routes", () => {
+    test("registers GET well-known and POST agent routes", async () => {
       const app = new AixyzApp();
-      new A2APlugin({ default: makeMockAgent(), accepts: { scheme: "free" } }).register(app);
+      await app.withPlugin(new A2APlugin([{ exports: { default: makeMockAgent(), accepts: { scheme: "free" } } }]));
       expect(app.routes.has("GET /.well-known/agent-card.json")).toBe(true);
       expect(app.routes.has("POST /agent")).toBe(true);
     });
 
-    test("skips registration when no accepts", () => {
+    test("skips registration when no accepts", async () => {
       const app = new AixyzApp();
-      new A2APlugin({ default: makeMockAgent() }).register(app);
+      await app.withPlugin(new A2APlugin([{ exports: { default: makeMockAgent() } }]));
       expect(app.routes.size).toBe(0);
     });
 
-    test("registers routes with custom prefix", () => {
+    test("registers routes with custom prefix", async () => {
       const app = new AixyzApp();
-      new A2APlugin({ default: makeMockAgent(), accepts: { scheme: "free" } }, "v1").register(app);
+      await app.withPlugin(
+        new A2APlugin([{ name: "v1", exports: { default: makeMockAgent(), accepts: { scheme: "free" } } }]),
+      );
       expect(app.routes.has("GET /v1/.well-known/agent-card.json")).toBe(true);
       expect(app.routes.has("POST /v1/agent")).toBe(true);
+    });
+
+    test("registers multiple agents in a single plugin instance", async () => {
+      const app = new AixyzApp();
+      const plugin = new A2APlugin([
+        { exports: { default: makeMockAgent(), accepts: { scheme: "free" } } },
+        { name: "v1", exports: { default: makeMockAgent(), accepts: { scheme: "free" } } },
+      ]);
+      await app.withPlugin(plugin);
+      expect(app.routes.has("GET /.well-known/agent-card.json")).toBe(true);
+      expect(app.routes.has("POST /agent")).toBe(true);
+      expect(app.routes.has("GET /v1/.well-known/agent-card.json")).toBe(true);
+      expect(app.routes.has("POST /v1/agent")).toBe(true);
+      // registeredRoutes is auto-populated for all agents
+      expect(plugin.registeredRoutes.has("GET /.well-known/agent-card.json")).toBe(true);
+      expect(plugin.registeredRoutes.has("POST /agent")).toBe(true);
+      expect(plugin.registeredRoutes.has("GET /v1/.well-known/agent-card.json")).toBe(true);
+      expect(plugin.registeredRoutes.has("POST /v1/agent")).toBe(true);
+    });
+
+    test("skips agents without accepts while registering others", async () => {
+      const app = new AixyzApp();
+      const plugin = new A2APlugin([
+        { exports: { default: makeMockAgent() } },
+        { name: "v1", exports: { default: makeMockAgent(), accepts: { scheme: "free" } } },
+      ]);
+      await app.withPlugin(plugin);
+      expect(app.routes.has("GET /.well-known/agent-card.json")).toBe(false);
+      expect(app.routes.has("POST /agent")).toBe(false);
+      expect(app.routes.has("GET /v1/.well-known/agent-card.json")).toBe(true);
+      expect(app.routes.has("POST /v1/agent")).toBe(true);
+      // Only agents with accepts should be tracked
+      expect(plugin.registeredRoutes.has("GET /.well-known/agent-card.json")).toBe(false);
+      expect(plugin.registeredRoutes.has("POST /agent")).toBe(false);
+      expect(plugin.registeredRoutes.has("GET /v1/.well-known/agent-card.json")).toBe(true);
+      expect(plugin.registeredRoutes.has("POST /v1/agent")).toBe(true);
     });
   });
 
@@ -333,7 +371,9 @@ describe("A2APlugin", () => {
     });
 
     test("getA2ACard falls back to defaults for invalid capabilities", async () => {
-      const { server, url } = createServer(makeMockAgent(), { scheme: "free" }, undefined, { streaming: "yes" } as any);
+      const { server, url } = await createServer(makeMockAgent(), { scheme: "free" }, undefined, {
+        streaming: "yes",
+      } as any);
       try {
         const card = await getA2ACard(url);
         expect(card.capabilities.streaming).toBe(true);
@@ -344,7 +384,7 @@ describe("A2APlugin", () => {
     });
 
     test("getA2ACard reflects custom capabilities", async () => {
-      const { server, url } = createServer(makeMockAgent(), { scheme: "free" }, undefined, {
+      const { server, url } = await createServer(makeMockAgent(), { scheme: "free" }, undefined, {
         streaming: false,
         pushNotifications: true,
       });
@@ -358,7 +398,7 @@ describe("A2APlugin", () => {
     });
 
     test("getA2ACard merges partial capabilities with defaults", async () => {
-      const { server, url } = createServer(makeMockAgent(), { scheme: "free" }, undefined, { streaming: false });
+      const { server, url } = await createServer(makeMockAgent(), { scheme: "free" }, undefined, { streaming: false });
       try {
         const card = await getA2ACard(url);
         expect(card.capabilities.streaming).toBe(false);
@@ -413,7 +453,7 @@ describe("A2APlugin", () => {
           throw new Error("agent exploded");
         },
       } as unknown as ToolLoopAgent<never>;
-      const { server, url } = createServer(failingAgent);
+      const { server, url } = await createServer(failingAgent);
       try {
         const result = await sendA2AMessage(url, "fail");
         expect(result.text).toBeDefined();
@@ -564,29 +604,29 @@ describe("A2APlugin x402 payment", () => {
 
   // A2A embeds the server URL in the agent card, so we must allocate the port
   // before building the app (fixture.serve() allocates after, which breaks the card URL).
-  function createX402Server(accepts: { scheme: "free" } | { scheme: "exact"; price: string }): {
+  async function createX402Server(accepts: { scheme: "free" } | { scheme: "exact"; price: string }): Promise<{
     url: string;
     stop: () => void;
     app: AixyzApp;
-  } {
+  }> {
     const server = Bun.serve({ port: 0, fetch: () => new Response("") });
     const url = `http://localhost:${server.port}`;
     const prevUrl = testUrl;
     testUrl = url;
     const app = new AixyzApp({ facilitators: fixture.facilitator });
-    new A2APlugin({ default: makeMockAgent(), accepts }).register(app);
+    await app.withPlugin(new A2APlugin([{ exports: { default: makeMockAgent(), accepts } }]));
     server.reload({ fetch: app.fetch.bind(app) });
     testUrl = prevUrl;
     return { url, stop: () => server.stop(true), app };
   }
 
   beforeAll(async () => {
-    const paid = createX402Server({ scheme: "exact" as const, price: "$0.01" });
+    const paid = await createX402Server({ scheme: "exact" as const, price: "$0.01" });
     paidUrl = paid.url;
     stopPaidServer = paid.stop;
     await paid.app.initialize();
 
-    const free = createX402Server({ scheme: "free" as const });
+    const free = await createX402Server({ scheme: "free" as const });
     freeUrl = free.url;
     stopFreeServer = free.stop;
     await free.app.initialize();

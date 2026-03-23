@@ -94,7 +94,7 @@ import { A2APlugin } from "aixyz/app/plugins/a2a";
 
 // agentExports is `import * as agent from "./agent"`
 // reads `default` (the ToolLoopAgent), `accepts` (payment config), and `capabilities`
-await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(new A2APlugin([{ exports: agent }]));
 ```
 
 This registers:
@@ -104,18 +104,22 @@ This registers:
 
 ### Sub-Agent Routing
 
-Pass an optional `prefix` argument to mount a sub-agent under its own path:
+Pass multiple entries with a `name` to mount sub-agents under their own paths:
 
 ```typescript title="app/server.ts"
 import * as research from "./agents/research";
 import * as implement from "./agents/implement";
 
-await server.withPlugin(new A2APlugin(agent)); // → /agent
-await server.withPlugin(new A2APlugin(research, "research")); // → /research/agent
-await server.withPlugin(new A2APlugin(implement, "implement")); // → /implement/agent
+await server.withPlugin(
+  new A2APlugin([
+    { exports: agent }, // → /agent
+    { name: "research", exports: research }, // → /research/agent
+    { name: "implement", exports: implement }, // → /implement/agent
+  ]),
+);
 ```
 
-Each sub-agent gets its own agent card at `/{prefix}/.well-known/agent-card.json` and its own JSON-RPC endpoint at `/{prefix}/agent`. When using `app/agents/`, the build pipeline generates these calls automatically.
+Each sub-agent gets its own agent card at `/{name}/.well-known/agent-card.json` and its own JSON-RPC endpoint at `/{name}/agent`. When using `app/agents/`, the build pipeline generates these calls automatically.
 
 ## Payment Integration
 

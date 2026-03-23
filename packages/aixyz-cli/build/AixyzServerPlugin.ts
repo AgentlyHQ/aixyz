@@ -172,11 +172,19 @@ function generateServer(appDir: string, entrypointDir: string): string {
   body.push("const app = new AixyzApp({ facilitators: facilitator });");
   body.push("await app.withPlugin(new IndexPagePlugin());");
 
-  if (rootAgent) {
-    body.push("await app.withPlugin(new A2APlugin(agent));");
-  }
-  for (const subAgent of subAgents) {
-    body.push(`await app.withPlugin(new A2APlugin(${subAgent.identifier}, "${subAgent.name}"));`);
+  if (needsA2A) {
+    const agentEntries: string[] = [];
+    if (rootAgent) {
+      agentEntries.push("  { exports: agent },");
+    }
+    for (const subAgent of subAgents) {
+      agentEntries.push(`  { name: "${subAgent.name}", exports: ${subAgent.identifier} },`);
+    }
+    body.push("await app.withPlugin(new A2APlugin([");
+    for (const entry of agentEntries) {
+      body.push(entry);
+    }
+    body.push("]));");
   }
 
   if (tools.length > 0) {

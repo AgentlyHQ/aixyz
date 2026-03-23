@@ -5,12 +5,13 @@ import { PaymentGateway } from "./payment/payment";
 import { Network } from "@x402/core/types";
 import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
-import { BasePlugin } from "./plugin";
+import { BasePlugin, type RegisterContext, type InitializeContext } from "./plugin";
 
 // Load .env and .env.production files at runtime (local files are excluded at build time).
 loadEnvConfig(process.cwd());
 
 export { BasePlugin };
+export type { RegisterContext, InitializeContext };
 export type { HttpMethod, RouteHandler, Middleware, RouteEntry };
 
 export interface AixyzAppOptions {
@@ -52,15 +53,31 @@ export class AixyzApp {
       await this.payment.initialize();
     }
 
+    const ctx: InitializeContext = {
+      route: (method, path, handler, options) => this.route(method, path, handler, options),
+      use: (mw) => this.use(mw),
+      routes: this.routes,
+      getPlugin: <T extends BasePlugin>(name: string) => this.getPlugin<T>(name),
+      payment: this.payment,
+    };
     for (const plugin of this.plugins) {
-      await plugin.initialize?.(this);
+      await plugin.initialize?.(ctx);
     }
   }
 
-  /** Register a plugin. Calls plugin.register(this) and returns this for chaining. */
+  /** Register a plugin with a scoped RegisterContext that auto-tracks registered routes. */
   async withPlugin<B extends BasePlugin>(plugin: B): Promise<this> {
     this.plugins.push(plugin);
-    await plugin.register(this);
+    const ctx: RegisterContext = {
+      route: (method, path, handler, options) => {
+        this.route(method, path, handler, options);
+        const key = this.getRouteKey(method, path);
+        const entry = this.routes.get(key);
+        if (entry) plugin.registeredRoutes.set(key, entry);
+      },
+      use: (mw) => this.use(mw),
+    };
+    await plugin.register?.(ctx);
     return this;
   }
 

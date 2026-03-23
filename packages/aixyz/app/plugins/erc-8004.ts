@@ -6,8 +6,7 @@ import {
   ERC8004_REGISTRATION_TYPE,
   ServiceSchema,
 } from "@aixyz/erc-8004/schemas/registration";
-import { BasePlugin } from "../plugin";
-import type { AixyzApp } from "../index";
+import { BasePlugin, type RegisterContext } from "../plugin";
 
 /**
  * Build an ERC-8004 agent registration file by merging user-provided data with
@@ -57,9 +56,9 @@ export class ERC8004Plugin extends BasePlugin {
     super();
   }
 
-  register(app: AixyzApp): void {
+  register(ctx: RegisterContext): void {
     const file = getAgentRegistrationFile(this.exports.default, this.exports.options);
 
-    app.route("GET", "/_aixyz/erc-8004.json", () => Response.json(file));
+    ctx.route("GET", "/_aixyz/erc-8004.json", () => Response.json(file));
   }
 }

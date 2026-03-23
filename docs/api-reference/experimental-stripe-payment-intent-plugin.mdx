@@ -77,7 +77,7 @@ await server.withPlugin(new IndexPagePlugin());
 // Register Stripe before other plugins so the Stripe middleware runs first
 await server.withPlugin(new experimental_StripePaymentIntentPlugin());
 
-await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(new A2APlugin([{ exports: agent }]));
 
 await server.initialize();
 

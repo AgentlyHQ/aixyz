@@ -47,7 +47,7 @@ interface NodeResponse {
  * import * as myTool from "./tools/my-tool";
  *
  * const app = new AixyzApp();
- * await app.withPlugin(new A2APlugin(agent));
+ * await app.withPlugin(new A2APlugin([{ exports: agent }]));
  * await app.withPlugin(new MCPPlugin([{ name: "myTool", exports: myTool }]));
  * await app.initialize();
  *

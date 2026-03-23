@@ -176,7 +176,7 @@ import * as lookup from "./tools/lookup";
 const server = new AixyzApp();
 
 await server.withPlugin(new IndexPagePlugin());
-await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(new A2APlugin([{ exports: agent }]));
 await server.withPlugin(
   new MCPPlugin([
     {

@@ -47,7 +47,7 @@ import * as premiumTemperature from "./tools/premium-temperature";
 // 1. Create AixyzApp with plugins
 const app = new AixyzApp(facilitator ? { facilitators: facilitator } : undefined);
 await app.withPlugin(new IndexPagePlugin());
-await app.withPlugin(new A2APlugin(agent));
+await app.withPlugin(new A2APlugin([{ exports: agent }]));
 await app.withPlugin(
   new MCPPlugin([
     { name: "convertTemperature", exports: convertTemperature },

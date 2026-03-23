@@ -73,7 +73,7 @@ server.use(async (request, next) => {
 
 ### `withPlugin(plugin)`
 
-Register a plugin. Calls `plugin.register(this)` and returns `this` for chaining:
+Register a plugin. Creates a scoped `RegisterContext` that auto-tracks routes in `plugin.registeredRoutes`, calls `plugin.register(ctx)`, and returns `this` for chaining:
 
 ```typescript
 await server.withPlugin(new IndexPagePlugin());
@@ -81,7 +81,7 @@ await server.withPlugin(new IndexPagePlugin());
 
 ### `initialize()`
 
-Initialize payment gateway. Must be called after all routes are registered:
+Initialize payment gateway and plugins. Passes an `InitializeContext` with read access to all routes, registered plugins, and payment gateway. Must be called after all plugins are registered:
 
 ```typescript
 await server.initialize();
@@ -98,7 +98,7 @@ import * as agent from "./agent";
 const server = new AixyzApp();
 
 await server.withPlugin(new IndexPagePlugin());
-await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(new A2APlugin([{ exports: agent }]));
 
 await server.initialize();
 

@@ -137,7 +137,7 @@ const server = new AixyzApp();
 await server.withPlugin(new IndexPagePlugin());
 
 // A2A: agent discovery + JSON-RPC endpoint
-await server.withPlugin(new A2APlugin(agent));
+await server.withPlugin(new A2APlugin([{ exports: agent }]));
 
 // MCP: expose tools to MCP clients
 await server.withPlugin(
