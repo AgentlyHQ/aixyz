@@ -90,9 +90,9 @@ export class MCPPlugin extends BasePlugin {
 
       const reqs = await resourceServer.buildPaymentRequirements({
         scheme: accepts.scheme,
-        payTo: accepts.payTo ?? config.x402.payTo,
+        payTo: accepts.payTo ?? config.x402?.payTo,
         price: accepts.price,
-        network: (accepts.network as Network) ?? (config.x402.network as Network),
+        network: (accepts.network as Network) ?? (config.x402?.network as Network),
       });
 
       this.paymentWrappers.set(

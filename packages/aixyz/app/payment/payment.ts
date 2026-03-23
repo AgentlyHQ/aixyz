@@ -79,6 +79,7 @@ export class PaymentGateway {
    * Add a payment-gated route. Must be called before initialize().
    */
   addRoute(method: string, path: string, accepts: AcceptsX402): void {
+    if (!this.config.x402) return;
     const pattern = this.getRouteKey(method, path);
     this.pendingRoutes.set(pattern, {
       accepts: {

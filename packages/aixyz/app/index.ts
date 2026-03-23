@@ -1,7 +1,8 @@
 import type { AcceptsX402 } from "../accepts";
 import type { FacilitatorClient } from "@x402/core/server";
-import { type HttpMethod, type RouteHandler, type Middleware, type RouteEntry } from "./types";
+import { type HttpMethod, type RouteHandler, type Middleware, type RouteEntry, type RoutePaymentOptions } from "./types";
 import { PaymentGateway } from "./payment/payment";
+import { MppPaymentGateway } from "./payment/mpp";
 import { Network } from "@x402/core/types";
 import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
@@ -18,38 +19,60 @@ export interface AixyzAppOptions {
 }
 
 /**
- * Framework-agnostic route and middleware registry with optional x402 payment gating.
- * Call `fetch()` to dispatch a web-standard Request through payment verification, middleware, and route handler.
+ * Framework-agnostic route and middleware registry with optional payment gating.
+ *
+ * Supports two payment protocols, independently or simultaneously:
+ * - **x402**: HTTP 402 with `X-Payment` headers (EVM/Base, existing behavior)
+ * - **MPP**: HTTP 402 with `WWW-Authenticate: Payment` headers (Tempo, Stripe, Lightning)
+ *
+ * Which protocols are active is determined by what's configured in `aixyz.config.ts`:
+ * - Only `x402` → x402 only
+ * - Only `mpp`  → MPP only
+ * - Both        → both; dispatched based on incoming request headers
+ *
+ * Call `fetch()` to dispatch a web-standard Request through payment verification,
+ * middleware, and route handler.
  */
 export class AixyzApp {
   readonly routes = new Map<string, RouteEntry>();
   readonly payment?: PaymentGateway;
+  readonly mppPayment?: MppPaymentGateway;
   private middlewares: Middleware[] = [];
   private plugins: BasePlugin[] = [];
   private readonly poweredByHeader: boolean;
 
   constructor(options?: AixyzAppOptions) {
-    // TODO(future): getAiXyzConfig will be materialized.
-    //  this is internal, we control it so it's fine for us to use—but we changing it in the future.
     const config = getAixyzConfig();
     this.poweredByHeader = config.build.poweredByHeader;
 
-    if (options?.facilitators) {
-      this.payment = new PaymentGateway(options.facilitators, config);
-      this.payment.register((config.x402.network as Network) ?? "eip155:8453");
+    // Initialize x402 gateway if configured
+    if (config.x402) {
+      const facilitators = options?.facilitators;
+      if (facilitators) {
+        this.payment = new PaymentGateway(facilitators, config as any);
+        this.payment.register((config.x402.network as Network) ?? "eip155:8453");
+      }
+    }
+
+    // Initialize MPP gateway if configured
+    if (config.mpp) {
+      this.mppPayment = new MppPaymentGateway(config.mpp);
     }
   }
 
-  /** Initialize payment gateway and plugins. Must be called after all routes are registered. */
+  /** Initialize payment gateways and plugins. Must be called after all routes are registered. */
   async initialize(): Promise<void> {
     if (this.payment) {
-      // Register payment routes with the gateway before initializing
       for (const [, entry] of this.routes) {
-        if (entry.payment) {
-          this.payment.addRoute(entry.method, entry.path, entry.payment);
+        if (entry.payment?.x402) {
+          this.payment.addRoute(entry.method, entry.path, entry.payment.x402);
         }
       }
       await this.payment.initialize();
+    }
+
+    if (this.mppPayment) {
+      await this.mppPayment.initialize();
     }
 
     for (const plugin of this.plugins) {
@@ -69,8 +92,22 @@ export class AixyzApp {
     return `${method} ${path}`;
   }
 
-  /** Register a route with an optional x402 payment requirement. */
-  route(method: HttpMethod, path: string, handler: RouteHandler, options?: { payment?: AcceptsX402 }): void {
+  /**
+   * Register a route with optional payment requirements.
+   *
+   * @example
+   * // x402 only
+   * app.route("POST", "/agent", handler, { payment: { x402: { scheme: "exact", price: "$0.005" } } });
+   *
+   * @example
+   * // MPP only
+   * app.route("POST", "/agent", handler, { payment: { mppAmount: "0.005" } });
+   *
+   * @example
+   * // Both (when both x402 and mpp are configured)
+   * app.route("POST", "/agent", handler, { payment: { x402: { scheme: "exact", price: "$0.005" }, mppAmount: "0.005" } });
+   */
+  route(method: HttpMethod, path: string, handler: RouteHandler, options?: { payment?: RoutePaymentOptions }): void {
     const key = this.getRouteKey(method, path);
     this.routes.set(key, {
       method,
@@ -113,9 +150,9 @@ export class AixyzApp {
       return new Response("Not Found", { status: 404 });
     }
 
-    if (entry.payment && this.payment) {
-      const rejection = await this.payment.verify(request);
-      if (rejection) return rejection;
+    if (entry.payment) {
+      const paymentResponse = await this.verifyPayment(request, entry.payment);
+      if (paymentResponse) return paymentResponse;
     }
 
     let index = 0;
@@ -132,16 +169,116 @@ export class AixyzApp {
 
     const response = await next();
 
-    if (entry.payment && this.payment) {
-      const settlementResult = await this.payment.settle(request);
-      if (settlementResult?.success) {
-        const paymentResultHeader = settlementResult.headers["PAYMENT-RESPONSE"];
-        const cloned = new Response(response.body, response);
-        cloned.headers.set("PAYMENT-RESPONSE", paymentResultHeader);
-        return cloned;
-      }
+    if (entry.payment) {
+      return this.attachPaymentReceipts(request, response, entry.payment);
     }
 
     return response;
   };
+
+  /**
+   * Verify payment for a request against the configured protocol(s).
+   *
+   * When both x402 and mpp are configured:
+   * - `Authorization: Payment ...` → MPP path
+   * - `X-Payment: ...` / `PAYMENT-SIGNATURE: ...` → x402 path
+   * - Neither → return 402 with challenge(s) for all active protocols
+   */
+  private async verifyPayment(request: Request, payment: RoutePaymentOptions): Promise<Response | null> {
+    const hasMppCredential = request.headers.get("Authorization")?.startsWith("Payment ");
+    const hasX402Credential =
+      request.headers.has("X-Payment") || request.headers.has("PAYMENT-SIGNATURE");
+
+    const bothConfigured = this.payment && payment.x402 && this.mppPayment && payment.mppAmount;
+
+    if (bothConfigured) {
+      if (hasMppCredential) {
+        // Client is speaking MPP
+        return this.mppPayment!.verify(request, payment.mppAmount!);
+      }
+      if (hasX402Credential) {
+        // Client is speaking x402
+        return this.payment!.verify(request);
+      }
+      // No credential — return a combined 402 with both challenges
+      return this.buildCombined402(request, payment);
+    }
+
+    // Only MPP configured
+    if (this.mppPayment && payment.mppAmount) {
+      return this.mppPayment.verify(request, payment.mppAmount);
+    }
+
+    // Only x402 configured (original behavior)
+    if (this.payment && payment.x402) {
+      return this.payment.verify(request);
+    }
+
+    return null;
+  }
+
+  /**
+   * Build a 402 response that includes challenge headers for all active payment protocols.
+   * Clients that speak either protocol will be able to proceed.
+   */
+  private async buildCombined402(request: Request, payment: RoutePaymentOptions): Promise<Response> {
+    const headers = new Headers();
+    headers.set("Content-Type", "application/json");
+
+    // Get the MPP 402 challenge (WWW-Authenticate: Payment ...)
+    if (this.mppPayment && payment.mppAmount) {
+      const mppChallenge = await this.mppPayment.verify(request, payment.mppAmount);
+      if (mppChallenge?.status === 402) {
+        const wwwAuth = mppChallenge.headers.get("WWW-Authenticate");
+        if (wwwAuth) headers.set("WWW-Authenticate", wwwAuth);
+      }
+    }
+
+    // Get the x402 402 challenge (X-Payment-Required: ...)
+    if (this.payment && payment.x402) {
+      const x402Challenge = await this.payment.verify(request);
+      if (x402Challenge?.status === 402) {
+        for (const [key, value] of x402Challenge.headers.entries()) {
+          if (key.toLowerCase().startsWith("x-payment")) {
+            headers.set(key, value);
+          }
+        }
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ error: "Payment Required", protocols: ["mpp", "x402"] }),
+      { status: 402, headers },
+    );
+  }
+
+  /**
+   * Attach payment receipt headers to a successful response.
+   */
+  private async attachPaymentReceipts(
+    request: Request,
+    response: Response,
+    payment: RoutePaymentOptions,
+  ): Promise<Response> {
+    const cloned = new Response(response.body, response);
+
+    // Attach MPP receipt if present
+    if (this.mppPayment) {
+      const receipt = this.mppPayment.getReceipt(request);
+      if (receipt) {
+        cloned.headers.set("Payment-Receipt", receipt);
+      }
+    }
+
+    // Attach x402 settlement header if present
+    if (this.payment && payment.x402) {
+      const settlementResult = await this.payment.settle(request);
+      if (settlementResult?.success) {
+        const paymentResultHeader = settlementResult.headers["PAYMENT-RESPONSE"];
+        cloned.headers.set("PAYMENT-RESPONSE", paymentResultHeader);
+      }
+    }
+
+    return cloned;
+  }
 }

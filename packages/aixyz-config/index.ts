@@ -4,6 +4,8 @@ import { z } from "zod";
 
 export type Network = `${string}:${string}`;
 
+export type MppMethod = "tempo" | "stripe" | "lightning";
+
 export type AixyzConfig = {
   /**
    * The name of the agent will be used in the agent card.
@@ -23,7 +25,12 @@ export type AixyzConfig = {
    * Defaults to `process.env.VERCEL_URL` for Vercel deployments.
    */
   url?: string;
-  x402: {
+  /**
+   * x402 payment configuration.
+   * When present, the agent will accept x402 payments (HTTP 402 with X-Payment headers).
+   * Can be configured alongside `mpp` to accept both protocols simultaneously.
+   */
+  x402?: {
     /**
      * The address that will receive the payment from the agent.
      * Defaults to `process.env.X402_PAY_TO` if not set.
@@ -34,6 +41,50 @@ export type AixyzConfig = {
      * The x402 network to use for the agent.
      */
     network: string;
+  };
+  /**
+   * MPP (Machine Payments Protocol) configuration.
+   * When present, the agent will accept MPP payments (HTTP 402 with WWW-Authenticate: Payment headers).
+   * Supports Tempo stablecoins, Stripe cards, and Lightning Bitcoin.
+   * Can be configured alongside `x402` to accept both protocols simultaneously.
+   *
+   * @see https://mpp.dev
+   */
+  mpp?: {
+    /**
+     * The EVM address that will receive payments.
+     * Used as the `recipient` in Tempo payment methods.
+     * Defaults to `process.env.MPP_RECIPIENT` if not set.
+     */
+    recipient: string;
+    /**
+     * The Tempo currency contract address.
+     * Defaults to pathUSD on Tempo mainnet: `process.env.MPP_CURRENCY`
+     * @default "0x20c0000000000000000000000000000000000000"
+     */
+    currency?: string;
+    /**
+     * Payment methods to accept.
+     * @default ["tempo"]
+     */
+    methods?: MppMethod[];
+    /**
+     * Stripe secret key for Stripe payment method support.
+     * Required when "stripe" is included in methods.
+     * Defaults to `process.env.MPP_STRIPE_SECRET_KEY`.
+     */
+    stripeSecretKey?: string;
+    /**
+     * Fee payer account private key for sponsoring gas on Tempo pull-mode transactions.
+     * Defaults to `process.env.MPP_FEE_PAYER_KEY`.
+     */
+    feePayerKey?: string;
+    /**
+     * Use optimistic verification (do not wait for on-chain confirmation).
+     * Reduces latency at the cost of slightly higher risk.
+     * @default false
+     */
+    optimistic?: boolean;
   };
   build?: {
     /**
@@ -116,10 +167,25 @@ const AixyzConfigSchema = z.object({
       return `http://localhost:${port}/`;
     })
     .pipe(z.url()),
-  x402: z.object({
-    payTo: z.string(),
-    network: NetworkSchema,
-  }),
+  x402: z
+    .object({
+      payTo: z.string(),
+      network: NetworkSchema,
+    })
+    .optional(),
+  mpp: z
+    .object({
+      recipient: z.string(),
+      currency: z.string().optional().default("0x20c0000000000000000000000000000000000000"),
+      methods: z
+        .array(z.enum(["tempo", "stripe", "lightning"]))
+        .optional()
+        .default(["tempo"]),
+      stripeSecretKey: z.string().optional(),
+      feePayerKey: z.string().optional(),
+      optimistic: z.boolean().optional().default(false),
+    })
+    .optional(),
   build: z
     .object({
       output: z.enum(["standalone", "vercel", "executable"]).optional(),
@@ -158,7 +224,13 @@ const AixyzConfigSchema = z.object({
       }),
     )
     .default(defaultConfig.skills),
-});
+}).refine(
+  (data) => data.x402 !== undefined || data.mpp !== undefined,
+  {
+    message: "At least one of `x402` or `mpp` must be configured",
+    path: ["x402"],
+  },
+);
 
 type InferredAixyzConfig = z.infer<typeof AixyzConfigSchema>;
 
