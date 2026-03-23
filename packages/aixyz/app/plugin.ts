@@ -20,13 +20,15 @@ export interface RegisterContext {
 }
 
 /**
- * Extended context passed to {@link BasePlugin.initialize}.
+ * Context passed to {@link BasePlugin.initialize}.
  *
  * Available after all plugins have registered their routes. Provides read access
  * to the full route table, other plugins, and the payment gateway — enabling
  * cross-plugin discovery and late-binding concerns like payment wrapper setup.
+ *
+ * Route registration should happen in `register()`, not `initialize()`.
  */
-export interface InitializeContext extends RegisterContext {
+export interface InitializeContext {
   /** Read-only view of all registered routes across all plugins. */
   readonly routes: ReadonlyMap<string, RouteEntry>;
   /** Find a registered plugin by name. Returns `undefined` if not found. */

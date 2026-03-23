@@ -54,8 +54,6 @@ export class AixyzApp {
     }
 
     const ctx: InitializeContext = {
-      route: (method, path, handler, options) => this.route(method, path, handler, options),
-      use: (mw) => this.use(mw),
       routes: this.routes,
       getPlugin: <T extends BasePlugin>(name: string) => this.getPlugin<T>(name),
       payment: this.payment,

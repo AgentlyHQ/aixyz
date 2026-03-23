@@ -595,10 +595,10 @@ describe("IndexPagePlugin", () => {
     expect(app.routes.has("GET /")).toBe(false);
   });
 
-  test("invalid path throws", () => {
-    expect(async () => {
-      const app = new AixyzApp();
-      await app.withPlugin(new IndexPagePlugin("no-slash"));
-    }).toThrow('Invalid path: no-slash. Path must start with "/"');
+  test("invalid path throws", async () => {
+    const app = new AixyzApp();
+    await expect(app.withPlugin(new IndexPagePlugin("no-slash"))).rejects.toThrow(
+      'Invalid path: no-slash. Path must start with "/"',
+    );
   });
 });
