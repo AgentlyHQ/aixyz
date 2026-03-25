@@ -32,11 +32,11 @@ export function AixyzServerPlugin(
         if (identifierMatch) {
           transformed = source.replace(
             identifierRe,
-            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: ${identifierMatch[1]}.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`,
+            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: ${identifierMatch[1]}.fetch, idleTimeout: 255 });\nconsole.log(\`Server listening on port \${__server.port}\`);`,
           );
         } else if (expressionRe.test(source)) {
           transformed = source.replace(expressionRe, `const __app = `);
-          transformed += `\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: __app.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`;
+          transformed += `\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: __app.fetch, idleTimeout: 255 });\nconsole.log(\`Server listening on port \${__server.port}\`);`;
         } else {
           throw new Error(
             `[aixyz] Could not find \`export default\` in entrypoint ${args.path}. ` +

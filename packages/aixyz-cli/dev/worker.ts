@@ -31,7 +31,7 @@ async function main() {
     process.exit(1);
   }
 
-  const server = Bun.serve({ port, fetch: app.fetch });
+  const server = Bun.serve({ port, fetch: app.fetch, idleTimeout: 255 });
 
   const duration = Math.round(performance.now() - startTime);
   console.log(chalk.blueBright("✓") + ` Ready in ${duration}ms`);
