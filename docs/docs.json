@@ -46,6 +46,7 @@
               "api-reference/aixyz-server",
               "api-reference/aixyz-model-fake",
               "api-reference/unstable-with-index-page",
+              "api-reference/session-plugin",
               "api-reference/experimental-stripe-payment-intent-plugin"
             ]
           },
@@ -79,7 +80,8 @@
               "templates/advanced/with-custom-facilitator",
               "templates/advanced/with-tests",
               "templates/advanced/fake-llm",
-              "templates/advanced/with-express"
+              "templates/advanced/with-express",
+              "templates/advanced/x402-sessions"
             ]
           }
         ]

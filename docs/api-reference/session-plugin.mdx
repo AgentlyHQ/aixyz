@@ -1,0 +1,135 @@
+---
+title: "SessionPlugin"
+description: "Payer-scoped key-value storage gated by x402 payment identity"
+---
+
+## Overview
+
+`SessionPlugin` provides per-payer key-value storage for aixyz agents. Each x402 signer gets an isolated session — two different payers never see each other's data. Sessions are accessed via `getSession()` using `AsyncLocalStorage`, so tools don't need to thread payer identity through function parameters.
+
+This is an **optional plugin** that requires a custom `app/server.ts`. It is not auto-wired by the build pipeline.
+
+```typescript
+import { SessionPlugin } from "aixyz/app/plugins/session";
+import { getSession, getPayer } from "aixyz/app/plugins/session";
+```
+
+## Setup
+
+Register `SessionPlugin` **before** other plugins so its middleware runs first:
+
+```typescript title="app/server.ts"
+import { AixyzApp } from "aixyz/app";
+import { SessionPlugin } from "aixyz/app/plugins/session";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
+
+const app = new AixyzApp({ facilitators: facilitator });
+
+await app.withPlugin(new SessionPlugin());   // must be first
+await app.withPlugin(new A2APlugin([...]));
+await app.withPlugin(new MCPPlugin([...]));
+
+await app.initialize();
+
+export default app;
+```
+
+## API
+
+### `getSession()`
+
+Returns the current payer-scoped `Session`, or `undefined` if no x402 payment was made for this request.
+
+```typescript
+import { getSession } from "aixyz/app/plugins/session";
+
+const session = getSession();
+if (!session) {
+  return { error: "No authenticated signer" };
+}
+
+await session.set("key", "value");
+const value = await session.get("key");
+```
+
+### `getPayer()`
+
+Shorthand for `getSession()?.payer`. Returns the x402 signer address or `undefined`.
+
+```typescript
+import { getPayer } from "aixyz/app/plugins/session";
+
+const payer = getPayer(); // "0x1234..."
+```
+
+## Session Interface
+
+All operations are scoped to the current x402 payer automatically.
+
+| Method   | Signature                                       | Description                              |
+| -------- | ----------------------------------------------- | ---------------------------------------- |
+| `payer`  | `readonly string`                               | The x402 signer address                  |
+| `get`    | `(key: string) => Promise<string \| undefined>` | Get a value by key                       |
+| `set`    | `(key: string, value: string) => Promise<void>` | Store a key-value pair                   |
+| `delete` | `(key: string) => Promise<boolean>`             | Delete a key, returns whether it existed |
+| `list`   | `() => Promise<Record<string, string>>`         | List all key-value pairs                 |
+
+## Custom Storage Backend
+
+By default, sessions use an in-memory `Map`. For production, implement the `SessionStore` interface to use Redis, a database, or any KV store:
+
+```typescript
+import type { SessionStore } from "aixyz/app/plugins/session";
+
+class RedisSessionStore implements SessionStore {
+  async get(payer: string, key: string): Promise<string | undefined> {
+    return (await redis.get(`${payer}:${key}`)) ?? undefined;
+  }
+  async set(payer: string, key: string, value: string): Promise<void> {
+    await redis.set(`${payer}:${key}`, value);
+  }
+  async delete(payer: string, key: string): Promise<boolean> {
+    return (await redis.del(`${payer}:${key}`)) > 0;
+  }
+  async list(payer: string): Promise<Record<string, string>> {
+    // scan for keys matching payer prefix
+  }
+}
+
+await app.withPlugin(new SessionPlugin({ store: new RedisSessionStore() }));
+```
+
+### `SessionStore` Interface
+
+| Method   | Signature                                                      | Description                 |
+| -------- | -------------------------------------------------------------- | --------------------------- |
+| `get`    | `(payer: string, key: string) => Promise<string \| undefined>` | Get a value                 |
+| `set`    | `(payer: string, key: string, value: string) => Promise<void>` | Store a value               |
+| `delete` | `(payer: string, key: string) => Promise<boolean>`             | Delete a value              |
+| `list`   | `(payer: string) => Promise<Record<string, string>>`           | List all values for a payer |
+
+## MCP Integration
+
+When `SessionPlugin` is registered before `MCPPlugin`, sessions work automatically inside MCP tool handlers. The MCP plugin detects the session plugin and wraps tool execution with the payer context from x402 payment verification.
+
+No additional configuration is needed — just register `SessionPlugin` first.
+
+## Constructor Options
+
+```typescript
+new SessionPlugin(options?: SessionPluginOptions)
+```
+
+| Option  | Type           | Default                | Description            |
+| ------- | -------------- | ---------------------- | ---------------------- |
+| `store` | `SessionStore` | `InMemorySessionStore` | Custom storage backend |
+
+<CardGroup cols={2}>
+  <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">
+    Payment protocol that provides payer identity for sessions.
+  </Card>
+  <Card title="x402 Sessions Template" icon="database" href="/templates/advanced/x402-sessions">
+    Working example with session-backed content storage.
+  </Card>
+</CardGroup>

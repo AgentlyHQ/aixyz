@@ -1,0 +1,113 @@
+---
+title: "x402 Sessions"
+description: "Template demonstrating payer-scoped session storage with x402 payment identity"
+---
+
+<Info>**Source:** [`examples/x402-sessions`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/x402-sessions)</Info>
+
+## Overview
+
+This template demonstrates `SessionPlugin` — payer-scoped key-value storage gated by x402 payment identity. Each x402 signer gets isolated storage that persists across requests. Two different payers never see each other's data.
+
+Requires a custom `app/server.ts` because `SessionPlugin` is an optional plugin not auto-wired by the build pipeline.
+
+## Project Structure
+
+```
+x402-sessions/
+├── aixyz.config.ts           # Agent metadata and skills
+├── app/
+│   ├── server.ts             # Custom server with SessionPlugin
+│   ├── agent.ts              # Agent definition
+│   ├── accepts.ts            # Custom x402 facilitator
+│   └── tools/
+│       ├── put-content.ts    # Store content in session
+│       └── get-content.ts    # Retrieve content from session
+├── package.json
+└── vercel.json
+```
+
+## Custom Server
+
+`SessionPlugin` must be registered **before** other plugins so its middleware runs first:
+
+```typescript title="app/server.ts"
+import { AixyzApp } from "aixyz/app";
+import { SessionPlugin } from "aixyz/app/plugins/session";
+import { A2APlugin } from "aixyz/app/plugins/a2a";
+import { MCPPlugin } from "aixyz/app/plugins/mcp";
+
+const app = new AixyzApp({ facilitators: facilitator });
+
+await app.withPlugin(new SessionPlugin()); // must be first
+await app.withPlugin(new A2APlugin([{ exports: agent }]));
+await app.withPlugin(
+  new MCPPlugin([
+    { name: "put-content", exports: putContent },
+    { name: "get-content", exports: getContent },
+  ]),
+);
+
+await app.initialize();
+
+export default app;
+```
+
+## Using Sessions in Tools
+
+Tools access the session via `getSession()` — no need to pass payer identity manually:
+
+```typescript title="app/tools/put-content.ts"
+import { tool } from "ai";
+import { z } from "zod";
+import { getSession } from "aixyz/app/plugins/session";
+
+export default tool({
+  description: "Store a key-value pair in the current user's session",
+  inputSchema: z.object({
+    key: z.string(),
+    value: z.string().nullable(),
+  }),
+  execute: async ({ key, value }) => {
+    const session = getSession();
+    if (!session) {
+      return { success: false, error: "No authenticated signer in context" };
+    }
+
+    if (value === null) {
+      await session.delete(key);
+      return { success: true, key, deleted: true };
+    }
+
+    await session.set(key, value);
+    return { success: true, key };
+  },
+});
+
+export const accepts: Accepts = { scheme: "exact", price: "$0.01" };
+```
+
+## Skills
+
+| Skill         | Description                                     | Price  |
+| ------------- | ----------------------------------------------- | ------ |
+| `put-content` | Store key-value content in payer-scoped session | $0.01  |
+| `get-content` | Retrieve stored content from session            | $0.001 |
+
+## Running
+
+```bash
+cd examples/x402-sessions
+cp .env.example .env   # configure X402_PAY_TO and facilitator
+bun install
+bun run dev
+```
+
+<CardGroup cols={2}>
+  <Card title="SessionPlugin API" icon="plug" href="/api-reference/session-plugin">
+    Full API reference for SessionPlugin, Session, and SessionStore.
+  </Card>
+  <Card title="Custom Server" icon="server" href="/templates/advanced/with-custom-server">
+    How to set up a custom server.ts for manual plugin wiring.
+  </Card>
+</CardGroup>
