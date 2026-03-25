@@ -156,6 +156,39 @@ describe("SessionPlugin", () => {
     expect(captured!).toBeUndefined();
   });
 
+  test("getSession returns undefined when payment is configured but getPayer returns undefined (unpaid request)", async () => {
+    // This tests the `if (payer)` branch in the middleware: this.payment is defined
+    // (payment is configured), but getPayer() returns undefined for this specific request
+    // (e.g. a free/unauthenticated route sitting alongside paid routes).
+    // Without the `if (payer)` guard, next() would run with a broken session context.
+    const app = new AixyzApp();
+    const plugin = new SessionPlugin();
+    await app.withPlugin(plugin);
+
+    // Payment IS configured, but getPayer always returns undefined (simulates a free route
+    // on a server that also has paid routes — payment header absent or not required).
+    plugin.initialize({
+      routes: app.routes,
+      getPlugin: () => undefined,
+      payment: { getPayer: (_req: Request) => undefined } as any,
+    });
+
+    let capturedSession: ReturnType<typeof getSession>;
+    let capturedPayer: ReturnType<typeof getPayer>;
+    app.route("GET", "/free", async () => {
+      capturedSession = getSession();
+      capturedPayer = getPayer();
+      return Response.json({ hasSession: capturedSession !== undefined });
+    });
+
+    const res = await app.fetch(new Request("http://localhost/free"));
+    const json = await res.json();
+
+    expect(json.hasSession).toBe(false);
+    expect(capturedSession!).toBeUndefined();
+    expect(capturedPayer!).toBeUndefined();
+  });
+
   test("getPayer returns the payer address", async () => {
     const { app } = await createAppWithSession("0xALICE");
 
