@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { type Tool } from "ai";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -7,6 +8,13 @@ import type { Accepts } from "../../accepts";
 import { AcceptsScheme } from "../../accepts";
 import { getAixyzConfig, getAixyzConfigRuntime } from "../../config";
 import { Network } from "@x402/core/types";
+import type { SessionPlugin } from "./session";
+
+/**
+ * AsyncLocalStorage to pass the MCP-level payer address from the
+ * onAfterVerify hook to the tool handler within the same async context.
+ */
+const mcpPayerStorage = new AsyncLocalStorage<{ payer?: string }>();
 
 /**
  * MCP (Model Context Protocol) plugin. Collects tools and exposes them
@@ -20,6 +28,7 @@ export class MCPPlugin extends BasePlugin {
   readonly name = "mcp";
   readonly registeredTools: Array<{ name: string; tool: Tool; accepts?: Accepts }> = [];
   private paymentWrappers = new Map<string, (handler: any) => any>();
+  private sessionPlugin?: SessionPlugin;
 
   constructor(private tools: Array<{ name: string; exports: { default: Tool; accepts?: Accepts } }>) {
     super();
@@ -30,22 +39,44 @@ export class MCPPlugin extends BasePlugin {
     const mcpServer = new McpServer({ name: config.name, version: config.version }, { capabilities: { tools: {} } });
 
     for (const { name, tool } of this.registeredTools) {
+      const sessionPlugin = this.sessionPlugin;
       const handler = async (args: Record<string, unknown>) => {
-        try {
-          const result = await tool.execute!(args, { toolCallId: name, messages: [] });
-          const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
-          return { content: [{ type: "text" as const, text }] };
-        } catch (error) {
-          const text = error instanceof Error ? error.message : "Unknown error";
-          return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
+        const execute = async () => {
+          try {
+            const result = await tool.execute!(args, { toolCallId: name, messages: [] });
+            const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
+            return { content: [{ type: "text" as const, text }] };
+          } catch (error) {
+            const text = error instanceof Error ? error.message : "Unknown error";
+            return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
+          }
+        };
+
+        // If SessionPlugin is active and a payer was captured from MCP-level payment,
+        // run the tool within a session context so getSession() works.
+        const payer = mcpPayerStorage.getStore()?.payer;
+        if (sessionPlugin && payer) {
+          return sessionPlugin.runWithPayer(payer, execute);
         }
+        return execute();
       };
 
       const wrapper = this.paymentWrappers.get(name);
+      let registeredHandler;
+      if (wrapper) {
+        const wrapped = wrapper(handler);
+        // Wrap the payment wrapper call in mcpPayerStorage.run() so the
+        // onAfterVerify hook and handler share the same async context.
+        registeredHandler = sessionPlugin
+          ? (args: any, extra: any) => mcpPayerStorage.run({ payer: undefined }, () => wrapped(args, extra))
+          : wrapped;
+      } else {
+        registeredHandler = handler;
+      }
       mcpServer.registerTool(
         name,
         { description: tool.description, inputSchema: tool.inputSchema as any },
-        wrapper ? wrapper(handler) : handler,
+        registeredHandler,
       );
     }
 
@@ -79,10 +110,25 @@ export class MCPPlugin extends BasePlugin {
   }
 
   async initialize(ctx: InitializeContext): Promise<void> {
+    this.sessionPlugin = ctx.getPlugin<SessionPlugin>("session") as SessionPlugin | undefined;
+
     if (!ctx.payment) return;
 
     const config = getAixyzConfig();
     const resourceServer = ctx.payment.resourceServer;
+
+    // Capture payer from MCP-level payment verification for session integration.
+    // This hook is global (fires for all verifications, including HTTP-level), but
+    // only writes when mcpPayerStorage has an active context — which only happens
+    // inside MCP tool calls wrapped by mcpPayerStorage.run() below.
+    if (this.sessionPlugin) {
+      ctx.payment.onAfterVerify(async (context) => {
+        const store = mcpPayerStorage.getStore();
+        if (store && context.result.payer) {
+          store.payer = context.result.payer;
+        }
+      });
+    }
 
     for (const { name, accepts } of this.registeredTools) {
       if (accepts?.scheme !== "exact") continue;

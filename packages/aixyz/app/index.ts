@@ -5,7 +5,7 @@ import { PaymentGateway } from "./payment/payment";
 import { Network } from "@x402/core/types";
 import { getAixyzConfig } from "@aixyz/config";
 import { loadEnvConfig } from "@next/env";
-import { BasePlugin, type RegisterContext, type InitializeContext } from "./plugin";
+import { BasePlugin, type RegisterContext, type InitializeContext, type PaymentHookContext } from "./plugin";
 
 // Load .env and .env.production files at runtime (local files are excluded at build time).
 loadEnvConfig(process.cwd());
@@ -69,6 +69,35 @@ export class AixyzApp {
     // clear registered routes for this plugin before registration, in case of hot reload or multiple registrations
     plugin.registeredRoutes.clear();
 
+    const paymentHooks: PaymentHookContext | undefined = this.payment
+      ? {
+          onBeforeVerify: (h) => {
+            this.payment!.onBeforeVerify(h);
+            return paymentHooks!;
+          },
+          onAfterVerify: (h) => {
+            this.payment!.onAfterVerify(h);
+            return paymentHooks!;
+          },
+          onVerifyFailure: (h) => {
+            this.payment!.onVerifyFailure(h);
+            return paymentHooks!;
+          },
+          onBeforeSettle: (h) => {
+            this.payment!.onBeforeSettle(h);
+            return paymentHooks!;
+          },
+          onAfterSettle: (h) => {
+            this.payment!.onAfterSettle(h);
+            return paymentHooks!;
+          },
+          onSettleFailure: (h) => {
+            this.payment!.onSettleFailure(h);
+            return paymentHooks!;
+          },
+        }
+      : undefined;
+
     const ctx: RegisterContext = {
       route: (method, path, handler, options) => {
         this.route(method, path, handler, options);
@@ -77,6 +106,7 @@ export class AixyzApp {
         if (entry) plugin.registeredRoutes.set(key, entry);
       },
       use: (mw) => this.use(mw),
+      paymentHooks,
     };
     await plugin.register?.(ctx);
     return this;
