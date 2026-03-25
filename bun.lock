@@ -154,6 +154,19 @@
         "typescript": "^5",
       },
     },
+    "examples/x402-sessions": {
+      "name": "@examples/x402-sessions",
+      "dependencies": {
+        "@ai-sdk/openai": "^3",
+        "ai": "^6",
+        "aixyz": "^0",
+        "zod": "^4",
+      },
+      "devDependencies": {
+        "@types/bun": "^1",
+        "typescript": "^5",
+      },
+    },
     "packages/aixyz": {
       "name": "aixyz",
       "version": "0.0.0",
@@ -305,6 +318,8 @@
     "@examples/with-express": ["@examples/with-express@workspace:examples/with-express"],
 
     "@examples/with-tests": ["@examples/with-tests@workspace:examples/with-tests"],
+
+    "@examples/x402-sessions": ["@examples/x402-sessions@workspace:examples/x402-sessions"],
 
     "@grpc/grpc-js": ["@grpc/grpc-js@1.14.3", "", { "dependencies": { "@grpc/proto-loader": "^0.8.0", "@js-sdsl/ordered-map": "^4.4.2" } }, "sha512-Iq8QQQ/7X3Sac15oB6p0FmUg/klxQvXLeileoqrTRGJYLV+/9tubbr9ipz0GKHjmXVsgFPo/+W+2cA8eNcR+XA=="],
 

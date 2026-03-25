@@ -45,10 +45,12 @@ function toResponse(instructions: HTTPResponseInstructions): Response {
   return new Response(body, { status: instructions.status, headers });
 }
 
-interface PaymentContext {
+export interface PaymentContext {
   paymentPayload: PaymentPayload;
   paymentRequirements: PaymentRequirements;
   declaredExtensions?: Record<string, unknown>;
+  /** The payer's address, captured from x402 verification. */
+  payer?: string;
 }
 
 /**
@@ -60,10 +62,22 @@ export class PaymentGateway {
   private readonly config: AixyzConfig;
   private readonly pendingRoutes = new Map<string, RouteConfig>();
   private readonly verifiedPayments = new WeakMap<Request, PaymentContext>();
+  /**
+   * Temporary map to capture payer address from the afterVerify hook.
+   * Keyed by PaymentPayload reference (same object flows through the verify pipeline).
+   */
+  private readonly pendingPayers = new WeakMap<PaymentPayload, string>();
 
   constructor(facilitators: FacilitatorClient | FacilitatorClient[], config: AixyzConfig) {
     this.resourceServer = new x402ResourceServer(facilitators);
     this.config = config;
+
+    // Capture payer address from verification so it can be exposed to handlers.
+    this.resourceServer.onAfterVerify(async (context) => {
+      if (context.result.payer) {
+        this.pendingPayers.set(context.paymentPayload, context.result.payer);
+      }
+    });
   }
 
   /** Register an EVM payment scheme for the given network (e.g. Base mainnet). */
@@ -145,13 +159,16 @@ export class PaymentGateway {
       case "no-payment-required":
         return null;
 
-      case "payment-verified":
+      case "payment-verified": {
+        const payer = this.pendingPayers.get(result.paymentPayload);
         this.verifiedPayments.set(request, {
           paymentPayload: result.paymentPayload,
           paymentRequirements: result.paymentRequirements,
           declaredExtensions: result.declaredExtensions,
+          payer,
         });
         return null;
+      }
 
       case "payment-error":
         return toResponse(result.response);
@@ -174,5 +191,21 @@ export class PaymentGateway {
     );
 
     return result;
+  }
+
+  /**
+   * Get the payer's address for a verified payment request.
+   * Available after `verify()` succeeds and before `settle()` is called.
+   */
+  getPayer(request: Request): string | undefined {
+    return this.verifiedPayments.get(request)?.payer;
+  }
+
+  /**
+   * Get the full payment context for a verified payment request.
+   * Available after `verify()` succeeds and before `settle()` is called.
+   */
+  getPaymentContext(request: Request): Readonly<PaymentContext> | undefined {
+    return this.verifiedPayments.get(request);
   }
 }
