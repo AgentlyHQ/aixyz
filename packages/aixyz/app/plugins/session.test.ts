@@ -156,37 +156,56 @@ describe("SessionPlugin", () => {
     expect(captured!).toBeUndefined();
   });
 
-  test("getSession returns undefined when payment is configured but getPayer returns undefined (unpaid request)", async () => {
-    // This tests the `if (payer)` branch in the middleware: this.payment is defined
-    // (payment is configured), but getPayer() returns undefined for this specific request
-    // (e.g. a free/unauthenticated route sitting alongside paid routes).
-    // Without the `if (payer)` guard, next() would run with a broken session context.
+  test("unpaid internal fetch from a paid handler does not inherit the outer session (ALS isolation)", async () => {
+    // Regression test for AsyncLocalStorage context leaking: when a paid
+    // handler calls app.fetch() on an unpaid route in the same async chain,
+    // getSession() inside the unpaid route must be undefined — not the
+    // outer payer's session.
     const app = new AixyzApp();
     const plugin = new SessionPlugin();
     await app.withPlugin(plugin);
 
-    // Payment IS configured, but getPayer always returns undefined (simulates a free route
-    // on a server that also has paid routes — payment header absent or not required).
+    // Mock payment: returns "0xALICE" for requests with an X-Payer header,
+    // undefined otherwise (simulates paid vs free routes on the same server).
     plugin.initialize({
       routes: app.routes,
       getPlugin: () => undefined,
-      payment: { getPayer: (_req: Request) => undefined } as any,
+      payment: {
+        getPayer: (req: Request) => req.headers.get("x-payer") ?? undefined,
+      } as any,
     });
 
-    let capturedSession: ReturnType<typeof getSession>;
-    let capturedPayer: ReturnType<typeof getPayer>;
-    app.route("GET", "/free", async () => {
-      capturedSession = getSession();
-      capturedPayer = getPayer();
-      return Response.json({ hasSession: capturedSession !== undefined });
+    let innerSession: ReturnType<typeof getSession>;
+    let innerPayer: ReturnType<typeof getPayer>;
+
+    // Unpaid internal route — should never see a session.
+    app.route("GET", "/internal/free", async () => {
+      innerSession = getSession();
+      innerPayer = getPayer();
+      return Response.json({ hasSession: innerSession !== undefined });
     });
 
-    const res = await app.fetch(new Request("http://localhost/free"));
+    // Paid route that internally fetches the unpaid route.
+    app.route("GET", "/paid", async () => {
+      const outerSession = getSession();
+      // Sanity check: the paid route itself has a session.
+      if (!outerSession) throw new Error("expected session in paid route");
+
+      // Internal fetch to an unpaid route — no X-Payer header.
+      const innerRes = await app.fetch(new Request("http://localhost/internal/free"));
+      const innerJson = await innerRes.json();
+      return Response.json({ outerPayer: outerSession.payer, innerHasSession: innerJson.hasSession });
+    });
+
+    const res = await app.fetch(new Request("http://localhost/paid", { headers: { "x-payer": "0xALICE" } }));
     const json = await res.json();
 
-    expect(json.hasSession).toBe(false);
-    expect(capturedSession!).toBeUndefined();
-    expect(capturedPayer!).toBeUndefined();
+    expect(json.outerPayer).toBe("0xALICE");
+    // This is the critical assertion: the inner unpaid route must NOT
+    // inherit the outer paid session via AsyncLocalStorage.
+    expect(json.innerHasSession).toBe(false);
+    expect(innerSession!).toBeUndefined();
+    expect(innerPayer!).toBeUndefined();
   });
 
   test("getPayer returns the payer address", async () => {

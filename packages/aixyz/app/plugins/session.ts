@@ -143,7 +143,9 @@ export class SessionPlugin extends BasePlugin {
         const session = createSession(payer, this.store);
         return sessionStorage.run(session, next);
       }
-      return next();
+      // Explicitly clear any inherited ALS context so that an unpaid route
+      // nested inside a paid handler's app.fetch() doesn't leak the outer session.
+      return sessionStorage.run(undefined as any, next);
     });
   }
 
