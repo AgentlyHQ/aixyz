@@ -63,7 +63,7 @@ export class MCPPlugin extends BasePlugin {
       };
 
       const wrapper = this.paymentWrappers.get(name);
-      let registeredHandler;
+      let registeredHandler: (args: any, extra?: any) => any;
       if (wrapper) {
         const wrapped = wrapper(handler);
         // Wrap the payment wrapper call in mcpPayerStorage.run() so the

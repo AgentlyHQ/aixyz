@@ -16,7 +16,13 @@ export interface SessionStore {
   list(payer: string): Promise<Record<string, string>>;
 }
 
-/** Default in-memory implementation of {@link SessionStore}. */
+/**
+ * Default in-memory implementation of {@link SessionStore}.
+ *
+ * **Not suitable for production** — entries never expire and the store grows
+ * without bound. Use a persistent backend (Redis, DB, Vercel KV) for anything
+ * beyond local development or testing.
+ */
 export class InMemorySessionStore implements SessionStore {
   private data = new Map<string, Map<string, string>>();
 
@@ -59,12 +65,17 @@ export interface Session {
 }
 
 function createSession(payer: string, store: SessionStore): Session {
+  // Normalize the payer address to lowercase so sessions are keyed consistently
+  // regardless of whether the x402 verifier returns a checksummed (EIP-55) or
+  // lowercase address. The original (possibly checksummed) address is still
+  // exposed as `session.payer` for display purposes.
+  const storedPayer = payer.toLowerCase();
   return {
     payer,
-    get: (key) => store.get(payer, key),
-    set: (key, value) => store.set(payer, key, value),
-    delete: (key) => store.delete(payer, key),
-    list: () => store.list(payer),
+    get: (key) => store.get(storedPayer, key),
+    set: (key, value) => store.set(storedPayer, key, value),
+    delete: (key) => store.delete(storedPayer, key),
+    list: () => store.list(storedPayer),
   };
 }
 
@@ -144,6 +155,11 @@ export class SessionPlugin extends BasePlugin {
    * Run a function within a session context for the given payer.
    * Used by other plugins (e.g., MCPPlugin) to set session context
    * for tool execution when payment is handled at the protocol level.
+   *
+   * **Security note:** This method bypasses HTTP-level payment verification.
+   * Only call it with a payer address that has already been authenticated by a
+   * trusted payment mechanism (e.g., the `@x402/mcp` payment wrapper).
+   * @internal
    */
   runWithPayer<T>(payer: string, fn: () => T): T {
     const session = createSession(payer, this.store);
