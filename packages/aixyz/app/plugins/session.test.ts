@@ -201,7 +201,7 @@ describe("SessionPlugin", () => {
 
     await app.fetch(new Request("http://localhost/test"));
 
-    expect(calls).toEqual(["set:0xALICE:k:v", "get:0xALICE:k", "delete:0xALICE:k", "list:0xALICE"]);
+    expect(calls).toEqual(["set:0xalice:k:v", "get:0xalice:k", "delete:0xalice:k", "list:0xalice"]);
   });
 
   test("session data persists across requests for same payer", async () => {
@@ -226,5 +226,33 @@ describe("SessionPlugin", () => {
   test("uses InMemorySessionStore by default", () => {
     const plugin = new SessionPlugin();
     expect(plugin.store).toBeInstanceOf(InMemorySessionStore);
+  });
+
+  test("checksummed and lowercase payer address share the same session (normalization)", async () => {
+    // The checksummed address and its lowercase variant must share the same store slot.
+    const checksummedPayer = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12";
+    const lowercasePayer = checksummedPayer.toLowerCase();
+    const store = new InMemorySessionStore();
+
+    // Write via a checksummed payer address
+    const { app: appWrite } = await createAppWithSession(checksummedPayer, store);
+    appWrite.route("POST", "/write", async () => {
+      await getSession()!.set("shared", "hello");
+      return Response.json({ ok: true });
+    });
+    await appWrite.fetch(new Request("http://localhost/write", { method: "POST" }));
+
+    // The store must have been written under the lowercase key
+    expect(await store.get(lowercasePayer, "shared")).toBe("hello");
+
+    // Read back via a lowercase payer address — same slot, same data
+    const { app: appRead } = await createAppWithSession(lowercasePayer, store);
+    appRead.route("GET", "/read", async () => {
+      const val = await getSession()!.get("shared");
+      return Response.json({ val });
+    });
+    const res = await appRead.fetch(new Request("http://localhost/read"));
+    const json = await res.json();
+    expect(json.val).toBe("hello");
   });
 });
