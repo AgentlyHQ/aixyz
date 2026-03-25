@@ -25,7 +25,8 @@ export type Capabilities = z.infer<typeof CapabilitiesSchema>;
 
 export interface A2AAgentEntry {
   name?: string;
-  exports: { default: ToolLoopAgent; accepts?: Accepts; capabilities?: Capabilities };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  exports: { default: ToolLoopAgent<never, any>; accepts?: Accepts; capabilities?: Capabilities };
   /** Optional task store override. Defaults to a per-agent InMemoryTaskStore for isolation. */
   taskStore?: TaskStore;
 }
