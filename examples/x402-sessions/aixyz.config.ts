@@ -6,8 +6,8 @@ const config: AixyzConfig = {
     "AI agent with x402-authenticated sessions. Each payer gets isolated content storage that persists across requests.",
   version: "0.1.0",
   x402: {
-    payTo: "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
-    network: process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532",
+    payTo: process.env.X402_PAY_TO ?? "0x0799872E07EA7a63c79357694504FE66EDfE4a0A",
+    network: process.env.X402_NETWORK ?? (process.env.NODE_ENV === "production" ? "eip155:8453" : "eip155:84532"),
   },
   skills: [
     {

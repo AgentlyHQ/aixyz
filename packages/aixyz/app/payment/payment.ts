@@ -10,8 +10,53 @@ import {
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import type { AcceptsX402, AcceptsX402Multi } from "../../accepts";
 import { normalizeAcceptsX402 } from "../../accepts";
-import { Network, PaymentPayload, PaymentRequirements } from "@x402/core/types";
+import { Network, PaymentPayload, PaymentRequirements, VerifyResponse, SettleResponse } from "@x402/core/types";
 import { AixyzConfig } from "@aixyz/config";
+
+// ── x402 Lifecycle Hook Types ──────────────────────────────────────────
+// These mirror x402ResourceServer's hook signatures but are defined here
+// because x402/core does not export them publicly.
+
+export interface VerifyContext {
+  paymentPayload: PaymentPayload;
+  requirements: PaymentRequirements;
+}
+
+export interface VerifyResultContext extends VerifyContext {
+  result: VerifyResponse;
+}
+
+export interface VerifyFailureContext extends VerifyContext {
+  error: Error;
+}
+
+export interface SettleContext {
+  paymentPayload: PaymentPayload;
+  requirements: PaymentRequirements;
+}
+
+export interface SettleResultContext extends SettleContext {
+  result: SettleResponse;
+}
+
+export interface SettleFailureContext extends SettleContext {
+  error: Error;
+}
+
+export type BeforeVerifyHook = (
+  context: VerifyContext,
+) => Promise<void | { abort: true; reason: string; message?: string }>;
+export type AfterVerifyHook = (context: VerifyResultContext) => Promise<void>;
+export type OnVerifyFailureHook = (
+  context: VerifyFailureContext,
+) => Promise<void | { recovered: true; result: VerifyResponse }>;
+export type BeforeSettleHook = (
+  context: SettleContext,
+) => Promise<void | { abort: true; reason: string; message?: string }>;
+export type AfterSettleHook = (context: SettleResultContext) => Promise<void>;
+export type OnSettleFailureHook = (
+  context: SettleFailureContext,
+) => Promise<void | { recovered: true; result: SettleResponse }>;
 
 /**
  * Converts a web-standard Request into the x402 HTTPAdapter interface.
@@ -73,7 +118,7 @@ export class PaymentGateway {
     this.config = config;
 
     // Capture payer address from verification so it can be exposed to handlers.
-    this.resourceServer.onAfterVerify(async (context) => {
+    this.onAfterVerify(async (context) => {
       if (context.result.payer) {
         this.pendingPayers.set(context.paymentPayload, context.result.payer);
       }
@@ -207,5 +252,43 @@ export class PaymentGateway {
    */
   getPaymentContext(request: Request): Readonly<PaymentContext> | undefined {
     return this.verifiedPayments.get(request);
+  }
+
+  // ── x402 Lifecycle Hooks ───────────────────────────────────────────
+
+  /** Register a hook to run before payment verification. Return `{ abort: true, reason }` to reject. */
+  onBeforeVerify(hook: BeforeVerifyHook): this {
+    this.resourceServer.onBeforeVerify(hook);
+    return this;
+  }
+
+  /** Register a hook to run after successful payment verification. */
+  onAfterVerify(hook: AfterVerifyHook): this {
+    this.resourceServer.onAfterVerify(hook);
+    return this;
+  }
+
+  /** Register a hook to run when payment verification fails. Return `{ recovered: true, result }` to recover. */
+  onVerifyFailure(hook: OnVerifyFailureHook): this {
+    this.resourceServer.onVerifyFailure(hook);
+    return this;
+  }
+
+  /** Register a hook to run before payment settlement. Return `{ abort: true, reason }` to reject. */
+  onBeforeSettle(hook: BeforeSettleHook): this {
+    this.resourceServer.onBeforeSettle(hook);
+    return this;
+  }
+
+  /** Register a hook to run after successful payment settlement. */
+  onAfterSettle(hook: AfterSettleHook): this {
+    this.resourceServer.onAfterSettle(hook);
+    return this;
+  }
+
+  /** Register a hook to run when payment settlement fails. Return `{ recovered: true, result }` to recover. */
+  onSettleFailure(hook: OnSettleFailureHook): this {
+    this.resourceServer.onSettleFailure(hook);
+    return this;
   }
 }

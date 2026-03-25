@@ -1,20 +1,32 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { getSigner, putContent } from "../session";
+import { getSession } from "aixyz/app/plugins/session";
+import type { Accepts } from "aixyz/accepts";
 
 export default tool({
-  description: "Store a key-value pair in the current user's session. Only the same x402 signer can retrieve it later.",
+  description:
+    "Store a key-value pair in the current user's session. Only the same x402 signer can retrieve it later. Set value to null to delete the key.",
   inputSchema: z.object({
     key: z.string().describe("The key to store the value under"),
-    value: z.string().describe("The value to store"),
+    value: z.string().nullable().describe("The value to store, or null to delete the key"),
   }),
   execute: async ({ key, value }) => {
-    const signer = getSigner();
-    if (!signer) {
+    const session = getSession();
+    if (!session) {
       return { success: false, error: "No authenticated signer in context" };
     }
 
-    putContent(signer, key, value);
-    return { success: true, key, signer: signer.slice(0, 10) + "..." };
+    if (value === null) {
+      const deleted = await session.delete(key);
+      return { success: true, key, deleted, signer: session.payer.slice(0, 10) + "..." };
+    }
+
+    await session.set(key, value);
+    return { success: true, key, signer: session.payer.slice(0, 10) + "..." };
   },
 });
+
+export const accepts: Accepts = {
+  scheme: "exact",
+  price: "$0.01",
+};
