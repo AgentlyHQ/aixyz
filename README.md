@@ -8,7 +8,7 @@
 
 <p></p>
 
-<p align="center"><b>Payment-native framework for bundling AI agents into deployable services with A2A, MCP, x402 payments, and ERC-8004 identity.</b></p>
+<p align="center"><b>Nextjs-like framework for bundling AI agents into deployable services with A2A, MCP, x402 payments, and ERC-8004 identity.</b></p>
 
 <p align="center">
   <a href="https://aixyz.sh">Documentation</a> · <a href="#quick-start">Quick Start</a> · <a href="#how-it-works">How It Works</a> · <a href="#examples">Examples</a> · <a href="#cli">CLI</a> · <a href="#protocols">Protocols</a>
@@ -28,8 +28,6 @@
     </picture>
   </a>
 </p>
-
----
 
 ## Documentation
 
