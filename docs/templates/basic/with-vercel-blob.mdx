@@ -45,7 +45,7 @@ export default tool({
       `expiresAt=${plan.expiresAt.toISOString()}`,
       "",
       text,
-    ].join("\\n");
+    ].join("\n");
     const blob = await put(plan.path, payload, {
       access: "private",
       contentType: "text/plain; charset=utf-8",

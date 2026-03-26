@@ -7,6 +7,8 @@ import { z } from "zod";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const DEFAULT_TTL_DAYS = 365;
 const DEFAULT_FOLDER = "txt";
+const MAX_TEXT_LENGTH = 50_000;
+const MAX_FOLDER_LENGTH = 120;
 
 export type TxtPlan = {
   id: string;
@@ -43,11 +45,11 @@ export function createTxtPlan(args: { folder?: string; expiresInDays?: number; n
 }
 
 const inputSchema = z.object({
-  text: z.string().min(1).max(50_000).describe("Plain text content to store as a .txt blob."),
+  text: z.string().min(1).max(MAX_TEXT_LENGTH).describe("Plain text content to store as a .txt blob."),
   folder: z
     .string()
     .trim()
-    .max(120)
+    .max(MAX_FOLDER_LENGTH)
     .regex(/^[a-zA-Z0-9/_-]+$/, "Only alphanumeric, /, -, and _ are allowed")
     .describe("Optional folder prefix for organizing blobs (default: txt).")
     .optional(),
