@@ -1,0 +1,88 @@
+---
+title: "Vercel Blob (txt)"
+description: "MCP-only template that stores private .txt blobs on Vercel Blob using UUID hex IDs"
+---
+
+<Info>**Source:** [`examples/with-vercel-blob`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/with-vercel-blob)</Info>
+
+## Overview
+
+This template exposes a single MCP tool, `putTxt`, that writes **private** `.txt` files to Vercel Blob using `@vercel/blob`. IDs are generated as UUID hex strings (no base58) and each call is priced at `$0.001` via x402. There is **no** `app/agent.ts` — the server only serves `/mcp`.
+
+## Project Structure
+
+```
+with-vercel-blob/
+├── aixyz.config.ts             # Agent metadata + x402 config
+├── app/
+│   ├── icon.svg                # Template icon
+│   └── tools/
+│       ├── putTxt.ts           # MCP tool using @vercel/blob
+│       └── putTxt.test.ts      # Deterministic helper tests
+├── package.json
+├── tsconfig.json
+└── vercel.json
+```
+
+## Tool: `putTxt`
+
+```typescript title="app/tools/putTxt.ts"
+import { put } from "@vercel/blob";
+import { tool } from "ai";
+
+export default tool({
+  description: "Store a private UTF-8 .txt file in Vercel Blob and return its URL and metadata.",
+  inputSchema: z.object({
+    text: z.string().min(1).max(50_000),
+    folder: z.string().regex(/^[a-zA-Z0-9/_-]+$/).optional(), // default: txt/
+    expiresInDays: z.number().int().min(1).max(365).optional(), // default: 365
+  }),
+  execute: async ({ text, folder, expiresInDays }) => {
+    const plan = createTxtPlan({ folder, expiresInDays });
+    const payload = [
+      "# putTxt blob",
+      `createdAt=${plan.createdAt.toISOString()}`,
+      `expiresAt=${plan.expiresAt.toISOString()}`,
+      "",
+      text,
+    ].join("\\n");
+    const blob = await put(plan.path, payload, {
+      access: "private",
+      contentType: "text/plain; charset=utf-8",
+      addRandomSuffix: false,
+      allowOverwrite: false,
+      token: process.env.BLOB_READ_WRITE_TOKEN!,
+    });
+    return { id: plan.id, url: blob.url, path: plan.path, createdAt, expiresAt };
+  },
+});
+```
+
+Key behaviors:
+
+- **UUID hex IDs** — `crypto.randomUUID().replace(/-/g, "")`, stored at `folder/{id}.txt`
+- **Metadata envelope** — prepends `createdAt` / `expiresAt` to the text body
+- **Access control** — `access: "private"` + `allowOverwrite: false`
+- **TTL** — default 365 days, clamped to 1-365 via `expiresInDays`
+
+## Environment
+
+Set a Vercel Blob read/write token before running locally:
+
+```bash
+echo 'BLOB_READ_WRITE_TOKEN=...' >> .env.local
+```
+
+## Payment
+
+`putTxt` charges `$0.001` per call using the x402 settings in `aixyz.config.ts` (Base mainnet in production, Base Sepolia in development).
+
+## Running locally
+
+```bash
+cd examples/with-vercel-blob
+bun install
+bun run dev
+```
+
+Connect any MCP client (Claude Desktop, VS Code MCP extension, etc.) to `http://localhost:3000/mcp` and call `putTxt` with the schema above.

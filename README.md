@@ -137,6 +137,7 @@ That's it. Run `bun run dev` and aixyz auto-generates the server, wires up A2A +
 | [`sub-agents`](./examples/sub-agents/)                           | Multiple A2A endpoints from one deployment      |
 | [`with-tests`](./examples/with-tests/)                           | Agent with test examples                        |
 | [`fake-llm`](./examples/fake-llm/)                               | Fully deterministic testing with `fake()` model |
+| [`with-vercel-blob`](./examples/with-vercel-blob/)               | MCP-only txt storage using Vercel Blob          |
 
 ## CLI
 
