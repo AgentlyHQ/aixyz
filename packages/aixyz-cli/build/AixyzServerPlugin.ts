@@ -3,6 +3,36 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { resolve, relative, join } from "path";
 import { getAixyzConfig } from "@aixyz/config";
 
+/**
+ * Generate code that scans for static assets at startup and builds a `Bun.serve({ static })` map.
+ * At runtime, `import.meta.dir` resolves to the directory containing the bundled server.js (or compiled binary).
+ * Static files live alongside it: `icon.png` and `public/` (copied there by the build step).
+ */
+function generateStaticSetup(): { imports: string; setup: string } {
+  const imports = [
+    'import { existsSync as __existsSync, readdirSync as __readdirSync } from "node:fs";',
+    'import { resolve as __resolve, join as __join } from "node:path";',
+  ].join("\n");
+
+  const setup = [
+    `const __aixyzStatic: Record<string, Response> = {};`,
+    `const __iconPath = __resolve(import.meta.dir, "icon.png");`,
+    `if (__existsSync(__iconPath)) __aixyzStatic["/icon.png"] = new Response(Bun.file(__iconPath));`,
+    `const __publicDir = __resolve(import.meta.dir, "public");`,
+    `if (__existsSync(__publicDir)) {`,
+    `  (function __walk(dir: string, prefix: string) {`,
+    `    for (const e of __readdirSync(dir, { withFileTypes: true })) {`,
+    `      const p = __join(dir, e.name);`,
+    `      if (e.isFile()) __aixyzStatic[prefix + "/" + e.name] = new Response(Bun.file(p));`,
+    `      else if (e.isDirectory()) __walk(p, prefix + "/" + e.name);`,
+    `    }`,
+    `  })(__publicDir, "");`,
+    `}`,
+  ].join("\n");
+
+  return { imports, setup };
+}
+
 export function AixyzServerPlugin(
   entrypoint: string,
   mode: "vercel" | "standalone" | "executable",
@@ -27,16 +57,17 @@ export function AixyzServerPlugin(
         const identifierRe = /export\s+default\s+(\w+)\s*;/;
         const expressionRe = /export\s+default\s+/;
 
+        const { imports: staticImports, setup: staticSetup } = generateStaticSetup();
+        const bunServe = (fetchExpr: string) =>
+          `${staticSetup}\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), static: __aixyzStatic, fetch: ${fetchExpr} } as Parameters<typeof Bun.serve>[0]);\nconsole.log(\`Server listening on port \${__server.port}\`);`;
+
         let transformed: string;
         const identifierMatch = source.match(identifierRe);
         if (identifierMatch) {
-          transformed = source.replace(
-            identifierRe,
-            `const __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: ${identifierMatch[1]}.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`,
-          );
+          transformed = source.replace(identifierRe, bunServe(`${identifierMatch[1]}.fetch`));
         } else if (expressionRe.test(source)) {
           transformed = source.replace(expressionRe, `const __app = `);
-          transformed += `\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), fetch: __app.fetch });\nconsole.log(\`Server listening on port \${__server.port}\`);`;
+          transformed += "\n" + bunServe("__app.fetch");
         } else {
           throw new Error(
             `[aixyz] Could not find \`export default\` in entrypoint ${args.path}. ` +
@@ -44,6 +75,8 @@ export function AixyzServerPlugin(
               `or \`export default new AixyzApp({...});\`.`,
           );
         }
+
+        transformed = staticImports + "\n" + transformed;
         return { contents: transformed, loader: "ts" };
       });
     },
