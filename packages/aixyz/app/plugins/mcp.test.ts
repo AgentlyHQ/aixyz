@@ -441,6 +441,10 @@ describe("MCPPlugin x402 payment", () => {
   let multiPriceUrl: string;
   let stopMultiPriceServer: () => void;
 
+  // Array accepts (multi-network) app
+  let multiNetworkUrl: string;
+  let stopMultiNetworkServer: () => void;
+
   beforeAll(async () => {
     // Single paid tool app
     const paidApp = new AixyzApp({ facilitators: fixture.facilitator });
@@ -473,12 +477,32 @@ describe("MCPPlugin x402 payment", () => {
     );
     await multiPriceApp.initialize();
     ({ url: multiPriceUrl, stop: stopMultiPriceServer } = await fixture.serve(multiPriceApp));
+
+    // Array accepts (multi-network) app
+    const multiNetworkApp = new AixyzApp({ facilitators: fixture.facilitator });
+    await multiNetworkApp.withPlugin(
+      new MCPPlugin([
+        {
+          name: "add",
+          exports: {
+            default: mockTool,
+            accepts: [
+              { scheme: "exact" as const, price: "$0.01", network: "eip155:8453" },
+              { scheme: "exact" as const, price: "$0.05", network: "eip155:84532" },
+            ],
+          },
+        },
+      ]),
+    );
+    await multiNetworkApp.initialize();
+    ({ url: multiNetworkUrl, stop: stopMultiNetworkServer } = await fixture.serve(multiNetworkApp));
   });
 
   afterAll(() => {
     stopPaidServer?.();
     stopMixedServer?.();
     stopMultiPriceServer?.();
+    stopMultiNetworkServer?.();
   });
 
   test("paid tool without payment throws DryRunPaymentRequired", async () => {
@@ -534,4 +558,28 @@ describe("MCPPlugin x402 payment", () => {
       ]);
     }
   });
+
+  test("array accepts tool returns multiple payment requirements", async () => {
+    try {
+      await callMcpTool(multiNetworkUrl, "add", { a: 1, b: 2 }, { fetchImpl: createDryRunFetch() });
+      expect.unreachable("expected DryRunPaymentRequired");
+    } catch (e) {
+      expect(e).toBeInstanceOf(DryRunPaymentRequired);
+      const reqs = (e as DryRunPaymentRequired).requirements;
+      expect(reqs).toHaveLength(2);
+      expect(reqs[0]).toMatchObject({ scheme: "exact", network: "eip155:8453", amount: "10000" });
+      expect(reqs[1]).toMatchObject({ scheme: "exact", network: "eip155:84532", amount: "50000" });
+    }
+  });
+
+  test("array accepts tool with payment on default network succeeds", async () => {
+    const result = await callMcpTool(
+      multiNetworkUrl,
+      "add",
+      { a: 4, b: 5 },
+      { transaction: PayTransaction(fixture.wallet) },
+    );
+    const content = result.content as Array<{ type: string; text: string }>;
+    expect(JSON.parse(content[0].text)).toEqual({ result: 9 });
+  }, 30_000);
 });

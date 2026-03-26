@@ -13,6 +13,7 @@ export interface X402Fixture {
   container: StartedX402FacilitatorLocalContainer;
   facilitator: FacilitatorClient;
   wallet: EvmPrivateKeyWallet;
+  privateKey: `0x${string}`;
   payTo: `0x${string}`;
   network: "eip155:8453";
   rpcUrl: string;
@@ -37,6 +38,7 @@ export async function createFixture(): Promise<X402Fixture> {
     container,
     facilitator,
     wallet,
+    privateKey,
     payTo,
     network: "eip155:8453",
     rpcUrl,

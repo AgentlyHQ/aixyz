@@ -229,10 +229,7 @@ describe("PaymentGateway", () => {
     const senderBeforeSepolia = await fixture.container.balance(senderAddress, "base-sepolia");
 
     // Create wallet pointing at the sepolia RPC for signing on that chain
-    const sepoliaWallet = new EvmPrivateKeyWallet(
-      (fixture.wallet as any).privateKey ?? (fixture.wallet as any)._privateKey,
-      fixture.container.getRpcUrl("base-sepolia"),
-    );
+    const sepoliaWallet = new EvmPrivateKeyWallet(fixture.privateKey, fixture.container.getRpcUrl("base-sepolia"));
     const payFetch = createPaymentFetch(sepoliaWallet) as typeof fetch;
 
     // /sepolia-only route has only eip155:84532, so no ambiguity

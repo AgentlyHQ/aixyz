@@ -88,6 +88,8 @@ export class MCPPlugin extends BasePlugin {
 
     // MCP payment operates via @x402/mcp wrappers independently of the HTTP payment
     // middleware (PaymentGateway), so network schemes must be registered here separately.
+    // The default network is already registered by PaymentGateway.initialize() on the
+    // shared resourceServer — seed the set so we skip re-registering it.
     const registeredNetworks = new Set<string>([defaultNetwork]);
     for (const { accepts } of this.registeredTools) {
       if (!accepts || !isAcceptsPaid(accepts)) continue;
