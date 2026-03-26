@@ -1,6 +1,6 @@
 ---
 title: "Deploying"
-description: "Deploy your agent to Vercel, standalone Bun, or Docker"
+description: "Deploy your agent to Vercel, Railway, standalone Bun, or Docker"
 ---
 
 ## Vercel
@@ -33,7 +33,7 @@ Set `OPENAI_API_KEY` and any payment environment variables in the Vercel dashboa
 
 ## Standalone (Bun Runtime)
 
-For direct deployment on Bun-compatible hosts (DigitalOcean, Railway, Fly.io, etc.):
+For direct deployment on Bun-compatible hosts (DigitalOcean, Fly.io, etc.):
 
 ```bash
 aixyz build
@@ -52,16 +52,58 @@ export OPENAI_API_KEY=sk-...
 bun .aixyz/output/server.js
 ```
 
-## Docker
+## Railway
 
-Using the standalone build:
+[Railway](https://railway.com) auto-detects a `Dockerfile` in your project root. Use a multi-stage build so only the compiled output is shipped in the final image, and pass `RAILWAY_PUBLIC_DOMAIN` at build time so the agent URL is resolved automatically.
 
 ```dockerfile title="Dockerfile"
-FROM oven/bun:1.3.9
+FROM oven/bun:1 AS build
+WORKDIR /app
+COPY . .
+RUN bun install
+ARG RAILWAY_PUBLIC_DOMAIN
+ENV RAILWAY_PUBLIC_DOMAIN=$RAILWAY_PUBLIC_DOMAIN
+RUN bun run build
+
+FROM oven/bun:1-slim
+WORKDIR /app
+COPY --from=build /app/.aixyz/output .aixyz/output
+CMD ["bun", ".aixyz/output/server.js"]
+```
+
+Deploy by connecting your GitHub repository to a Railway project. Railway injects `RAILWAY_PUBLIC_DOMAIN` automatically so `bun run build` picks up the correct public URL — no manual `url` config needed.
+
+Set `OPENAI_API_KEY` and any payment environment variables in the Railway dashboard under **Variables**.
+
+Add a `.dockerignore` to keep the build context small:
+
+```text title=".dockerignore"
+node_modules
+.aixyz
+.vercel
+.env*.local
+*.log
+```
+
+<Note>
+  `RAILWAY_PUBLIC_DOMAIN` is only available after a public domain is assigned in Railway. If you use a custom domain,
+  set it there first and Railway will expose it as the `RAILWAY_PUBLIC_DOMAIN` build argument.
+</Note>
+
+## Docker
+
+For self-hosted or custom container deployments, use a multi-stage build to keep the final image small:
+
+```dockerfile title="Dockerfile"
+FROM oven/bun:1 AS build
 WORKDIR /app
 COPY . .
 RUN bun install
 RUN bun run build
+
+FROM oven/bun:1-slim
+WORKDIR /app
+COPY --from=build /app/.aixyz/output .aixyz/output
 CMD ["bun", ".aixyz/output/server.js"]
 ```
 
@@ -73,6 +115,16 @@ docker run -p 3000:3000 \
   -e OPENAI_API_KEY=sk-... \
   -e PORT=3000 \
   my-agent
+```
+
+Add a `.dockerignore` to keep the build context small:
+
+```text title=".dockerignore"
+node_modules
+.aixyz
+.vercel
+.env*.local
+*.log
 ```
 
 <Warning>Never bake API keys into Docker images. Pass them as environment variables at runtime.</Warning>

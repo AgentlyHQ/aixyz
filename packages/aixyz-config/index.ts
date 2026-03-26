@@ -112,6 +112,10 @@ const AixyzConfigSchema = z.object({
         return `https://${process.env.VERCEL_URL}/`;
       }
 
+      if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+        return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/`;
+      }
+
       const port = process.env.PORT || 3000;
       return `http://localhost:${port}/`;
     })
