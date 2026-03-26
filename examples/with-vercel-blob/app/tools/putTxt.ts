@@ -7,7 +7,9 @@ import { z } from "zod";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const DEFAULT_TTL_DAYS = 365;
 const DEFAULT_FOLDER = "txt";
+// Keep blobs lightweight for the example and MCP transport while still allowing rich snippets.
 const MAX_TEXT_LENGTH = 50_000;
+// Prevent overly long folder prefixes that could create unwieldy blob paths.
 const MAX_FOLDER_LENGTH = 120;
 
 export type TxtPlan = {
@@ -68,7 +70,7 @@ export const accepts: Accepts = {
 };
 
 export default tool({
-  description: "Store a private UTF-8 .txt file in Vercel Blob and return its URL and metadata.",
+  description: "Store a private UTF-8 .txt file (up to 50k chars) in Vercel Blob and return its URL and metadata.",
   inputSchema,
   execute: async ({ text, folder, expiresInDays }) => {
     const token = process.env.BLOB_READ_WRITE_TOKEN;

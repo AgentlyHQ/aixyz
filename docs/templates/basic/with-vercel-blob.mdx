@@ -33,7 +33,7 @@ import { tool } from "ai";
 export default tool({
   description: "Store a private UTF-8 .txt file in Vercel Blob and return its URL and metadata.",
   inputSchema: z.object({
-    text: z.string().min(1).max(50_000),
+    text: z.string().min(1).max(50_000), // matches MAX_TEXT_LENGTH in source
     folder: z.string().regex(/^[a-zA-Z0-9/_-]+$/).optional(), // default: txt/
     expiresInDays: z.number().int().min(1).max(365).optional(), // default: 365
   }),
