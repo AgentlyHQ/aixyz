@@ -157,6 +157,19 @@ describe("MCPPlugin", () => {
     expect(app.routes.get("POST /mcp")?.payment).toBeUndefined();
   });
 
+  test("registers tools with array accepts (multiple networks)", async () => {
+    const app = createApp();
+    const multiAccepts = [
+      { scheme: "exact" as const, price: "$0.01", network: "eip155:8453" },
+      { scheme: "exact" as const, price: "$0.05", network: "eip155:1" },
+    ];
+    const plugin = new MCPPlugin([{ name: "add", exports: { default: mockTool, accepts: multiAccepts } }]);
+    await app.withPlugin(plugin);
+
+    expect(plugin.registeredTools).toHaveLength(1);
+    expect(plugin.registeredTools[0].accepts).toEqual(multiAccepts);
+  });
+
   // ---------------------------------------------------------------------------
   // POST /mcp — SSE response path
   // ---------------------------------------------------------------------------

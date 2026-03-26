@@ -250,7 +250,7 @@ export class A2APlugin extends BasePlugin {
         return Response.json(result);
       },
       {
-        payment: entry.exports.accepts.scheme === "exact" ? entry.exports.accepts : undefined,
+        payment: entry.exports.accepts,
       },
     );
   }

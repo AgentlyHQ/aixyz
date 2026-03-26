@@ -1,5 +1,4 @@
-import type { HttpMethod, RouteHandler, RouteEntry, Middleware } from "./types";
-import type { AcceptsX402 } from "../accepts";
+import type { HttpMethod, RouteHandler, RouteEntry, RouteOptions, Middleware } from "./types";
 import type { PaymentGateway } from "./payment/payment";
 
 /**
@@ -14,7 +13,7 @@ import type { PaymentGateway } from "./payment/payment";
  */
 export interface RegisterContext {
   /** Register a route on the application. Automatically tracked in `plugin.registeredRoutes`. */
-  route(method: HttpMethod, path: string, handler: RouteHandler, options?: { payment?: AcceptsX402 }): void;
+  route(method: HttpMethod, path: string, handler: RouteHandler, options?: RouteOptions): void;
   /** Append a middleware to the application's middleware chain. */
   use(middleware: Middleware): void;
 }

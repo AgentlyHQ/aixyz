@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test, mock, setDefaultTimeout } 
 import { PaymentGateway } from "./payment";
 import { decodePaymentRequiredHeader, decodePaymentResponseHeader } from "@x402/core/http";
 import { createFixture, type X402Fixture } from "../../test/x402-fixture";
-import { createPaymentFetch } from "@use-agently/sdk";
+import { createPaymentFetch, EvmPrivateKeyWallet } from "@use-agently/sdk";
 import { AixyzApp } from "../index";
 
 setDefaultTimeout(30_000);
@@ -57,11 +57,26 @@ beforeAll(async () => {
   app.route("POST", "/custom-payto", () => new Response("custom"), {
     payment: { scheme: "exact", price: "$0.01", payTo: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd" },
   });
+  app.route("POST", "/multi-accepts", () => new Response("multi"), {
+    payment: [
+      { scheme: "exact", price: "$0.01", network: "eip155:8453" },
+      { scheme: "exact", price: "$0.05", network: "eip155:8453", payTo: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd" },
+    ],
+  });
+  app.route("POST", "/multi-network", () => new Response("multi-network"), {
+    payment: [
+      { scheme: "exact", price: "$0.005", network: "eip155:8453" },
+      { scheme: "exact", price: "$0.05", network: "eip155:84532" },
+    ],
+  });
+  app.route("POST", "/sepolia-only", () => new Response("sepolia"), {
+    payment: [{ scheme: "exact", price: "$0.01", network: "eip155:84532" }],
+  });
   app.route("GET", "/free", () => new Response("free"));
   await app.initialize();
 
   ({ url, stop: stopServer } = await fixture.serve(app));
-}, 120_000);
+}, 180_000);
 
 afterAll(async () => {
   stopServer?.();
@@ -166,6 +181,86 @@ describe("PaymentGateway", () => {
   });
 
   // --- Settlement ---
+
+  test("array accepts returns 402 with multiple payment options", async () => {
+    const res = await fetch(`${url}/multi-accepts`, { method: "POST" });
+    expect(res.status).toBe(402);
+
+    const decoded = decodePaymentRequiredHeader(res.headers.get("payment-required")!);
+    expect(decoded.accepts).toHaveLength(2);
+    expect(decoded.accepts[0].amount).toBe("10000"); // $0.01
+    expect(decoded.accepts[0].payTo).toBe(fixture.payTo); // defaults to config
+    expect(decoded.accepts[1].amount).toBe("50000"); // $0.05
+    expect(decoded.accepts[1].payTo).toBe("0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"); // explicit
+  });
+
+  test("array accepts with different networks returns 402 with both networks", async () => {
+    const res = await fetch(`${url}/multi-network`, { method: "POST" });
+    expect(res.status).toBe(402);
+
+    const decoded = decodePaymentRequiredHeader(res.headers.get("payment-required")!);
+    expect(decoded.accepts).toHaveLength(2);
+    expect(decoded.accepts[0].network).toBe("eip155:8453");
+    expect(decoded.accepts[0].amount).toBe("5000"); // $0.005
+    expect(decoded.accepts[1].network).toBe("eip155:84532");
+    expect(decoded.accepts[1].amount).toBe("50000"); // $0.05
+  });
+
+  test("multi-network: paying on default network debits sender", async () => {
+    const senderAddress = fixture.wallet.address as `0x${string}`;
+    const senderBefore = await fixture.container.balance(senderAddress);
+
+    const payFetch = createPaymentFetch(fixture.wallet) as typeof fetch;
+    // Default selector picks the first option (eip155:8453, $0.005)
+    const res = await payFetch(`${url}/multi-network`, { method: "POST" });
+    expect(res.status).toBe(200);
+
+    const decoded = decodePaymentResponseHeader(res.headers.get("PAYMENT-RESPONSE")!);
+    expect(decoded.success).toBe(true);
+    expect(decoded.network).toBe("eip155:8453");
+
+    const senderAfter = await fixture.container.balance(senderAddress);
+    expect(senderBefore.value - senderAfter.value).toBe(5000n); // $0.005 in USDC (6 decimals)
+  }, 30_000);
+
+  test("multi-network: paying on secondary network debits correct chain", async () => {
+    const senderAddress = fixture.wallet.address as `0x${string}`;
+    const senderBeforeBase = await fixture.container.balance(senderAddress);
+    const senderBeforeSepolia = await fixture.container.balance(senderAddress, "base-sepolia");
+
+    // Create wallet pointing at the sepolia RPC for signing on that chain
+    const sepoliaWallet = new EvmPrivateKeyWallet(
+      (fixture.wallet as any).privateKey ?? (fixture.wallet as any)._privateKey,
+      fixture.container.getRpcUrl("base-sepolia"),
+    );
+    const payFetch = createPaymentFetch(sepoliaWallet) as typeof fetch;
+
+    // /sepolia-only route has only eip155:84532, so no ambiguity
+    const res = await payFetch(`${url}/sepolia-only`, { method: "POST" });
+    expect(res.status).toBe(200);
+
+    const decoded = decodePaymentResponseHeader(res.headers.get("PAYMENT-RESPONSE")!);
+    expect(decoded.success).toBe(true);
+    expect(decoded.network).toBe("eip155:84532");
+
+    // Base balance should be unchanged
+    const senderAfterBase = await fixture.container.balance(senderAddress);
+    expect(senderAfterBase.value).toBe(senderBeforeBase.value);
+
+    // Sepolia balance should be debited exactly $0.01
+    const senderAfterSepolia = await fixture.container.balance(senderAddress, "base-sepolia");
+    expect(senderBeforeSepolia.value - senderAfterSepolia.value).toBe(10000n); // $0.01 in USDC (6 decimals)
+  }, 30_000);
+
+  test("multi-accepts: payment settles and returns correct payer", async () => {
+    const payFetch = createPaymentFetch(fixture.wallet) as typeof fetch;
+    const res = await payFetch(`${url}/multi-accepts`, { method: "POST" });
+    expect(res.status).toBe(200);
+
+    const decoded = decodePaymentResponseHeader(res.headers.get("PAYMENT-RESPONSE")!);
+    expect(decoded.success).toBe(true);
+    expect(decoded.payer).toBe(fixture.wallet.address);
+  }, 30_000);
 
   test("successful payment settles and debits sender", async () => {
     const senderBefore = await fixture.container.balance(

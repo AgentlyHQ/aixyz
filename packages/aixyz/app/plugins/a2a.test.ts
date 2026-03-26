@@ -347,6 +347,19 @@ describe("A2APlugin", () => {
       expect(app.withPlugin(plugin)).rejects.toThrow(/Invalid accepts config for agent "root"/);
     });
 
+    test("registers agent with array accepts (multiple networks)", async () => {
+      const app = new AixyzApp();
+      const multiAccepts = [
+        { scheme: "exact" as const, price: "$0.01", network: "eip155:8453" },
+        { scheme: "exact" as const, price: "$0.05", network: "eip155:1" },
+      ];
+      await app.withPlugin(new A2APlugin([{ exports: { default: makeMockAgent(), accepts: multiAccepts } }]));
+      expect(app.routes.has("GET /.well-known/agent-card.json")).toBe(true);
+      expect(app.routes.has("POST /agent")).toBe(true);
+      const routeEntry = app.routes.get("POST /agent");
+      expect(routeEntry?.payment).toEqual(multiAccepts);
+    });
+
     test("skips agents without accepts while registering others", async () => {
       const app = new AixyzApp();
       const plugin = new A2APlugin([

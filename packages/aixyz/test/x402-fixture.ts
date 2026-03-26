@@ -21,11 +21,12 @@ export interface X402Fixture {
 }
 
 export async function createFixture(): Promise<X402Fixture> {
-  const container = await new X402FacilitatorLocalContainer().start();
+  const container = await new X402FacilitatorLocalContainer().withNetworkPreset("base", "base-sepolia").start();
 
   const privateKey = generatePrivateKey();
   const address = privateKeyToAccount(privateKey).address;
   await container.fund(address, "100");
+  await container.fund(address, "100", "base-sepolia");
 
   const wallet = new EvmPrivateKeyWallet(privateKey, container.getRpcUrl());
   const facilitator = new HTTPFacilitatorClient({ url: container.getFacilitatorUrl() });

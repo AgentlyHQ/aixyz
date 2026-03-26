@@ -8,7 +8,8 @@ import {
   type HTTPResponseInstructions,
 } from "@x402/core/http";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
-import type { AcceptsX402 } from "../../accepts";
+import type { AcceptsX402, AcceptsX402Multi } from "../../accepts";
+import { normalizeAcceptsX402 } from "../../accepts";
 import { Network, PaymentPayload, PaymentRequirements } from "@x402/core/types";
 import { AixyzConfig } from "@aixyz/config";
 
@@ -78,27 +79,47 @@ export class PaymentGateway {
   /**
    * Add a payment-gated route. Must be called before initialize().
    */
-  addRoute(method: string, path: string, accepts: AcceptsX402): void {
+  addRoute(method: string, path: string, accepts: AcceptsX402 | AcceptsX402Multi): void {
     const pattern = this.getRouteKey(method, path);
+    const items = normalizeAcceptsX402(accepts);
     this.pendingRoutes.set(pattern, {
-      accepts: {
-        scheme: accepts.scheme,
-        payTo: accepts.payTo ?? this.config.x402.payTo,
-        price: accepts.price,
-        network: (accepts.network as Network) ?? (this.config.x402.network as Network),
-      },
+      accepts: items.map((a) => ({
+        scheme: a.scheme,
+        payTo: a.payTo ?? this.config.x402.payTo,
+        price: a.price,
+        network: (a.network as Network) ?? (this.config.x402.network as Network),
+      })),
     });
   }
 
   /**
-   * Initialize the payment gateway. Builds the x402HTTPResourceServer from registered routes.
+   * Initialize the payment gateway. Registers all required network schemes
+   * from pending routes, then builds the x402HTTPResourceServer.
    * Must be called after all routes are added.
    */
   async initialize(): Promise<void> {
+    this.registerNetworksFromRoutes();
     const routes: RoutesConfig =
       this.pendingRoutes.size > 0 ? Object.fromEntries(this.pendingRoutes) : { "* /*": { accepts: [] } };
     this.httpServer = new x402HTTPResourceServer(this.resourceServer, routes);
     await this.httpServer.initialize();
+  }
+
+  private registerNetworksFromRoutes(): void {
+    const networks = new Set<Network>();
+    const defaultNetwork = (this.config.x402.network as Network) ?? ("eip155:8453" as Network);
+    networks.add(defaultNetwork);
+
+    for (const [, route] of this.pendingRoutes) {
+      const accepts = Array.isArray(route.accepts) ? route.accepts : [route.accepts];
+      for (const opt of accepts) {
+        if (opt.network) networks.add(opt.network as Network);
+      }
+    }
+
+    for (const network of networks) {
+      this.register(network);
+    }
   }
 
   /**
