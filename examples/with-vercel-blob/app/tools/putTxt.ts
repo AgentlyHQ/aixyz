@@ -84,6 +84,7 @@ export default tool({
       "",
     ].join("\n");
     const payload = `${metadata}${text}`;
+    const bytes = new TextEncoder().encode(payload).length;
 
     const blob = await put(plan.path, payload, {
       access: "private",
@@ -99,9 +100,11 @@ export default tool({
       createdAt: plan.createdAt.toISOString(),
       expiresAt: plan.expiresAt.toISOString(),
       url: blob.url,
-      downloadUrl: (blob as { downloadUrl?: string }).downloadUrl,
-      size: blob.size,
-      access: blob.access,
+      downloadUrl: blob.downloadUrl,
+      pathname: blob.pathname,
+      etag: blob.etag,
+      contentType: blob.contentType,
+      bytes,
     };
   },
 });

@@ -53,7 +53,14 @@ export default tool({
       allowOverwrite: false,
       token: process.env.BLOB_READ_WRITE_TOKEN!,
     });
-    return { id: plan.id, url: blob.url, path: plan.path, createdAt, expiresAt };
+    return {
+      id: plan.id,
+      url: blob.url,
+      path: plan.path,
+      downloadUrl: blob.downloadUrl,
+      createdAt: plan.createdAt.toISOString(),
+      expiresAt: plan.expiresAt.toISOString(),
+    };
   },
 });
 ```
