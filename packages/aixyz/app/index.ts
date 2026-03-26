@@ -1,4 +1,4 @@
-import { isAcceptsPaid } from "../accepts";
+import { isAcceptsPaid, AcceptsScheme } from "../accepts";
 import type { Accepts } from "../accepts";
 import type { FacilitatorClient } from "@x402/core/server";
 import { type HttpMethod, type RouteHandler, type Middleware, type RouteEntry, type RouteOptions } from "./types";
@@ -89,6 +89,12 @@ export class AixyzApp {
   /** Register a route with an optional x402 payment requirement. Free accepts are filtered out. */
   route(method: HttpMethod, path: string, handler: RouteHandler, options?: RouteOptions): void {
     const key = this.getRouteKey(method, path);
+    if (options?.payment) {
+      const result = AcceptsScheme.safeParse(options.payment);
+      if (!result.success) {
+        throw new Error(`Invalid accepts config for route "${method} ${path}": ${result.error.message}`);
+      }
+    }
     const payment = options?.payment && isAcceptsPaid(options.payment) ? options.payment : undefined;
     this.routes.set(key, {
       method,

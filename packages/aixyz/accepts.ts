@@ -37,7 +37,8 @@ export function normalizeAcceptsX402(accepts: AcceptsX402 | AcceptsX402Multi): A
 }
 
 export function isAcceptsPaid(accepts: Accepts): accepts is AcceptsX402 | AcceptsX402Multi {
-  if (Array.isArray(accepts)) return accepts.length > 0;
+  if (Array.isArray(accepts))
+    return accepts.length > 0 && accepts.every((e) => e.scheme === "exact" && typeof e.network === "string");
   return accepts.scheme === "exact";
 }
 

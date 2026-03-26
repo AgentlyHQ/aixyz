@@ -115,6 +115,28 @@ describe("AixyzApp", () => {
     expect(app.routes.get("POST /b")?.payment).toEqual({ scheme: "exact", price: "$0.01" });
   });
 
+  test("route() throws on invalid accepts config", () => {
+    const app = new AixyzApp();
+    expect(() =>
+      app.route("POST", "/bad", () => new Response("ok"), { payment: { scheme: "invalid" } as any }),
+    ).toThrow(/Invalid accepts config for route "POST \/bad"/);
+  });
+
+  test("route() throws on malformed multi-accepts (missing network)", () => {
+    const app = new AixyzApp();
+    expect(() =>
+      app.route("POST", "/bad", () => new Response("ok"), {
+        payment: [{ scheme: "exact", price: "$0.01" }] as any,
+      }),
+    ).toThrow(/Invalid accepts config for route "POST \/bad"/);
+  });
+
+  test("route() accepts valid free scheme without throwing", () => {
+    const app = new AixyzApp();
+    app.route("POST", "/free", () => new Response("ok"), { payment: { scheme: "free" } });
+    expect(app.routes.get("POST /free")?.payment).toBeUndefined();
+  });
+
   test("fetch() sets X-Powered-By header by default", async () => {
     const app = new AixyzApp();
     app.route("GET", "/hello", () => new Response("world"));
