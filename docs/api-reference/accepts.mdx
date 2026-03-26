@@ -6,18 +6,18 @@ description: "Payment configuration types and facilitator client for x402 gating
 Types and utilities for configuring x402 payment gating on agent and tool endpoints.
 
 ```typescript
-import type { Accepts, AcceptsX402, AcceptsFree } from "aixyz/accepts";
-import { HTTPFacilitatorClient, facilitator } from "aixyz/accepts";
+import type { Accepts, AcceptsX402, AcceptsX402Entry, AcceptsX402Multi, AcceptsFree } from "aixyz/accepts";
+import { HTTPFacilitatorClient, facilitator, normalizeAcceptsX402, isAcceptsPaid } from "aixyz/accepts";
 ```
 
 ## Types
 
 ### `Accepts`
 
-Union type for payment configuration:
+Union type for payment configuration. Supports a single payment option, free access, or an array of payment options for multi-network support:
 
 ```typescript
-type Accepts = AcceptsX402 | AcceptsFree;
+type Accepts = AcceptsX402 | AcceptsFree | AcceptsX402Multi;
 ```
 
 ### `AcceptsX402`
@@ -40,6 +40,34 @@ type AcceptsX402 = {
 | `network` | `string` | No       | CAIP-2 chain ID, overrides `x402.network` from config         |
 | `payTo`   | `string` | No       | EVM address to receive payment, overrides `x402.payTo` config |
 
+### `AcceptsX402Entry`
+
+A single payment option within a multi-accepts array. Same as `AcceptsX402` but `network` is **required** — the server needs an explicit network to register each payment scheme:
+
+```typescript
+type AcceptsX402Entry = {
+  scheme: "exact";
+  price: string;
+  network: string; // required
+  payTo?: string;
+};
+```
+
+| Field     | Type     | Required | Description                                                   |
+| --------- | -------- | -------- | ------------------------------------------------------------- |
+| `scheme`  | `string` | Yes      | Must be `"exact"`                                             |
+| `price`   | `string` | Yes      | USD price string (e.g. `"$0.005"`)                            |
+| `network` | `string` | Yes      | CAIP-2 chain ID — required for multi-accepts                  |
+| `payTo`   | `string` | No       | EVM address to receive payment, overrides `x402.payTo` config |
+
+### `AcceptsX402Multi`
+
+An array of payment entries, enabling multi-network support. Must contain at least one entry:
+
+```typescript
+type AcceptsX402Multi = AcceptsX402Entry[];
+```
+
 ### `AcceptsFree`
 
 No payment required:
@@ -51,6 +79,22 @@ type AcceptsFree = {
 ```
 
 ## Exports
+
+### `normalizeAcceptsX402`
+
+Converts a single or multi accepts value into a uniform array:
+
+```typescript
+function normalizeAcceptsX402(accepts: AcceptsX402 | AcceptsX402Multi): AcceptsX402[];
+```
+
+### `isAcceptsPaid`
+
+Type guard that returns `true` if the accepts config requires payment (i.e., is not `{ scheme: "free" }`):
+
+```typescript
+function isAcceptsPaid(accepts: Accepts): accepts is AcceptsX402 | AcceptsX402Multi;
+```
 
 ### `HTTPFacilitatorClient`
 
@@ -74,12 +118,19 @@ import { facilitator } from "aixyz/accepts";
 
 ### `AcceptsScheme`
 
-Zod schema for validating `Accepts` objects at runtime:
+Zod schema for validating `Accepts` objects at runtime. Accepts a single object or an array of payment entries:
 
 ```typescript
 import { AcceptsScheme } from "aixyz/accepts";
 
+// Single accepts
 AcceptsScheme.parse({ scheme: "exact", price: "$0.005" });
+
+// Multiple accepts
+AcceptsScheme.parse([
+  { scheme: "exact", price: "$0.005", network: "eip155:8453" },
+  { scheme: "exact", price: "$0.005", network: "eip155:84532" },
+]);
 ```
 
 ## Usage
@@ -102,6 +153,21 @@ export const accepts: Accepts = {
   scheme: "free",
 };
 ```
+
+### Multiple payment options
+
+Accept payment across multiple networks by passing an array. Each entry requires an explicit `network`:
+
+```typescript title="app/agent.ts"
+import type { Accepts } from "aixyz/accepts";
+
+export const accepts: Accepts = [
+  { scheme: "exact", price: "$0.005", network: "eip155:8453" },
+  { scheme: "exact", price: "$0.005", network: "eip155:84532" },
+];
+```
+
+All referenced networks are automatically registered with the payment gateway during initialization — no manual setup required.
 
 ### Custom facilitator
 

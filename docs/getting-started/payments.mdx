@@ -64,6 +64,37 @@ export const accepts: Accepts = {
 - Tool `accepts` gates the tool on the MCP `/mcp` endpoint
 - Agents and tools **without** `accepts` are not registered on protocol endpoints
 
+## Multiple Payment Options
+
+Accept payment across multiple networks by passing an array of payment entries. This lets clients pay on whichever network they prefer:
+
+```typescript
+export const accepts: Accepts = [
+  { scheme: "exact", price: "$0.005", network: "eip155:8453" }, // Base
+  { scheme: "exact", price: "$0.005", network: "eip155:84532" }, // Base Sepolia
+];
+```
+
+When using the array format, `network` is **required** on each entry so the server can register the correct payment scheme for each network.
+
+All referenced networks are automatically discovered and registered during server initialization — no manual configuration needed beyond the `accepts` export.
+
+This works for both agents and tools:
+
+```typescript
+// app/agent.ts — multi-network agent pricing
+export const accepts: Accepts = [
+  { scheme: "exact", price: "$0.01", network: "eip155:8453" },
+  { scheme: "exact", price: "$0.01", network: "eip155:1" },
+];
+
+// app/tools/premium-search.ts — multi-network tool pricing
+export const accepts: Accepts = [
+  { scheme: "exact", price: "$0.001", network: "eip155:8453" },
+  { scheme: "exact", price: "$0.001", network: "eip155:1" },
+];
+```
+
 ## Payment Networks
 
 Configure the payment network in `aixyz.config.ts`:

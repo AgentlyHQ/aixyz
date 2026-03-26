@@ -38,7 +38,7 @@ export default new ToolLoopAgent({
 | `accepts`      | `Accepts`       | No       | Payment config — gates the A2A `/agent` route                       |
 | `capabilities` | `Capabilities`  | No       | A2A capabilities — controls streaming and push notification support |
 
-When `accepts` is exported, the `/agent` endpoint requires x402 payment. Without it, the agent is not registered on the A2A endpoint.
+When `accepts` is exported, the `/agent` endpoint requires x402 payment. Without it, the agent is not registered on the A2A endpoint. `accepts` can also be an array of payment entries for [multi-network support](/getting-started/payments#multiple-payment-options).
 
 ## Capabilities
 

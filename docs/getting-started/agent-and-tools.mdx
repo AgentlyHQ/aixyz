@@ -43,6 +43,15 @@ The optional `accepts` named export controls [x402 payment](/getting-started/pay
 - Agents **with** `accepts` are registered on payment-gated A2A endpoints
 - Agents **without** `accepts` are not registered
 
+You can also pass an array to accept payment on multiple networks:
+
+```typescript
+export const accepts: Accepts = [
+  { scheme: "exact", price: "$0.005", network: "eip155:8453" },
+  { scheme: "exact", price: "$0.005", network: "eip155:84532" },
+];
+```
+
 ### `capabilities` Export
 
 The optional `capabilities` named export configures the A2A agent card's capabilities and controls how the executor runs your agent:
@@ -159,6 +168,8 @@ export default tool({ ... });
 export const accepts: Accepts = { scheme: "exact", price: "$0.001" };
 export default tool({ ... });
 ```
+
+Tools also support [multiple payment options](/getting-started/payments#multiple-payment-options) via an array of accepts entries.
 
 ## Custom Server
 
