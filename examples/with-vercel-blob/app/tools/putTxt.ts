@@ -77,13 +77,13 @@ export default tool({
     }
 
     const plan = createTxtPlan({ folder, expiresInDays });
-    const metadata = [
+    const payload = [
       "# putTxt blob",
       `createdAt=${plan.createdAt.toISOString()}`,
       `expiresAt=${plan.expiresAt.toISOString()}`,
       "",
+      text,
     ].join("\n");
-    const payload = `${metadata}${text}`;
     const bytes = new TextEncoder().encode(payload).length;
 
     const blob = await put(plan.path, payload, {
