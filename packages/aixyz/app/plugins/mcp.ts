@@ -4,9 +4,10 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { createPaymentWrapper } from "@x402/mcp";
 import { BasePlugin, type RegisterContext, type InitializeContext } from "../plugin";
 import type { Accepts } from "../../accepts";
-import { AcceptsScheme } from "../../accepts";
+import { AcceptsScheme, isAcceptsPaid, normalizeAcceptsX402 } from "../../accepts";
 import { getAixyzConfig, getAixyzConfigRuntime } from "../../config";
 import { Network } from "@x402/core/types";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
 
 /**
  * MCP (Model Context Protocol) plugin. Collects tools and exposes them
@@ -83,21 +84,43 @@ export class MCPPlugin extends BasePlugin {
 
     const config = getAixyzConfig();
     const resourceServer = ctx.payment.resourceServer;
+    const defaultNetwork = (config.x402.network as Network) ?? ("eip155:8453" as Network);
+
+    // MCP payment operates via @x402/mcp wrappers independently of the HTTP payment
+    // middleware (PaymentGateway), so network schemes must be registered here separately.
+    // The default network is already registered by PaymentGateway.initialize() on the
+    // shared resourceServer — seed the set so we skip re-registering it.
+    const registeredNetworks = new Set<string>([defaultNetwork]);
+    for (const { accepts } of this.registeredTools) {
+      if (!accepts || !isAcceptsPaid(accepts)) continue;
+      for (const a of normalizeAcceptsX402(accepts)) {
+        const network = a.network ?? defaultNetwork;
+        if (!registeredNetworks.has(network)) {
+          registeredNetworks.add(network);
+          resourceServer.register(network as Network, new ExactEvmScheme());
+        }
+      }
+    }
 
     for (const { name, accepts } of this.registeredTools) {
-      if (accepts?.scheme !== "exact") continue;
+      if (!accepts || !isAcceptsPaid(accepts)) continue;
 
-      const reqs = await resourceServer.buildPaymentRequirements({
-        scheme: accepts.scheme,
-        payTo: accepts.payTo ?? config.x402.payTo,
-        price: accepts.price,
-        network: (accepts.network as Network) ?? (config.x402.network as Network),
-      });
+      const items = normalizeAcceptsX402(accepts);
+      const allReqs: Awaited<ReturnType<typeof resourceServer.buildPaymentRequirements>> = [];
+      for (const a of items) {
+        const reqs = await resourceServer.buildPaymentRequirements({
+          scheme: a.scheme,
+          payTo: a.payTo ?? config.x402.payTo,
+          price: a.price,
+          network: (a.network as Network) ?? defaultNetwork,
+        });
+        allReqs.push(...reqs);
+      }
 
       this.paymentWrappers.set(
         name,
         createPaymentWrapper(resourceServer, {
-          accepts: reqs,
+          accepts: allReqs,
           resource: { url: `mcp://tool/${name}` },
         }),
       );

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { BasePlugin, type RegisterContext, type InitializeContext } from "../../plugin";
 import type { MCPPlugin } from "../mcp";
 import { renderHtml } from "./html";
+import { isAcceptsPaid } from "../../../accepts";
 
 export type AixyzConfigRuntime = ReturnType<typeof getAixyzConfigRuntime>;
 
@@ -141,7 +142,7 @@ export class IndexPagePlugin extends BasePlugin {
           protocol: "a2a",
           name,
           path: entry.path,
-          paid: entry.payment?.scheme === "exact",
+          paid: !!entry.payment, // only set for paid routes (free accepts filtered in AixyzApp.route())
         });
       }
     }
@@ -170,7 +171,7 @@ export class IndexPagePlugin extends BasePlugin {
           name: tool.name,
           path: "/mcp",
           description: tool.tool.description,
-          paid: tool.accepts?.scheme === "exact",
+          paid: tool.accepts ? isAcceptsPaid(tool.accepts) : false,
           inputSchema,
         });
       }
