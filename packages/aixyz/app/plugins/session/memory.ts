@@ -14,6 +14,7 @@ interface Entry {
   payer: string;
   key: string;
   expiresAt: number; // 0 = never expires
+  ttlMs: number; // effective TTL used when refreshing on get(); 0 = no expiry
 }
 
 // ── Implementation ────────────────────────────────────────────────────
@@ -55,9 +56,9 @@ export class InMemorySessionStore implements SessionStore {
       return undefined;
     }
 
-    // LRU touch: move to end + refresh TTL
+    // LRU touch: move to end + refresh TTL using the entry's own TTL
     this.entries.delete(ck);
-    entry.expiresAt = this.expiryFor(undefined);
+    entry.expiresAt = this.expiryFor(entry.ttlMs);
     this.entries.set(ck, entry);
 
     return entry.value;
@@ -81,7 +82,8 @@ export class InMemorySessionStore implements SessionStore {
       }
     }
 
-    const entry: Entry = { value, payer, key, expiresAt: this.expiryFor(options?.ttlMs) };
+    const effectiveTtl = options?.ttlMs ?? this.ttlMs;
+    const entry: Entry = { value, payer, key, expiresAt: this.expiryFor(effectiveTtl), ttlMs: effectiveTtl };
     this.entries.set(ck, entry);
 
     // Update payer index.
@@ -106,7 +108,7 @@ export class InMemorySessionStore implements SessionStore {
     if (!idx) return { entries: {} };
 
     const prefix = options?.prefix;
-    const limit = options?.limit ?? Infinity;
+    const limit = options?.limit && options.limit > 0 ? options.limit : Infinity;
     const keysOnly = options?.keysOnly ?? false;
     const cursor = options?.cursor;
 
@@ -192,9 +194,8 @@ export class InMemorySessionStore implements SessionStore {
     return entry.expiresAt > 0 && Date.now() > entry.expiresAt;
   }
 
-  private expiryFor(perKeyTtlMs: number | undefined): number {
-    const ttl = perKeyTtlMs ?? this.ttlMs;
-    return ttl > 0 ? Date.now() + ttl : 0;
+  private expiryFor(ttlMs: number): number {
+    return ttlMs > 0 ? Date.now() + ttlMs : 0;
   }
 }
 

@@ -47,31 +47,31 @@ describe("InMemorySessionStore", () => {
 
 describe("InMemorySessionStore TTL", () => {
   test("expired entry returns undefined on get", async () => {
-    const store = new InMemorySessionStore({ ttlMs: 50 });
+    const store = new InMemorySessionStore({ ttlMs: 100 });
     await store.set("0xALICE", "key", "val");
-    await Bun.sleep(60);
+    await Bun.sleep(150);
     expect(await store.get("0xALICE", "key")).toBeUndefined();
   });
 
   test("sliding window: get refreshes TTL", async () => {
-    const store = new InMemorySessionStore({ ttlMs: 80 });
+    const store = new InMemorySessionStore({ ttlMs: 200 });
     await store.set("0xALICE", "key", "val");
-    // Access at ~40ms (within TTL) to refresh
-    await Bun.sleep(40);
-    expect(await store.get("0xALICE", "key")).toBe("val");
-    // Wait another 60ms — 100ms total, but only 60ms since last get
-    await Bun.sleep(60);
-    expect(await store.get("0xALICE", "key")).toBe("val");
-    // Now let it fully expire
+    // Access at ~100ms (within TTL) to refresh
     await Bun.sleep(100);
+    expect(await store.get("0xALICE", "key")).toBe("val");
+    // Wait another 150ms — 250ms total, but only 150ms since last get
+    await Bun.sleep(150);
+    expect(await store.get("0xALICE", "key")).toBe("val");
+    // Now let it fully expire (more than 200ms since last get)
+    await Bun.sleep(250);
     expect(await store.get("0xALICE", "key")).toBeUndefined();
   });
 
   test("list filters out expired entries", async () => {
-    const store = new InMemorySessionStore({ ttlMs: 50 });
+    const store = new InMemorySessionStore({ ttlMs: 100 });
     await store.set("0xALICE", "a", "1");
     await store.set("0xALICE", "b", "2");
-    await Bun.sleep(60);
+    await Bun.sleep(150);
     // Both expired
     expect(await store.list("0xALICE")).toEqual({ entries: {} });
   });
@@ -149,19 +149,33 @@ describe("InMemorySessionStore LRU eviction", () => {
 
 describe("InMemorySessionStore per-key TTL", () => {
   test("per-key ttlMs overrides store default", async () => {
-    const store = new InMemorySessionStore({ ttlMs: 500 });
-    await store.set("0xALICE", "short", "val", { ttlMs: 50 });
+    const store = new InMemorySessionStore({ ttlMs: 1000 });
+    await store.set("0xALICE", "short", "val", { ttlMs: 100 });
     await store.set("0xALICE", "long", "val");
-    await Bun.sleep(60);
+    await Bun.sleep(150);
     expect(await store.get("0xALICE", "short")).toBeUndefined();
     expect(await store.get("0xALICE", "long")).toBe("val");
   });
 
   test("per-key ttlMs: 0 disables expiry even when store has default", async () => {
-    const store = new InMemorySessionStore({ ttlMs: 50 });
+    const store = new InMemorySessionStore({ ttlMs: 100 });
     await store.set("0xALICE", "forever", "val", { ttlMs: 0 });
-    await Bun.sleep(60);
+    await Bun.sleep(150);
     expect(await store.get("0xALICE", "forever")).toBe("val");
+  });
+
+  test("get() refreshes using per-key TTL, not store default", async () => {
+    const store = new InMemorySessionStore({ ttlMs: 1000 });
+    await store.set("0xALICE", "short", "val", { ttlMs: 150 });
+    // Access at 100ms to refresh — should use the 150ms per-key TTL
+    await Bun.sleep(100);
+    expect(await store.get("0xALICE", "short")).toBe("val");
+    // Wait 100ms more (200ms total, 100ms since last get) — still within 150ms TTL
+    await Bun.sleep(100);
+    expect(await store.get("0xALICE", "short")).toBe("val");
+    // Now let it expire (200ms since last get > 150ms TTL)
+    await Bun.sleep(200);
+    expect(await store.get("0xALICE", "short")).toBeUndefined();
   });
 });
 
@@ -191,6 +205,16 @@ describe("InMemorySessionStore list options", () => {
     const page2 = await store.list("0xALICE", { limit: 2, cursor: page1.cursor });
     expect(Object.keys(page2.entries)).toHaveLength(1);
     expect(page2.cursor).toBeUndefined();
+  });
+
+  test("limit: 0 returns all entries (treated as no limit)", async () => {
+    const store = new InMemorySessionStore({ ttlMs: 0 });
+    await store.set("0xALICE", "a", "1");
+    await store.set("0xALICE", "b", "2");
+
+    const result = await store.list("0xALICE", { limit: 0 });
+    expect(Object.keys(result.entries)).toHaveLength(2);
+    expect(result.cursor).toBeUndefined();
   });
 
   test("keysOnly returns empty strings for values", async () => {
@@ -223,9 +247,9 @@ describe("InMemorySessionStore batch operations", () => {
   });
 
   test("setMany respects per-key TTL", async () => {
-    const store = new InMemorySessionStore({ ttlMs: 500 });
-    await store.setMany("0xALICE", { a: "1", b: "2" }, { ttlMs: 50 });
-    await Bun.sleep(60);
+    const store = new InMemorySessionStore({ ttlMs: 1000 });
+    await store.setMany("0xALICE", { a: "1", b: "2" }, { ttlMs: 100 });
+    await Bun.sleep(150);
     expect(await store.get("0xALICE", "a")).toBeUndefined();
     expect(await store.get("0xALICE", "b")).toBeUndefined();
   });
