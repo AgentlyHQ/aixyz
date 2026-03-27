@@ -29,7 +29,7 @@ export class MCPPlugin extends BasePlugin {
   readonly name = "mcp";
   readonly registeredTools: Array<{ name: string; tool: Tool; accepts?: Accepts }> = [];
   private paymentWrappers = new Map<string, (handler: any) => any>();
-  private sessionPlugin!: SessionPlugin;
+  private sessionPlugin?: SessionPlugin;
 
   constructor(private tools: Array<{ name: string; exports: { default: Tool; accepts?: Accepts } }>) {
     super();
@@ -57,7 +57,7 @@ export class MCPPlugin extends BasePlugin {
         // If a payer was captured from MCP-level payment, run the tool
         // within a session context so getSession() works.
         const payer = mcpPayerStorage.getStore()?.payer;
-        if (payer) {
+        if (payer && sessionPlugin) {
           return sessionPlugin.runWithPayer(payer, execute);
         }
         return execute();
@@ -111,7 +111,7 @@ export class MCPPlugin extends BasePlugin {
   }
 
   async initialize(ctx: InitializeContext): Promise<void> {
-    this.sessionPlugin = ctx.getPlugin<SessionPlugin>("session") as SessionPlugin;
+    this.sessionPlugin = ctx.getPlugin<SessionPlugin>("session") as SessionPlugin | undefined;
 
     if (!ctx.payment) return;
 
