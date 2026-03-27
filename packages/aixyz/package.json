@@ -24,6 +24,7 @@
     "./app/*": "./app/*.ts",
     "./app/adapters/*": "./app/adapters/*.ts",
     "./app/plugins/index-page": "./app/plugins/index-page/index.ts",
+    "./app/plugins/session": "./app/plugins/session/index.ts",
     "./app/plugins/*": "./app/plugins/*.ts"
   },
   "bin": "bin.js",

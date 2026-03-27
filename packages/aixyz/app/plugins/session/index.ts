@@ -1,8 +1,36 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { BasePlugin, type RegisterContext, type InitializeContext } from "../plugin";
-import type { PaymentGateway } from "../payment/payment";
+import { BasePlugin, type RegisterContext, type InitializeContext } from "../../plugin";
+import type { PaymentGateway } from "../../payment/payment";
+import { InMemorySessionStore } from "./memory";
+
+export { InMemorySessionStore, type InMemorySessionStoreOptions } from "./memory";
 
 // ── Storage Interface ────────────────────────────────────────────────
+
+/** Options for {@link SessionStore.set} and {@link SessionStore.setMany}. */
+export interface SetOptions {
+  /** Per-key TTL in milliseconds. Overrides the store-level default when supported. */
+  ttlMs?: number;
+}
+
+/** Options for {@link SessionStore.list}. */
+export interface ListOptions {
+  /** Only return keys starting with this prefix. */
+  prefix?: string;
+  /** Opaque cursor from a previous `list()` call for pagination. */
+  cursor?: string;
+  /** Maximum number of entries to return. The store decides its own default when omitted. */
+  limit?: number;
+  /** If true, values are omitted (all values will be empty strings). */
+  keysOnly?: boolean;
+}
+
+/** Return type for {@link SessionStore.list}. */
+export interface ListResult {
+  entries: Record<string, string>;
+  /** If present, more results are available — pass to the next `list()` call. */
+  cursor?: string;
+}
 
 /**
  * Pluggable session storage backend.
@@ -11,43 +39,19 @@ import type { PaymentGateway } from "../payment/payment";
  */
 export interface SessionStore {
   get(payer: string, key: string): Promise<string | undefined>;
-  set(payer: string, key: string, value: string): Promise<void>;
+  set(payer: string, key: string, value: string, options?: SetOptions): Promise<void>;
   delete(payer: string, key: string): Promise<boolean>;
-  list(payer: string): Promise<Record<string, string>>;
-}
+  list(payer: string, options?: ListOptions): Promise<ListResult>;
 
-/**
- * Default in-memory implementation of {@link SessionStore}.
- *
- * **Not suitable for production** — entries never expire and the store grows
- * without bound. Use a persistent backend (Redis, DB, Vercel KV) for anything
- * beyond local development or testing.
- */
-export class InMemorySessionStore implements SessionStore {
-  private data = new Map<string, Map<string, string>>();
+  /** Retrieve multiple keys in a single call. */
+  getMany?(payer: string, keys: string[]): Promise<Record<string, string | undefined>>;
+  /** Set multiple keys in a single call. */
+  setMany?(payer: string, entries: Record<string, string>, options?: SetOptions): Promise<void>;
+  /** Delete multiple keys in a single call. Returns the number of keys actually removed. */
+  deleteMany?(payer: string, keys: string[]): Promise<number>;
 
-  async get(payer: string, key: string): Promise<string | undefined> {
-    return this.data.get(payer)?.get(key);
-  }
-
-  async set(payer: string, key: string, value: string): Promise<void> {
-    let store = this.data.get(payer);
-    if (!store) {
-      store = new Map();
-      this.data.set(payer, store);
-    }
-    store.set(key, value);
-  }
-
-  async delete(payer: string, key: string): Promise<boolean> {
-    return this.data.get(payer)?.delete(key) ?? false;
-  }
-
-  async list(payer: string): Promise<Record<string, string>> {
-    const store = this.data.get(payer);
-    if (!store) return {};
-    return Object.fromEntries(store);
-  }
+  /** Release resources held by the store (connections, timers, etc.). */
+  close?(): Promise<void>;
 }
 
 // ── Session Handle ───────────────────────────────────────────────────
@@ -59,9 +63,9 @@ export class InMemorySessionStore implements SessionStore {
 export interface Session {
   readonly payer: string;
   get(key: string): Promise<string | undefined>;
-  set(key: string, value: string): Promise<void>;
+  set(key: string, value: string, options?: SetOptions): Promise<void>;
   delete(key: string): Promise<boolean>;
-  list(): Promise<Record<string, string>>;
+  list(options?: ListOptions): Promise<ListResult>;
 }
 
 function createSession(payer: string, store: SessionStore): Session {
@@ -73,15 +77,15 @@ function createSession(payer: string, store: SessionStore): Session {
   return {
     payer,
     get: (key) => store.get(storedPayer, key),
-    set: (key, value) => store.set(storedPayer, key, value),
+    set: (key, value, options) => store.set(storedPayer, key, value, options),
     delete: (key) => store.delete(storedPayer, key),
-    list: () => store.list(storedPayer),
+    list: (options) => store.list(storedPayer, options),
   };
 }
 
 // ── AsyncLocalStorage API ────────────────────────────────────────────
 
-const sessionStorage = new AsyncLocalStorage<Session>();
+const sessionStorage = new AsyncLocalStorage<Session | undefined>();
 
 /**
  * Get the current payer-scoped session.
@@ -145,12 +149,17 @@ export class SessionPlugin extends BasePlugin {
       }
       // Explicitly clear any inherited ALS context so that an unpaid route
       // nested inside a paid handler's app.fetch() doesn't leak the outer session.
-      return sessionStorage.run(undefined as any, next);
+      return sessionStorage.run(undefined, next);
     });
   }
 
   initialize(ctx: InitializeContext): void {
     this.payment = ctx.payment;
+    if (!this.payment) {
+      console.warn(
+        "[session] No payment gateway configured — getSession() will always return undefined. Configure x402 facilitators to enable sessions.",
+      );
+    }
   }
 
   /**
@@ -167,4 +176,23 @@ export class SessionPlugin extends BasePlugin {
     const session = createSession(payer, this.store);
     return sessionStorage.run(session, fn);
   }
+}
+
+/**
+ * Identity helper that provides full type inference for a {@link SessionStore}.
+ * Use in `app/session.ts` to get type-safe autocompletion:
+ *
+ * ```ts
+ * import { defineSessionStore } from "aixyz/app/plugins/session";
+ *
+ * export default defineSessionStore({
+ *   async get(payer, key) { ... },
+ *   async set(payer, key, value) { ... },
+ *   async delete(payer, key) { ... },
+ *   async list(payer) { ... },
+ * });
+ * ```
+ */
+export function defineSessionStore(store: SessionStore): SessionStore {
+  return store;
 }

@@ -171,6 +171,12 @@ function generateServer(appDir: string, entrypointDir: string): string {
     imports.push('import { facilitator } from "aixyz/accepts";');
   }
 
+  const hasSession = existsSync(resolve(appDir, "session.ts"));
+  if (hasSession) {
+    imports.push('import { SessionPlugin } from "aixyz/app/plugins/session";');
+    imports.push(`import sessionStore from "${importPrefix}/session";`);
+  }
+
   const rootAgent = glob.hasRootAgent(appDir);
   const agentsDir = resolve(appDir, "agents");
   const subAgents = glob.getAgents(agentsDir);
@@ -204,6 +210,9 @@ function generateServer(appDir: string, entrypointDir: string): string {
   }
 
   body.push("const app = new AixyzApp({ facilitators: facilitator });");
+  if (hasSession) {
+    body.push("await app.withPlugin(new SessionPlugin({ store: sessionStore }));");
+  }
   body.push("await app.withPlugin(new IndexPagePlugin());");
   body.push("await app.withPlugin(new MetadataPlugin());");
 

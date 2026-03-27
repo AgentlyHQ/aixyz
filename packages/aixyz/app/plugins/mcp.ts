@@ -9,7 +9,7 @@ import { AcceptsScheme, isAcceptsPaid, normalizeAcceptsX402 } from "../../accept
 import { getAixyzConfig, getAixyzConfigRuntime } from "../../config";
 import { Network } from "@x402/core/types";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
-import type { SessionPlugin } from "./session";
+import type { SessionPlugin } from "./session/index";
 
 /**
  * AsyncLocalStorage to pass the MCP-level payer address from the
@@ -48,6 +48,7 @@ export class MCPPlugin extends BasePlugin {
             const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
             return { content: [{ type: "text" as const, text }] };
           } catch (error) {
+            console.error(`[mcp] Tool "${name}" failed:`, error);
             const text = error instanceof Error ? error.message : "Unknown error";
             return { content: [{ type: "text" as const, text: `Error: ${text}` }], isError: true };
           }

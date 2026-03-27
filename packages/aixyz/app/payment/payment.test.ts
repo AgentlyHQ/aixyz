@@ -72,6 +72,9 @@ beforeAll(async () => {
   app.route("POST", "/sepolia-only", () => new Response("sepolia"), {
     payment: [{ scheme: "exact", price: "$0.01", network: "eip155:84532" }],
   });
+  app.route("POST", "/zero", () => new Response("zero"), {
+    payment: { scheme: "exact", price: "$0.00" },
+  });
   app.route("GET", "/free", () => new Response("free"));
   await app.initialize();
 
@@ -131,6 +134,45 @@ describe("PaymentGateway", () => {
     });
     expect(res.status).toBe(402);
   });
+
+  // --- Zero Price ---
+
+  test("$0.00 price returns 402 with amount 0", async () => {
+    const res = await fetch(`${url}/zero`, { method: "POST" });
+    expect(res.status).toBe(402);
+
+    const header = res.headers.get("payment-required");
+    expect(header).not.toBeNull();
+
+    const decoded = decodePaymentRequiredHeader(header!);
+    expect(decoded.accepts).toHaveLength(1);
+    expect(decoded.accepts[0].amount).toBe("0");
+  });
+
+  test("$0.00 paid request succeeds without debiting sender", async () => {
+    const senderAddress = (await import("viem/accounts")).privateKeyToAccount(
+      (fixture.wallet as any).privateKey ?? (fixture.wallet as any)._privateKey,
+    ).address;
+
+    const balanceBefore = await fixture.container.balance(senderAddress);
+
+    const payFetch = createPaymentFetch(fixture.wallet) as typeof fetch;
+    const res = await payFetch(`${url}/zero`, { method: "POST" });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("zero");
+
+    // Verify settlement response header
+    const paymentResponse = res.headers.get("PAYMENT-RESPONSE");
+    expect(paymentResponse).not.toBeNull();
+    const decoded = decodePaymentResponseHeader(paymentResponse!);
+    expect(decoded.success).toBe(true);
+    expect(decoded.network).toBe("eip155:8453");
+    expect(decoded.payer).toBe(fixture.wallet.address);
+
+    // Balance should be unchanged — $0.00 means no funds transferred
+    const balanceAfter = await fixture.container.balance(senderAddress);
+    expect(balanceAfter.value).toBe(balanceBefore.value);
+  }, 30_000);
 
   // --- Config Defaults ---
 

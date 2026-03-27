@@ -23,8 +23,8 @@ export default tool({
       return { success: true, key, value };
     }
 
-    const all = await session.list();
-    return { success: true, content: all, count: Object.keys(all).length };
+    const { entries } = await session.list();
+    return { success: true, content: entries, count: Object.keys(entries).length };
   },
 });
 

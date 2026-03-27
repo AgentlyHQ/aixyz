@@ -20,50 +20,8 @@ mock.module("@aixyz/config", () => ({
   }),
 }));
 
-import { AixyzApp } from "../index";
-import { SessionPlugin, InMemorySessionStore, getSession, getPayer, type SessionStore } from "./session";
-
-// ── InMemorySessionStore ─────────────────────────────────────────────
-
-describe("InMemorySessionStore", () => {
-  test("get returns undefined for unknown key", async () => {
-    const store = new InMemorySessionStore();
-    expect(await store.get("0xALICE", "missing")).toBeUndefined();
-  });
-
-  test("set then get returns the value", async () => {
-    const store = new InMemorySessionStore();
-    await store.set("0xALICE", "color", "blue");
-    expect(await store.get("0xALICE", "color")).toBe("blue");
-  });
-
-  test("delete returns true for existing key, false for missing", async () => {
-    const store = new InMemorySessionStore();
-    await store.set("0xALICE", "key", "val");
-    expect(await store.delete("0xALICE", "key")).toBe(true);
-    expect(await store.delete("0xALICE", "key")).toBe(false);
-    expect(await store.delete("0xBOB", "key")).toBe(false);
-  });
-
-  test("list returns all entries or empty object", async () => {
-    const store = new InMemorySessionStore();
-    expect(await store.list("0xALICE")).toEqual({});
-
-    await store.set("0xALICE", "a", "1");
-    await store.set("0xALICE", "b", "2");
-    expect(await store.list("0xALICE")).toEqual({ a: "1", b: "2" });
-  });
-
-  test("payer isolation — two payers don't see each other's data", async () => {
-    const store = new InMemorySessionStore();
-    await store.set("0xALICE", "secret", "alice-data");
-    await store.set("0xBOB", "secret", "bob-data");
-
-    expect(await store.get("0xALICE", "secret")).toBe("alice-data");
-    expect(await store.get("0xBOB", "secret")).toBe("bob-data");
-    expect(await store.list("0xALICE")).toEqual({ secret: "alice-data" });
-  });
-});
+import { AixyzApp } from "../../index";
+import { SessionPlugin, InMemorySessionStore, getSession, getPayer, type SessionStore } from "./index";
 
 // ── SessionPlugin ────────────────────────────────────────────────────
 
@@ -135,9 +93,9 @@ describe("SessionPlugin", () => {
     const json = await res.json();
 
     expect(json.color).toBe("blue");
-    expect(json.all).toEqual({ color: "blue", food: "pizza" });
+    expect(json.all).toEqual({ entries: { color: "blue", food: "pizza" } });
     expect(json.deleted).toBe(true);
-    expect(json.afterDelete).toEqual({ color: "blue" });
+    expect(json.afterDelete).toEqual({ entries: { color: "blue" } });
   });
 
   test("getSession returns undefined when no payer (free route)", async () => {
@@ -236,7 +194,7 @@ describe("SessionPlugin", () => {
       },
       list: async (payer) => {
         calls.push(`list:${payer}`);
-        return {};
+        return { entries: {} };
       },
     };
 
@@ -306,5 +264,44 @@ describe("SessionPlugin", () => {
     const res = await appRead.fetch(new Request("http://localhost/read"));
     const json = await res.json();
     expect(json.val).toBe("hello");
+  });
+});
+
+// ── runWithPayer ─────────────────────────────────────────────────────
+
+describe("SessionPlugin.runWithPayer", () => {
+  test("getSession returns a session scoped to the given payer", async () => {
+    const plugin = new SessionPlugin();
+
+    let captured: ReturnType<typeof getSession>;
+    plugin.runWithPayer("0xALICE", () => {
+      captured = getSession();
+    });
+
+    expect(captured!).toBeDefined();
+    expect(captured!.payer).toBe("0xALICE");
+  });
+
+  test("normalizes payer address for storage (checksummed → lowercase)", async () => {
+    const store = new InMemorySessionStore();
+    const plugin = new SessionPlugin({ store });
+
+    await plugin.runWithPayer("0xAbCdEf1234567890AbCdEf1234567890AbCdEf12", async () => {
+      await getSession()!.set("key", "value");
+    });
+
+    // Store should have the entry under the lowercase payer
+    expect(await store.get("0xabcdef1234567890abcdef1234567890abcdef12", "key")).toBe("value");
+  });
+
+  test("does not leak session context after returning", () => {
+    const plugin = new SessionPlugin();
+
+    plugin.runWithPayer("0xALICE", () => {
+      expect(getSession()).toBeDefined();
+    });
+
+    // Outside runWithPayer, getSession should return undefined
+    expect(getSession()).toBeUndefined();
   });
 });
