@@ -111,7 +111,7 @@ export class MCPPlugin extends BasePlugin {
   }
 
   async initialize(ctx: InitializeContext): Promise<void> {
-    this.sessionPlugin = ctx.getPlugin<SessionPlugin>("session") as SessionPlugin | undefined;
+    this.sessionPlugin = ctx.getPlugin<SessionPlugin>("session");
 
     if (!ctx.payment) return;
 

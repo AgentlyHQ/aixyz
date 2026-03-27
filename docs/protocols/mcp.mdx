@@ -58,6 +58,20 @@ await server.withPlugin(
 );
 ```
 
+## Session Integration
+
+Paid MCP tools automatically get session context. When a tool is invoked with x402 payment, `getSession()` returns the payer-scoped session inside the tool handler — no additional configuration needed.
+
+```typescript
+import { getSession } from "aixyz/app/plugins/session";
+
+// Inside an MCP tool handler:
+const session = getSession();
+await session?.set("key", "value"); // stored per-payer
+```
+
+See [SessionPlugin](/api-reference/session-plugin) for the full API.
+
 ## Payment-Gated Tools
 
 Tools with `accepts.scheme === "exact"` require [x402 payment](/protocols/x402) via `@x402/mcp`. The payment wrapper is applied automatically when you provide an `accepts` configuration during registration.
@@ -80,6 +94,9 @@ await server.withPlugin(
 <CardGroup cols={2}>
   <Card title="Tools" icon="folder-tree" href="/api-reference/tools">
     How tools are defined in the app/ directory.
+  </Card>
+  <Card title="SessionPlugin" icon="database" href="/api-reference/session-plugin">
+    Payer-scoped storage for MCP tools.
   </Card>
   <Card title="A2A Protocol" icon="diagram-project" href="/protocols/a2a">
     Agent discovery and communication via A2A.

@@ -1,5 +1,4 @@
 import type { HttpMethod, RouteHandler, RouteEntry, RouteOptions, Middleware } from "./types";
-import type { AcceptsX402 } from "../accepts";
 import type {
   PaymentGateway,
   BeforeVerifyHook,

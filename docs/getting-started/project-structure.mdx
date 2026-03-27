@@ -36,6 +36,11 @@ An aixyz agent is defined by a small set of files in a standard layout. Run `aix
               badge: { text: "optional override", color: "purple" },
             },
             {
+              name: "session.ts",
+              description: "Custom session store",
+              badge: { text: "optional override", color: "purple" },
+            },
+            {
               name: "erc-8004.ts",
               description: "ERC-8004 identity registration",
             },
@@ -126,6 +131,7 @@ An aixyz agent is defined by a small set of files in a standard layout. Run `aix
 | `app/tools/*.ts`    | No       | Tool implementations, auto-discovered by the build                                |
 | `app/server.ts`     | No       | [Custom server](/api-reference/aixyz-server) — overrides auto-generation entirely |
 | `app/accepts.ts`    | No       | [Custom x402 facilitator](/api-reference/accepts) for payment verification        |
+| `app/session.ts`    | No       | [Custom session store](/api-reference/session-plugin) override for SessionPlugin  |
 | `app/erc-8004.ts`   | No       | ERC-8004 identity registration and trust config                                   |
 | `app/agent.test.ts` | No       | Agent tests using `bun:test`                                                      |
 | `app/icon.svg`      | No       | Agent icon served as a static asset                                               |
@@ -141,7 +147,8 @@ The build pipeline scans the `app/` directory to auto-generate a server:
 2. Imports `app/agent.ts` for the main agent definition (if present)
 3. Discovers all `.ts` files in `app/agents/` for sub-agents (each gets its own A2A endpoint)
 4. Discovers all `.ts` files in `app/tools/` (excluding `_` prefixed files)
-5. Wires up A2A (when agents exist), MCP (when tools exist), and x402 endpoints automatically
+5. Registers `SessionPlugin` (with custom store from `app/session.ts` if present)
+6. Wires up A2A (when agents exist), MCP (when tools exist), and x402 endpoints automatically
 
 The result is a server exposing:
 
