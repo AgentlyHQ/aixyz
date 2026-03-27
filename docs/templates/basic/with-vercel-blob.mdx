@@ -3,11 +3,13 @@ title: "Vercel Blob (txt)"
 description: "MCP-only template that stores private .txt blobs on Vercel Blob using UUID hex IDs"
 ---
 
-<Info>**Source:** [`examples/with-vercel-blob`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/with-vercel-blob)</Info>
+<Info>
+  **Source:** [`examples/with-vercel-blob`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/with-vercel-blob)
+</Info>
 
 ## Overview
 
-This template exposes a single MCP tool, `putTxt`, that writes **private** `.txt` files to Vercel Blob using `@vercel/blob`. IDs are generated as UUID hex strings (no base58) and each call is priced at `$0.001` via x402. There is **no** `app/agent.ts` — the server only serves `/mcp`.
+This template exposes two MCP tools, `put-text` and `get-text`, that write and read **private** `.txt` files to/from Vercel Blob using `@vercel/blob`. IDs are generated as UUID hex strings (no base58) and each call is priced at `$0.001` via x402. There is **no** `app/agent.ts` — the server only serves `/mcp`.
 
 ## Project Structure
 
@@ -17,50 +19,41 @@ with-vercel-blob/
 ├── app/
 │   ├── icon.svg                # Template icon
 │   └── tools/
-│       ├── putTxt.ts           # MCP tool using @vercel/blob
-│       └── putTxt.test.ts      # Deterministic helper tests
+│       ├── put-text.ts         # Write txt blob
+│       ├── get-text.ts         # Read txt blob
+│       └── path.test.ts        # Deterministic helper tests
 ├── package.json
 ├── tsconfig.json
 └── vercel.json
 ```
 
-## Tool: `putTxt`
+## Tools
+
+### `put-text`
 
 ```typescript title="app/tools/putTxt.ts"
 import { put } from "@vercel/blob";
 import { tool } from "ai";
 
 export default tool({
-  description: "Store a private UTF-8 .txt file in Vercel Blob and return its URL and metadata.",
+  description: "Store a private UTF-8 .txt file (up to 50k chars) in Vercel Blob and return its URLs.",
   inputSchema: z.object({
     text: z.string().min(1).max(50_000), // matches MAX_TEXT_LENGTH in source
-    folder: z.string().regex(/^[a-zA-Z0-9/_-]+$/).optional(), // default: txt/
-    expiresInDays: z.number().int().min(1).max(365).optional(), // default: 365
+    folder: z
+      .string()
+      .regex(/^[a-zA-Z0-9/_-]+$/)
+      .optional(), // default: txt/
   }),
-  execute: async ({ text, folder, expiresInDays }) => {
-    const plan = createTxtPlan({ folder, expiresInDays });
-    const payload = [
-      "# putTxt blob",
-      `createdAt=${plan.createdAt.toISOString()}`,
-      `expiresAt=${plan.expiresAt.toISOString()}`,
-      "",
-      text,
-    ].join("\n");
-    const blob = await put(plan.path, payload, {
+  execute: async ({ text, folder }) => {
+    const { id, path } = buildTxtPath(folder);
+    const blob = await put(path, text, {
       access: "private",
       contentType: "text/plain; charset=utf-8",
       addRandomSuffix: false,
       allowOverwrite: false,
       token: process.env.BLOB_READ_WRITE_TOKEN!,
     });
-    return {
-      id: plan.id,
-      url: blob.url,
-      path: plan.path,
-      downloadUrl: blob.downloadUrl,
-      createdAt: plan.createdAt.toISOString(),
-      expiresAt: plan.expiresAt.toISOString(),
-    };
+    return { id, url: blob.url, path, downloadUrl: blob.downloadUrl };
   },
 });
 ```
@@ -68,9 +61,25 @@ export default tool({
 Key behaviors:
 
 - **UUID hex IDs** — `crypto.randomUUID().replace(/-/g, "")`, stored at `folder/{id}.txt`
-- **Metadata envelope** — prepends `createdAt` / `expiresAt` to the text body
 - **Access control** — `access: "private"` + `allowOverwrite: false`
-- **TTL** — default 365 days, clamped to 1-365 via `expiresInDays`
+- **No metadata envelope** — payload is exactly the text provided
+
+### `get-text`
+
+```typescript title="app/tools/get-text.ts"
+export default tool({
+  description: "Fetch a private .txt blob from Vercel Blob and return its text content.",
+  inputSchema: z.object({
+    path: z.string().min(1), // blob pathname like txt/<uuid>.txt or full URL
+  }),
+  execute: async ({ path }) => {
+    const result = await get(path, { access: "private", token: process.env.BLOB_READ_WRITE_TOKEN! });
+    if (result.statusCode === 304) return { path: result.blob.pathname, text: "" };
+    const text = await new Response(result.stream).text();
+    return { path: result.blob.pathname, text, contentType: result.blob.contentType, size: result.blob.size };
+  },
+});
+```
 
 ## Environment
 
