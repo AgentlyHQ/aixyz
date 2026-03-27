@@ -29,7 +29,7 @@ export class MCPPlugin extends BasePlugin {
   readonly name = "mcp";
   readonly registeredTools: Array<{ name: string; tool: Tool; accepts?: Accepts }> = [];
   private paymentWrappers = new Map<string, (handler: any) => any>();
-  private sessionPlugin?: SessionPlugin;
+  private sessionPlugin!: SessionPlugin;
 
   constructor(private tools: Array<{ name: string; exports: { default: Tool; accepts?: Accepts } }>) {
     super();
@@ -54,10 +54,10 @@ export class MCPPlugin extends BasePlugin {
           }
         };
 
-        // If SessionPlugin is active and a payer was captured from MCP-level payment,
-        // run the tool within a session context so getSession() works.
+        // If a payer was captured from MCP-level payment, run the tool
+        // within a session context so getSession() works.
         const payer = mcpPayerStorage.getStore()?.payer;
-        if (sessionPlugin && payer) {
+        if (payer) {
           return sessionPlugin.runWithPayer(payer, execute);
         }
         return execute();
@@ -69,9 +69,8 @@ export class MCPPlugin extends BasePlugin {
         const wrapped = wrapper(handler);
         // Wrap the payment wrapper call in mcpPayerStorage.run() so the
         // onAfterVerify hook and handler share the same async context.
-        registeredHandler = sessionPlugin
-          ? (args: any, extra: any) => mcpPayerStorage.run({ payer: undefined }, () => wrapped(args, extra))
-          : wrapped;
+        registeredHandler = (args: any, extra: any) =>
+          mcpPayerStorage.run({ payer: undefined }, () => wrapped(args, extra));
       } else {
         registeredHandler = handler;
       }
@@ -112,7 +111,7 @@ export class MCPPlugin extends BasePlugin {
   }
 
   async initialize(ctx: InitializeContext): Promise<void> {
-    this.sessionPlugin = ctx.getPlugin<SessionPlugin>("session") as SessionPlugin | undefined;
+    this.sessionPlugin = ctx.getPlugin<SessionPlugin>("session") as SessionPlugin;
 
     if (!ctx.payment) return;
 
@@ -140,14 +139,12 @@ export class MCPPlugin extends BasePlugin {
     // This hook is global (fires for all verifications, including HTTP-level), but
     // only writes when mcpPayerStorage has an active context — which only happens
     // inside MCP tool calls wrapped by mcpPayerStorage.run() below.
-    if (this.sessionPlugin) {
-      ctx.payment.onAfterVerify(async (context) => {
-        const store = mcpPayerStorage.getStore();
-        if (store && context.result.payer) {
-          store.payer = context.result.payer;
-        }
-      });
-    }
+    ctx.payment.onAfterVerify(async (context) => {
+      const store = mcpPayerStorage.getStore();
+      if (store && context.result.payer) {
+        store.payer = context.result.payer;
+      }
+    });
 
     for (const { name, accepts } of this.registeredTools) {
       if (!accepts || !isAcceptsPaid(accepts)) continue;

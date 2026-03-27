@@ -155,11 +155,6 @@ export class SessionPlugin extends BasePlugin {
 
   initialize(ctx: InitializeContext): void {
     this.payment = ctx.payment;
-    if (!this.payment) {
-      console.warn(
-        "[session] No payment gateway configured — getSession() will always return undefined. Configure x402 facilitators to enable sessions.",
-      );
-    }
   }
 
   /**

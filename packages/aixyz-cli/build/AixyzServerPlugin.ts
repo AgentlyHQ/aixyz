@@ -163,6 +163,7 @@ function generateServer(appDir: string, entrypointDir: string): string {
   imports.push('import { AixyzApp } from "aixyz/app";');
   imports.push('import { IndexPagePlugin } from "aixyz/app/plugins/index-page";');
   imports.push('import { MetadataPlugin } from "aixyz/app/plugins/metadata";');
+  imports.push('import { SessionPlugin } from "aixyz/app/plugins/session";');
 
   const hasAccepts = existsSync(resolve(appDir, "accepts.ts"));
   if (hasAccepts) {
@@ -173,7 +174,6 @@ function generateServer(appDir: string, entrypointDir: string): string {
 
   const hasSession = existsSync(resolve(appDir, "session.ts"));
   if (hasSession) {
-    imports.push('import { SessionPlugin } from "aixyz/app/plugins/session";');
     imports.push(`import sessionStore from "${importPrefix}/session";`);
   }
 
@@ -212,6 +212,8 @@ function generateServer(appDir: string, entrypointDir: string): string {
   body.push("const app = new AixyzApp({ facilitators: facilitator });");
   if (hasSession) {
     body.push("await app.withPlugin(new SessionPlugin({ store: sessionStore }));");
+  } else {
+    body.push("await app.withPlugin(new SessionPlugin());");
   }
   body.push("await app.withPlugin(new IndexPagePlugin());");
   body.push("await app.withPlugin(new MetadataPlugin());");
