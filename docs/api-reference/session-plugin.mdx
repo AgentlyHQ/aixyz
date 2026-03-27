@@ -5,35 +5,27 @@ description: "Payer-scoped key-value storage gated by x402 payment identity"
 
 ## Overview
 
-`SessionPlugin` provides per-payer key-value storage for aixyz agents. Each x402 signer gets an isolated session — two different payers never see each other's data. Sessions are accessed via `getSession()` using `AsyncLocalStorage`, so tools don't need to thread payer identity through function parameters.
+`SessionPlugin` provides per-payer key-value storage for aixyz agents. Each x402 signer gets an isolated session -- two different payers never see each other's data. Sessions are accessed via `getSession()` using `AsyncLocalStorage`, so tools don't need to thread payer identity through function parameters.
 
-This is an **optional plugin** that requires a custom `app/server.ts`. It is not auto-wired by the build pipeline.
+SessionPlugin is **always registered** by the build pipeline. To use a custom storage backend, create an `app/session.ts` file.
 
 ```typescript
-import { SessionPlugin } from "aixyz/app/plugins/session";
 import { getSession, getPayer } from "aixyz/app/plugins/session";
 ```
 
 ## Setup
 
-Register `SessionPlugin` **before** other plugins so its middleware runs first:
+SessionPlugin is auto-registered when `aixyz build` or `aixyz dev` generates the server entrypoint. No manual setup is needed for the default in-memory store.
 
-```typescript title="app/server.ts"
-import { AixyzApp } from "aixyz/app";
-import { SessionPlugin } from "aixyz/app/plugins/session";
-import { A2APlugin } from "aixyz/app/plugins/a2a";
-import { MCPPlugin } from "aixyz/app/plugins/mcp";
+To use a custom store (Redis, database, etc.), create `app/session.ts`:
 
-const app = new AixyzApp({ facilitators: facilitator });
+```typescript title="app/session.ts"
+import { defineSessionStore, InMemorySessionStore } from "aixyz/app/plugins/session";
 
-await app.withPlugin(new SessionPlugin());   // must be first
-await app.withPlugin(new A2APlugin([...]));
-await app.withPlugin(new MCPPlugin([...]));
-
-await app.initialize();
-
-export default app;
+export default defineSessionStore(new InMemorySessionStore());
 ```
+
+The build pipeline detects `app/session.ts` and passes it to `SessionPlugin({ store: sessionStore })`. If no `app/session.ts` exists, the default `InMemorySessionStore` is used.
 
 ## API
 
@@ -67,53 +59,114 @@ const payer = getPayer(); // "0x1234..."
 
 All operations are scoped to the current x402 payer automatically.
 
-| Method   | Signature                                       | Description                              |
-| -------- | ----------------------------------------------- | ---------------------------------------- |
-| `payer`  | `readonly string`                               | The x402 signer address                  |
-| `get`    | `(key: string) => Promise<string \| undefined>` | Get a value by key                       |
-| `set`    | `(key: string, value: string) => Promise<void>` | Store a key-value pair                   |
-| `delete` | `(key: string) => Promise<boolean>`             | Delete a key, returns whether it existed |
-| `list`   | `() => Promise<Record<string, string>>`         | List all key-value pairs                 |
+| Method   | Signature                                                             | Description                                   |
+| -------- | --------------------------------------------------------------------- | --------------------------------------------- |
+| `payer`  | `readonly string`                                                     | The x402 signer address                       |
+| `get`    | `(key: string) => Promise<string \| undefined>`                       | Get a value by key                            |
+| `set`    | `(key: string, value: string, options?: SetOptions) => Promise<void>` | Store a key-value pair                        |
+| `delete` | `(key: string) => Promise<boolean>`                                   | Delete a key, returns whether it existed      |
+| `list`   | `(options?: ListOptions) => Promise<ListResult>`                      | List key-value pairs with optional pagination |
+
+### `SetOptions`
+
+| Field   | Type     | Description                                                          |
+| ------- | -------- | -------------------------------------------------------------------- |
+| `ttlMs` | `number` | Per-key TTL in milliseconds. Overrides store default when supported. |
+
+### `ListOptions`
+
+| Field      | Type      | Description                                       |
+| ---------- | --------- | ------------------------------------------------- |
+| `prefix`   | `string`  | Only return keys starting with this prefix        |
+| `cursor`   | `string`  | Opaque cursor from a previous `list()` call       |
+| `limit`    | `number`  | Maximum number of entries to return               |
+| `keysOnly` | `boolean` | If true, values are omitted (all values are `""`) |
+
+### `ListResult`
+
+| Field     | Type                     | Description                                                         |
+| --------- | ------------------------ | ------------------------------------------------------------------- |
+| `entries` | `Record<string, string>` | The key-value pairs                                                 |
+| `cursor`  | `string \| undefined`    | If present, more results are available. Pass to next `list()` call. |
+
+## InMemorySessionStore
+
+The default store. Uses LRU eviction and optional sliding-window TTL.
+
+- **LRU eviction** -- when `maxEntries` is reached, the least-recently-used entry is evicted
+- **Sliding-window TTL** -- `get()` refreshes the expiry timer. Expired entries are lazily removed on read.
+- **OOM-safe** -- `maxEntries` is a hard cap across all payers
+
+```typescript
+import { InMemorySessionStore } from "aixyz/app/plugins/session";
+
+const store = new InMemorySessionStore({
+  maxEntries: 10_000, // default
+  ttlMs: 3_600_000, // 1 hour default, 0 to disable
+});
+```
+
+| Option       | Type     | Default   | Description                                      |
+| ------------ | -------- | --------- | ------------------------------------------------ |
+| `maxEntries` | `number` | `10000`   | Maximum entries across all payers. Must be >= 1. |
+| `ttlMs`      | `number` | `3600000` | Sliding-window TTL in ms. 0 disables expiry.     |
 
 ## Custom Storage Backend
 
-By default, sessions use an in-memory `Map`. For production, implement the `SessionStore` interface to use Redis, a database, or any KV store:
+Implement the `SessionStore` interface for Redis, a database, or any KV store:
 
-```typescript
+```typescript title="app/session.ts"
+import { defineSessionStore } from "aixyz/app/plugins/session";
 import type { SessionStore } from "aixyz/app/plugins/session";
 
 class RedisSessionStore implements SessionStore {
-  async get(payer: string, key: string): Promise<string | undefined> {
+  async get(payer: string, key: string) {
     return (await redis.get(`${payer}:${key}`)) ?? undefined;
   }
-  async set(payer: string, key: string, value: string): Promise<void> {
+  async set(payer: string, key: string, value: string) {
     await redis.set(`${payer}:${key}`, value);
   }
-  async delete(payer: string, key: string): Promise<boolean> {
+  async delete(payer: string, key: string) {
     return (await redis.del(`${payer}:${key}`)) > 0;
   }
-  async list(payer: string): Promise<Record<string, string>> {
+  async list(payer: string) {
     // scan for keys matching payer prefix
+    return {
+      entries: {
+        /* ... */
+      },
+    };
   }
 }
 
-await app.withPlugin(new SessionPlugin({ store: new RedisSessionStore() }));
+export default defineSessionStore(new RedisSessionStore());
 ```
 
 ### `SessionStore` Interface
 
-| Method   | Signature                                                      | Description                 |
-| -------- | -------------------------------------------------------------- | --------------------------- |
-| `get`    | `(payer: string, key: string) => Promise<string \| undefined>` | Get a value                 |
-| `set`    | `(payer: string, key: string, value: string) => Promise<void>` | Store a value               |
-| `delete` | `(payer: string, key: string) => Promise<boolean>`             | Delete a value              |
-| `list`   | `(payer: string) => Promise<Record<string, string>>`           | List all values for a payer |
+**Required methods:**
+
+| Method   | Signature                                                                            | Description             |
+| -------- | ------------------------------------------------------------------------------------ | ----------------------- |
+| `get`    | `(payer: string, key: string) => Promise<string \| undefined>`                       | Get a value             |
+| `set`    | `(payer: string, key: string, value: string, options?: SetOptions) => Promise<void>` | Store a value           |
+| `delete` | `(payer: string, key: string) => Promise<boolean>`                                   | Delete a value          |
+| `list`   | `(payer: string, options?: ListOptions) => Promise<ListResult>`                      | List values for a payer |
+
+**Optional methods:**
+
+| Method       | Signature                                                                                 | Description                 |
+| ------------ | ----------------------------------------------------------------------------------------- | --------------------------- |
+| `getMany`    | `(payer: string, keys: string[]) => Promise<Record<string, string \| undefined>>`         | Batch get                   |
+| `setMany`    | `(payer: string, entries: Record<string, string>, options?: SetOptions) => Promise<void>` | Batch set                   |
+| `deleteMany` | `(payer: string, keys: string[]) => Promise<number>`                                      | Batch delete, returns count |
+| `close`      | `() => Promise<void>`                                                                     | Release connections/timers  |
 
 ## MCP Integration
 
-When `SessionPlugin` is registered before `MCPPlugin`, sessions work automatically inside MCP tool handlers. The MCP plugin detects the session plugin and wraps tool execution with the payer context from x402 payment verification.
+Sessions work automatically inside MCP tool handlers. The MCP plugin detects the session plugin and wraps tool execution with the payer context from x402 payment verification.
 
-No additional configuration is needed — just register `SessionPlugin` first.
+No additional configuration is needed.
 
 ## Constructor Options
 

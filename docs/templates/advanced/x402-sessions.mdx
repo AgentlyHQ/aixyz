@@ -7,9 +7,7 @@ description: "Template demonstrating payer-scoped session storage with x402 paym
 
 ## Overview
 
-This template demonstrates `SessionPlugin` — payer-scoped key-value storage gated by x402 payment identity. Each x402 signer gets isolated storage that persists across requests. Two different payers never see each other's data.
-
-Requires a custom `app/server.ts` because `SessionPlugin` is an optional plugin not auto-wired by the build pipeline.
+This template demonstrates `SessionPlugin` -- payer-scoped key-value storage gated by x402 payment identity. Each x402 signer gets isolated storage that persists across requests. Two different payers never see each other's data.
 
 ## Project Structure
 
@@ -17,7 +15,7 @@ Requires a custom `app/server.ts` because `SessionPlugin` is an optional plugin 
 x402-sessions/
 ├── aixyz.config.ts           # Agent metadata and skills
 ├── app/
-│   ├── server.ts             # Custom server with SessionPlugin
+│   ├── session.ts            # Custom session store (optional)
 │   ├── agent.ts              # Agent definition
 │   ├── accepts.ts            # Custom x402 facilitator
 │   └── tools/
@@ -27,40 +25,28 @@ x402-sessions/
 └── vercel.json
 ```
 
-## Custom Server
+## Session Store
 
-`SessionPlugin` must be registered **before** other plugins so its middleware runs first:
+SessionPlugin is auto-registered by the build pipeline. To customize the store, create `app/session.ts`:
 
-```typescript title="app/server.ts"
-import { AixyzApp } from "aixyz/app";
-import { SessionPlugin } from "aixyz/app/plugins/session";
-import { A2APlugin } from "aixyz/app/plugins/a2a";
-import { MCPPlugin } from "aixyz/app/plugins/mcp";
+```typescript title="app/session.ts"
+import { defineSessionStore, InMemorySessionStore } from "aixyz/app/plugins/session";
 
-const app = new AixyzApp({ facilitators: facilitator });
-
-await app.withPlugin(new SessionPlugin()); // must be first
-await app.withPlugin(new A2APlugin([{ exports: agent }]));
-await app.withPlugin(
-  new MCPPlugin([
-    { name: "put-content", exports: putContent },
-    { name: "get-content", exports: getContent },
-  ]),
-);
-
-await app.initialize();
-
-export default app;
+// Use the built-in in-memory store. Replace with Redis, DB, etc. for production.
+export default defineSessionStore(new InMemorySessionStore());
 ```
+
+If `app/session.ts` is not present, the default `InMemorySessionStore` is used automatically.
 
 ## Using Sessions in Tools
 
-Tools access the session via `getSession()` — no need to pass payer identity manually:
+Tools access the session via `getSession()` -- no need to pass payer identity manually:
 
 ```typescript title="app/tools/put-content.ts"
 import { tool } from "ai";
 import { z } from "zod";
 import { getSession } from "aixyz/app/plugins/session";
+import type { Accepts } from "aixyz/accepts";
 
 export default tool({
   description: "Store a key-value pair in the current user's session",
@@ -107,7 +93,7 @@ bun run dev
   <Card title="SessionPlugin API" icon="plug" href="/api-reference/session-plugin">
     Full API reference for SessionPlugin, Session, and SessionStore.
   </Card>
-  <Card title="Custom Server" icon="server" href="/templates/advanced/with-custom-server">
-    How to set up a custom server.ts for manual plugin wiring.
+  <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">
+    Payment protocol that provides payer identity for sessions.
   </Card>
 </CardGroup>
