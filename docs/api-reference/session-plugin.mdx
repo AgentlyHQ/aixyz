@@ -1,0 +1,192 @@
+---
+title: "SessionPlugin"
+description: "Payer-scoped key-value storage gated by x402 payment identity"
+---
+
+## Overview
+
+`SessionPlugin` provides per-payer key-value storage for aixyz agents. Each x402 signer gets an isolated session -- two different payers never see each other's data. Sessions are accessed via `getSession()` using `AsyncLocalStorage`, so tools don't need to thread payer identity through function parameters.
+
+SessionPlugin is **always registered** by the build pipeline. To use a custom storage backend, create an `app/session.ts` file.
+
+```typescript
+import { getSession, getPayer } from "aixyz/app/plugins/session";
+```
+
+## Setup
+
+SessionPlugin is auto-registered when `aixyz build` or `aixyz dev` generates the server entrypoint. No manual setup is needed for the default in-memory store.
+
+To use a custom store (Redis, database, etc.), create `app/session.ts`:
+
+```typescript title="app/session.ts"
+import { defineSessionStore, InMemorySessionStore } from "aixyz/app/plugins/session";
+
+export default defineSessionStore(new InMemorySessionStore());
+```
+
+The build pipeline detects `app/session.ts` and passes it to `SessionPlugin({ store: sessionStore })`. If no `app/session.ts` exists, the default `InMemorySessionStore` is used.
+
+## API
+
+### `getSession()`
+
+Returns the current payer-scoped `Session`, or `undefined` if no x402 payment was made for this request.
+
+```typescript
+import { getSession } from "aixyz/app/plugins/session";
+
+const session = getSession();
+if (!session) {
+  return { error: "No authenticated signer" };
+}
+
+await session.set("key", "value");
+const value = await session.get("key");
+```
+
+### `getPayer()`
+
+Shorthand for `getSession()?.payer`. Returns the x402 signer address or `undefined`.
+
+```typescript
+import { getPayer } from "aixyz/app/plugins/session";
+
+const payer = getPayer(); // "0x1234..."
+```
+
+## Session Interface
+
+All operations are scoped to the current x402 payer automatically.
+
+| Method   | Signature                                                             | Description                                   |
+| -------- | --------------------------------------------------------------------- | --------------------------------------------- |
+| `payer`  | `readonly string`                                                     | The x402 signer address                       |
+| `get`    | `(key: string) => Promise<string \| undefined>`                       | Get a value by key                            |
+| `set`    | `(key: string, value: string, options?: SetOptions) => Promise<void>` | Store a key-value pair                        |
+| `delete` | `(key: string) => Promise<boolean>`                                   | Delete a key, returns whether it existed      |
+| `list`   | `(options?: ListOptions) => Promise<ListResult>`                      | List key-value pairs with optional pagination |
+
+### `SetOptions`
+
+| Field   | Type     | Description                                                          |
+| ------- | -------- | -------------------------------------------------------------------- |
+| `ttlMs` | `number` | Per-key TTL in milliseconds. Overrides store default when supported. |
+
+### `ListOptions`
+
+| Field      | Type      | Description                                       |
+| ---------- | --------- | ------------------------------------------------- |
+| `prefix`   | `string`  | Only return keys starting with this prefix        |
+| `cursor`   | `string`  | Opaque cursor from a previous `list()` call       |
+| `limit`    | `number`  | Maximum number of entries to return               |
+| `keysOnly` | `boolean` | If true, values are omitted (all values are `""`) |
+
+### `ListResult`
+
+| Field     | Type                     | Description                                                         |
+| --------- | ------------------------ | ------------------------------------------------------------------- |
+| `entries` | `Record<string, string>` | The key-value pairs                                                 |
+| `cursor`  | `string \| undefined`    | If present, more results are available. Pass to next `list()` call. |
+
+## InMemorySessionStore
+
+The default store. Uses LRU eviction and optional sliding-window TTL.
+
+- **LRU eviction** -- when `maxEntries` is reached, the least-recently-used entry is evicted
+- **Sliding-window TTL** -- `get()` refreshes the expiry timer. Expired entries are lazily removed on read.
+- **OOM-safe** -- `maxEntries` is a hard cap across all payers
+
+```typescript
+import { InMemorySessionStore } from "aixyz/app/plugins/session";
+
+const store = new InMemorySessionStore({
+  maxEntries: 10_000, // default
+  ttlMs: 3_600_000, // 1 hour default, 0 to disable
+});
+```
+
+| Option       | Type     | Default   | Description                                      |
+| ------------ | -------- | --------- | ------------------------------------------------ |
+| `maxEntries` | `number` | `10000`   | Maximum entries across all payers. Must be >= 1. |
+| `ttlMs`      | `number` | `3600000` | Sliding-window TTL in ms. 0 disables expiry.     |
+
+## Custom Storage Backend
+
+Implement the `SessionStore` interface for Redis, a database, or any KV store:
+
+```typescript title="app/session.ts"
+import { defineSessionStore } from "aixyz/app/plugins/session";
+import type { SessionStore, ListOptions, SetOptions } from "aixyz/app/plugins/session";
+
+class RedisSessionStore implements SessionStore {
+  async get(payer: string, key: string) {
+    return (await redis.get(`${payer}:${key}`)) ?? undefined;
+  }
+  async set(payer: string, key: string, value: string, options?: SetOptions) {
+    if (options?.ttlMs) {
+      await redis.set(`${payer}:${key}`, value, "PX", options.ttlMs);
+    } else {
+      await redis.set(`${payer}:${key}`, value);
+    }
+  }
+  async delete(payer: string, key: string) {
+    return (await redis.del(`${payer}:${key}`)) > 0;
+  }
+  async list(payer: string, options?: ListOptions) {
+    // scan for keys matching payer prefix, apply options.prefix/limit/cursor
+    return {
+      entries: {
+        /* ... */
+      },
+    };
+  }
+}
+
+export default defineSessionStore(new RedisSessionStore());
+```
+
+### `SessionStore` Interface
+
+**Required methods:**
+
+| Method   | Signature                                                                            | Description             |
+| -------- | ------------------------------------------------------------------------------------ | ----------------------- |
+| `get`    | `(payer: string, key: string) => Promise<string \| undefined>`                       | Get a value             |
+| `set`    | `(payer: string, key: string, value: string, options?: SetOptions) => Promise<void>` | Store a value           |
+| `delete` | `(payer: string, key: string) => Promise<boolean>`                                   | Delete a value          |
+| `list`   | `(payer: string, options?: ListOptions) => Promise<ListResult>`                      | List values for a payer |
+
+**Optional methods:**
+
+| Method       | Signature                                                                                 | Description                 |
+| ------------ | ----------------------------------------------------------------------------------------- | --------------------------- |
+| `getMany`    | `(payer: string, keys: string[]) => Promise<Record<string, string \| undefined>>`         | Batch get                   |
+| `setMany`    | `(payer: string, entries: Record<string, string>, options?: SetOptions) => Promise<void>` | Batch set                   |
+| `deleteMany` | `(payer: string, keys: string[]) => Promise<number>`                                      | Batch delete, returns count |
+| `close`      | `() => Promise<void>`                                                                     | Release connections/timers  |
+
+## MCP Integration
+
+Sessions work automatically inside MCP tool handlers. The MCP plugin detects the session plugin and wraps tool execution with the payer context from x402 payment verification.
+
+No additional configuration is needed.
+
+## Constructor Options
+
+```typescript
+new SessionPlugin(options?: SessionPluginOptions)
+```
+
+| Option  | Type           | Default                | Description            |
+| ------- | -------------- | ---------------------- | ---------------------- |
+| `store` | `SessionStore` | `InMemorySessionStore` | Custom storage backend |
+
+<CardGroup cols={2}>
+  <Card title="x402 Payments" icon="credit-card" href="/protocols/x402">
+    Payment protocol that provides payer identity for sessions.
+  </Card>
+  <Card title="x402 Sessions Template" icon="database" href="/templates/advanced/x402-sessions">
+    Working example with session-backed content storage.
+  </Card>
+</CardGroup>

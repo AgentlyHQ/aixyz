@@ -137,3 +137,19 @@ export const facilitator = new HTTPFacilitatorClient({
 ```
 
 See the [BYO Facilitator template](/templates/advanced/with-custom-facilitator) for a working example.
+
+## Payer Identity and Sessions
+
+Every verified x402 payment identifies the payer by their wallet address. `SessionPlugin` (auto-registered by the build pipeline) gives each payer isolated key-value storage accessible via `getSession()`:
+
+```typescript
+import { getSession } from "aixyz/app/plugins/session";
+
+const session = getSession();
+if (session) {
+  await session.set("preference", "dark-mode");
+  const payer = session.payer; // "0x1234..."
+}
+```
+
+This works in both A2A agent handlers and MCP tool handlers. See [SessionPlugin](/api-reference/session-plugin) for the full API and custom store configuration.

@@ -1,5 +1,26 @@
 import type { HttpMethod, RouteHandler, RouteEntry, RouteOptions, Middleware } from "./types";
-import type { PaymentGateway } from "./payment/payment";
+import type {
+  PaymentGateway,
+  BeforeVerifyHook,
+  AfterVerifyHook,
+  OnVerifyFailureHook,
+  BeforeSettleHook,
+  AfterSettleHook,
+  OnSettleFailureHook,
+} from "./payment/payment";
+
+/**
+ * Scoped interface for registering x402 payment lifecycle hooks.
+ * Exposes only hook registration — not the full PaymentGateway.
+ */
+export interface PaymentHookContext {
+  onBeforeVerify(hook: BeforeVerifyHook): PaymentHookContext;
+  onAfterVerify(hook: AfterVerifyHook): PaymentHookContext;
+  onVerifyFailure(hook: OnVerifyFailureHook): PaymentHookContext;
+  onBeforeSettle(hook: BeforeSettleHook): PaymentHookContext;
+  onAfterSettle(hook: AfterSettleHook): PaymentHookContext;
+  onSettleFailure(hook: OnSettleFailureHook): PaymentHookContext;
+}
 
 /**
  * Scoped context passed to {@link BasePlugin.register}.
@@ -16,6 +37,8 @@ export interface RegisterContext {
   route(method: HttpMethod, path: string, handler: RouteHandler, options?: RouteOptions): void;
   /** Append a middleware to the application's middleware chain. */
   use(middleware: Middleware): void;
+  /** Register hooks on the x402 payment lifecycle. Undefined when no facilitators configured. */
+  readonly paymentHooks?: PaymentHookContext;
 }
 
 /**

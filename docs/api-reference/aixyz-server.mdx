@@ -91,12 +91,15 @@ await server.initialize();
 
 ```typescript title="app/server.ts"
 import { AixyzApp } from "aixyz/app";
+import { SessionPlugin } from "aixyz/app/plugins/session";
 import { IndexPagePlugin } from "aixyz/app/plugins/index-page";
 import { A2APlugin } from "aixyz/app/plugins/a2a";
 import * as agent from "./agent";
 
 const server = new AixyzApp();
 
+// SessionPlugin must be registered first so its middleware runs before other plugins
+await server.withPlugin(new SessionPlugin());
 await server.withPlugin(new IndexPagePlugin());
 await server.withPlugin(new A2APlugin([{ exports: agent }]));
 
