@@ -1,4 +1,4 @@
-# Vercel Blob txt (MCP-only)
+# Vercel Blob Example
 
 This template exposes two MCP tools that work with private `.txt` files on [Vercel Blob](https://vercel.com/docs/storage/vercel-blob):
 
@@ -9,7 +9,7 @@ Each call is priced at `$0.001` via x402.
 
 ## Prerequisites
 
-Set a Vercel Blob read/write token:
+Set a Vercel Blob read/write token (required for both tools):
 
 ```bash
 echo 'BLOB_READ_WRITE_TOKEN=...' >> .env.local
@@ -27,9 +27,9 @@ The server exposes only the MCP endpoint at `http://localhost:3000/mcp` (no `app
 ## Tools
 
 - `put-text`
-  - Input: `text` (required), `folder` (optional, default `txt/`)
-  - Behavior: Generates a UUID hex ID and writes the text to `folder/{id}.txt` as **private** with `allowOverwrite: false`
-  - Returns: `id`, `path`, `url`, `downloadUrl`
+  - Input: `text` (required)
+  - Behavior: Generates a UUID hex ID and writes the text to `txt/{id}.txt` as **private** with `allowOverwrite: false`
+  - Returns: `id`
 - `get-text`
   - Input: `path` (required) — blob pathname like `txt/<uuid>.txt` or full blob URL
   - Behavior: Fetches the private blob and returns its text content
@@ -37,7 +37,7 @@ The server exposes only the MCP endpoint at `http://localhost:3000/mcp` (no `app
 
 ## Connecting via MCP
 
-Point your MCP client (Claude Desktop, VS Code MCP extension, etc.) at `http://localhost:3000/mcp`. The tool will appear as `putTxt` with the schema above. No A2A agent is present in this template.
+Point your MCP client (Claude Desktop, VS Code MCP extension, etc.) at `http://localhost:3000/mcp`. Tools appear as `put-text` and `get-text`. No A2A agent is present in this template.
 
 ## Payment
 

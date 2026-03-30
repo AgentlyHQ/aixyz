@@ -1,5 +1,5 @@
 ---
-title: "Vercel Blob (txt)"
+title: "Vercel Blob"
 description: "MCP-only template that stores private .txt blobs on Vercel Blob using UUID hex IDs"
 ---
 
@@ -20,8 +20,7 @@ with-vercel-blob/
 │   ├── icon.svg                # Template icon
 │   └── tools/
 │       ├── put-text.ts         # Write txt blob
-│       ├── get-text.ts         # Read txt blob
-│       └── path.test.ts        # Deterministic helper tests
+│       └── get-text.ts         # Read txt blob
 ├── package.json
 ├── tsconfig.json
 └── vercel.json
@@ -31,38 +30,32 @@ with-vercel-blob/
 
 ### `put-text`
 
-```typescript title="app/tools/putTxt.ts"
-import { put } from "@vercel/blob";
-import { tool } from "ai";
-
+```typescript title="app/tools/put-text.ts"
 export default tool({
-  description: "Store a private UTF-8 .txt file (up to 50k chars) in Vercel Blob and return its URLs.",
+  description: "Store a private UTF-8 .txt file (up to 50k chars) in Vercel Blob and return its ID.",
   inputSchema: z.object({
     text: z.string().min(1).max(50_000), // matches MAX_TEXT_LENGTH in source
-    folder: z
-      .string()
-      .regex(/^[a-zA-Z0-9/_-]+$/)
-      .optional(), // default: txt/
   }),
-  execute: async ({ text, folder }) => {
-    const { id, path } = buildTxtPath(folder);
-    const blob = await put(path, text, {
+  execute: async ({ text }) => {
+    const id = randomUUID().replace(/-/g, "");
+    const path = `txt/${id}.txt`;
+    await put(path, text, {
       access: "private",
       contentType: "text/plain; charset=utf-8",
       addRandomSuffix: false,
       allowOverwrite: false,
-      token: process.env.BLOB_READ_WRITE_TOKEN!,
+      // BLOB_READ_WRITE_TOKEN is picked up from env automatically
     });
-    return { id, url: blob.url, path, downloadUrl: blob.downloadUrl };
+    return { id };
   },
 });
 ```
 
 Key behaviors:
 
-- **UUID hex IDs** — `crypto.randomUUID().replace(/-/g, "")`, stored at `folder/{id}.txt`
+- **UUID hex IDs** — `crypto.randomUUID().replace(/-/g, "")`, stored at `txt/{id}.txt`
 - **Access control** — `access: "private"` + `allowOverwrite: false`
-- **No metadata envelope** — payload is exactly the text provided
+- **Payload** — stored exactly as provided text
 
 ### `get-text`
 
@@ -73,7 +66,7 @@ export default tool({
     path: z.string().min(1), // blob pathname like txt/<uuid>.txt or full URL
   }),
   execute: async ({ path }) => {
-    const result = await get(path, { access: "private", token: process.env.BLOB_READ_WRITE_TOKEN! });
+    const result = await get(path, { access: "private" });
     if (result.statusCode === 304) return { path: result.blob.pathname, text: "" };
     const text = await new Response(result.stream).text();
     return { path: result.blob.pathname, text, contentType: result.blob.contentType, size: result.blob.size };
@@ -83,7 +76,7 @@ export default tool({
 
 ## Environment
 
-Set a Vercel Blob read/write token before running locally:
+Set a Vercel Blob read/write token before running locally (required by both tools):
 
 ```bash
 echo 'BLOB_READ_WRITE_TOKEN=...' >> .env.local
@@ -91,7 +84,7 @@ echo 'BLOB_READ_WRITE_TOKEN=...' >> .env.local
 
 ## Payment
 
-`putTxt` charges `$0.001` per call using the x402 settings in `aixyz.config.ts` (Base mainnet in production, Base Sepolia in development).
+`put-text` and `get-text` each charge `$0.001` per call using the x402 settings in `aixyz.config.ts` (Base mainnet in production, Base Sepolia in development).
 
 ## Running locally
 
@@ -101,4 +94,4 @@ bun install
 bun run dev
 ```
 
-Connect any MCP client (Claude Desktop, VS Code MCP extension, etc.) to `http://localhost:3000/mcp` and call `putTxt` with the schema above.
+Connect any MCP client (Claude Desktop, VS Code MCP extension, etc.) to `http://localhost:3000/mcp` and call `put-text` / `get-text` with the schemas above.
