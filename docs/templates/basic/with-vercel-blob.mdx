@@ -1,0 +1,61 @@
+---
+title: "Vercel Blob"
+description: "MCP-only template that stores text on Vercel Blob"
+---
+
+<Info>
+  **Source:** [`examples/with-vercel-blob`](https://github.com/AgentlyHQ/aixyz/tree/main/examples/with-vercel-blob)
+</Info>
+
+## Overview
+
+This template exposes two MCP tools, `put-text` and `get-text`, that store and retrieve text using Vercel Blob. Each call is priced at `$0.001` via x402. There is **no** `app/agent.ts` — the server only serves `/mcp`.
+
+## Project Structure
+
+```
+with-vercel-blob/
+├── aixyz.config.ts             # Agent metadata + x402 config
+├── app/
+│   ├── icon.svg                # Template icon
+│   └── tools/
+│       ├── put-text.ts         # Write txt blob
+│       └── get-text.ts         # Read txt blob
+├── package.json
+├── tsconfig.json
+└── vercel.json
+```
+
+## Tools
+
+### `put-text`
+
+- Input: `text` (string, 1–50k chars)
+- Returns: `{ id }` — a UUID identifying the stored text
+
+### `get-text`
+
+- Input: `id` (UUID returned by `put-text`)
+- Returns: `{ id, text }`
+
+## Environment
+
+Set a Vercel Blob read/write token before running locally (required by both tools):
+
+```bash
+echo 'BLOB_READ_WRITE_TOKEN=...' >> .env.local
+```
+
+## Payment
+
+`put-text` and `get-text` each charge `$0.001` per call using the x402 settings in `aixyz.config.ts` (Base mainnet in production, Base Sepolia in development).
+
+## Running locally
+
+```bash
+cd examples/with-vercel-blob
+bun install
+bun run dev
+```
+
+Connect any MCP client (Claude Desktop, VS Code MCP extension, etc.) to `http://localhost:3000/mcp` and call `put-text` / `get-text` with the schemas above.
