@@ -70,6 +70,7 @@ async function main() {
     port,
     static: buildStaticMap(),
     fetch: app.fetch,
+    idleTimeout: 255,
   } as Parameters<typeof Bun.serve>[0]);
 
   const duration = Math.round(performance.now() - startTime);

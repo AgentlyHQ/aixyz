@@ -59,7 +59,7 @@ export function AixyzServerPlugin(
 
         const { imports: staticImports, setup: staticSetup } = generateStaticSetup();
         const bunServe = (fetchExpr: string) =>
-          `${staticSetup}\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), static: __aixyzStatic, fetch: ${fetchExpr} } as Parameters<typeof Bun.serve>[0]);\nconsole.log(\`Server listening on port \${__server.port}\`);`;
+          `${staticSetup}\nconst __server = Bun.serve({ port: parseInt(process.env.PORT || "3000", 10), static: __aixyzStatic, fetch: ${fetchExpr}, idleTimeout: 255 } as Parameters<typeof Bun.serve>[0]);\nconsole.log(\`Server listening on port \${__server.port}\`);`;
 
         let transformed: string;
         const identifierMatch = source.match(identifierRe);
