@@ -35,7 +35,7 @@
     "@types/node": "^22",
     "ai": "^6",
     "aixyz": "workspace:*",
-    "typescript": "^5",
+    "typescript": "^6",
     "zod": "^4"
   }
 }
