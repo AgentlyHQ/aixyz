@@ -2,7 +2,7 @@
 
 This template exposes two MCP tools that work with private `.txt` files on [Vercel Blob](https://vercel.com/docs/storage/vercel-blob):
 
-- `put-text` — store text in a private blob with a UUID hex ID
+- `put-text` — store text in a private blob with a UUID ID
 - `get-text` — read a private blob back as text
 
 Each call is priced at `$0.001` via x402.
@@ -28,12 +28,10 @@ The server exposes only the MCP endpoint at `http://localhost:3000/mcp` (no `app
 
 - `put-text`
   - Input: `text` (required)
-  - Behavior: Generates a UUID hex ID and writes the text to `txt/{id}.txt` as **private** with `allowOverwrite: false`
   - Returns: `id`
 - `get-text`
-  - Input: `path` (required) — blob pathname like `txt/<uuid>.txt` or full blob URL
-  - Behavior: Fetches the private blob and returns its text content
-  - Returns: `path`, `text`, `contentType`, `size`
+  - Input: `id` (required, UUID returned by `put-text`)
+  - Returns: `id`, `text`
 
 ## Connecting via MCP
 

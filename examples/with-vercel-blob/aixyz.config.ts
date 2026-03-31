@@ -11,17 +11,17 @@ const config: AixyzConfig = {
   skills: [
     {
       id: "put-text",
-      name: "Put text to Vercel Blob",
-      description: "Persist a UTF-8 txt file using the put-text MCP tool.",
-      tags: ["storage", "blob", "vercel", "txt"],
-      examples: ["Save this note as a .txt file and return the blob URL", "Write a txt file under the logs/ folder"],
+      name: "Put Text",
+      description: "Store text and return its ID.",
+      tags: ["storage", "blob", "txt"],
+      examples: ["Save this note and return the ID", "Store this text for me"],
     },
     {
       id: "get-text",
-      name: "Get text from Vercel Blob",
-      description: "Read a private txt blob using the get-text MCP tool.",
-      tags: ["storage", "blob", "vercel", "txt", "read"],
-      examples: ["Fetch the content at txt/<id>.txt", "Read back the note I just saved"],
+      name: "Get Text",
+      description: "Retrieve stored text by ID.",
+      tags: ["storage", "blob", "txt", "read"],
+      examples: ["Fetch the text with this ID", "Read back the note I just saved"],
     },
   ],
 };

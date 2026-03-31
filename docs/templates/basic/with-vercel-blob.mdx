@@ -1,6 +1,6 @@
 ---
 title: "Vercel Blob"
-description: "MCP-only template that stores private .txt blobs on Vercel Blob using UUID hex IDs"
+description: "MCP-only template that stores text on Vercel Blob"
 ---
 
 <Info>
@@ -9,7 +9,7 @@ description: "MCP-only template that stores private .txt blobs on Vercel Blob us
 
 ## Overview
 
-This template exposes two MCP tools, `put-text` and `get-text`, that write and read **private** `.txt` files to/from Vercel Blob using `@vercel/blob`. IDs are generated as UUID hex strings (no base58) and each call is priced at `$0.001` via x402. There is **no** `app/agent.ts` — the server only serves `/mcp`.
+This template exposes two MCP tools, `put-text` and `get-text`, that store and retrieve text using Vercel Blob. Each call is priced at `$0.001` via x402. There is **no** `app/agent.ts` — the server only serves `/mcp`.
 
 ## Project Structure
 
@@ -30,49 +30,13 @@ with-vercel-blob/
 
 ### `put-text`
 
-```typescript title="app/tools/put-text.ts"
-export default tool({
-  description: "Store a private UTF-8 .txt file (up to 50k chars) in Vercel Blob and return its ID.",
-  inputSchema: z.object({
-    text: z.string().min(1).max(50_000), // matches MAX_TEXT_LENGTH in source
-  }),
-  execute: async ({ text }) => {
-    const id = randomUUID().replace(/-/g, "");
-    const path = `txt/${id}.txt`;
-    await put(path, text, {
-      access: "private",
-      contentType: "text/plain; charset=utf-8",
-      addRandomSuffix: false,
-      allowOverwrite: false,
-      // BLOB_READ_WRITE_TOKEN is picked up from env automatically
-    });
-    return { id };
-  },
-});
-```
-
-Key behaviors:
-
-- **UUID hex IDs** — `crypto.randomUUID().replace(/-/g, "")`, stored at `txt/{id}.txt`
-- **Access control** — `access: "private"` + `allowOverwrite: false`
-- **Payload** — stored exactly as provided text
+- Input: `text` (string, 1–50k chars)
+- Returns: `{ id }` — a UUID identifying the stored text
 
 ### `get-text`
 
-```typescript title="app/tools/get-text.ts"
-export default tool({
-  description: "Fetch a private .txt blob from Vercel Blob and return its text content.",
-  inputSchema: z.object({
-    path: z.string().min(1), // blob pathname like txt/<uuid>.txt or full URL
-  }),
-  execute: async ({ path }) => {
-    const result = await get(path, { access: "private" });
-    if (result.statusCode === 304) return { path: result.blob.pathname, text: "" };
-    const text = await new Response(result.stream).text();
-    return { path: result.blob.pathname, text, contentType: result.blob.contentType, size: result.blob.size };
-  },
-});
-```
+- Input: `id` (UUID returned by `put-text`)
+- Returns: `{ id, text }`
 
 ## Environment
 

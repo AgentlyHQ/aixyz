@@ -9,22 +9,17 @@ export const accepts: Accepts = {
 };
 
 export default tool({
-  description: "Fetch a private .txt blob from Vercel Blob and return its text content.",
+  description: "Retrieve stored text by ID.",
   inputSchema: z.object({
-    path: z.string().min(1).describe("Blob pathname (e.g., txt/<uuid>.txt) or full blob URL."),
+    id: z.uuid().describe("The ID returned by put-text."),
   }),
-  execute: async ({ path }) => {
-    const result = await get(path, { access: "private" });
-    if (result.statusCode === 304) {
-      return { path: result.blob.pathname, text: "", contentType: result.blob.contentType, size: result.blob.size };
+  execute: async ({ id }) => {
+    const result = await get(`${id}.txt`, { access: "private" });
+    if (result === null) {
+      return null;
     }
 
-    const text = await new Response(result.stream).text();
-    return {
-      path: result.blob.pathname,
-      text,
-      contentType: result.blob.contentType,
-      size: result.blob.size,
-    };
+    const text = result.statusCode === 304 ? "" : await new Response(result.stream).text();
+    return { text };
   },
 });
