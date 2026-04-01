@@ -4,6 +4,8 @@
   "scripts": {
     "build": "aixyz build",
     "dev": "aixyz dev",
+    "docker:build": "docker build -t small-language-model .",
+    "docker:run": "docker run -p 3000:3000 small-language-model",
     "test": "vitest run"
   },
   "dependencies": {
