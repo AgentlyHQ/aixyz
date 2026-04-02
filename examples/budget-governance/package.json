@@ -1,0 +1,14 @@
+{
+  "name": "budget-governance",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "aixyz": "workspace:*",
+    "@ai-sdk/openai": "^1.0.0",
+    "ai": "^4.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
